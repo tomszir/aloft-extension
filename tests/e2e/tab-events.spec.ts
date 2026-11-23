@@ -1,5 +1,13 @@
 import type { Locator, Page, Worker } from '@playwright/test'
-import { expect, isPinned, pressOpenAloft, TEST_ORIGIN, tabAction, test } from './fixtures'
+import {
+  expect,
+  isPinned,
+  palettePainted,
+  pressOpenAloft,
+  TEST_ORIGIN,
+  tabAction,
+  test,
+} from './fixtures'
 
 // Any tab event (a background tab loading, a title changing) reloads the
 // palette's data while it's open. A click whose press and release straddle one
@@ -28,6 +36,7 @@ test('a result row click survives a tab event mid-press', async ({ context, back
   const page = await context.newPage()
   await page.goto(`${TEST_ORIGIN}/Host`)
   await pressOpenAloft(background, page)
+  await palettePainted(page)
   await palette(page).getByRole('combobox').fill('>')
 
   const copy = context.waitForEvent('page')
@@ -46,6 +55,7 @@ test('a tile menu click survives a tab event mid-press', async ({ context, backg
   const page = await context.newPage()
   await page.goto(`${TEST_ORIGIN}/Host`)
   await pressOpenAloft(background, page)
+  await palettePainted(page)
 
   const row = palette(page).getByRole('region', { name: 'Pinned' })
   await row.getByRole('button', { name: 'Mail' }).click({ button: 'right' })
