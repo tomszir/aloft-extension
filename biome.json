@@ -6,7 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!.output", "!.wxt", "!src/ui/icon/svg"]
+    "includes": ["**", "!.output", "!.wxt", "!src/ui/icon/svg", "!CHANGELOG.md"]
   },
   "formatter": {
     "indentStyle": "space",
