@@ -1,9 +1,10 @@
-import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
+import { createMemo, createSignal, onCleanup, onMount, Show } from 'solid-js'
 import { i18n } from '#i18n'
 import { shortcutSlot } from '../../core/pinned'
 import type { Result, Section, SectionId, TabEntry } from '../../core/results'
 import { Icon } from '../icon/icon'
 import { Kbd } from '../kbd/kbd'
+import { Keyed } from '../keyed/keyed'
 import { PinnedRow } from '../pinned-row/pinned-row'
 import { ResultRow } from '../result-row/result-row'
 import { TileMenu } from '../tile-menu/tile-menu'
@@ -190,32 +191,32 @@ export function Palette(props: PaletteProps) {
           role="listbox"
           aria-label={i18n.t('resultsLabel')}
         >
-          <For each={props.sections}>
+          <Keyed each={props.sections} by={(section) => section.id}>
             {(section) => (
               // biome-ignore lint/a11y/useSemanticElements: a <fieldset> isn't allowed inside a listbox; role="group" is the ARIA pattern for grouped options.
-              <div class={styles.section} role="group" aria-label={SECTION_LABEL[section.id]?.()}>
-                <Show when={SECTION_LABEL[section.id]}>
+              <div class={styles.section} role="group" aria-label={SECTION_LABEL[section().id]?.()}>
+                <Show when={SECTION_LABEL[section().id]}>
                   {(label) => (
                     <div class={styles.sectionLabel} aria-hidden="true">
                       {label()()}
                     </div>
                   )}
                 </Show>
-                <For each={section.results}>
+                <Keyed each={section().results} by={(result) => result.id}>
                   {(result) => (
                     <ResultRow
-                      result={result}
-                      optionId={optionIds().get(result.id) ?? ''}
-                      active={result.id === props.activeId}
+                      result={result()}
+                      optionId={optionIds().get(result().id) ?? ''}
+                      active={result().id === props.activeId}
                       favicon={props.favicon}
-                      onHover={() => props.onHover(result.id)}
-                      onActivate={(shift) => props.onActivate(result, shift)}
+                      onHover={() => props.onHover(result().id)}
+                      onActivate={(shift) => props.onActivate(result(), shift)}
                     />
                   )}
-                </For>
+                </Keyed>
               </div>
             )}
-          </For>
+          </Keyed>
         </div>
         <footer class={styles.footer}>
           <span class={styles.hint}>

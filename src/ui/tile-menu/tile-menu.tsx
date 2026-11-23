@@ -1,4 +1,5 @@
-import { For, onMount } from 'solid-js'
+import { onMount } from 'solid-js'
+import { Keyed } from '../keyed/keyed'
 import styles from './tile-menu.module.css'
 
 export interface MenuItem {
@@ -60,24 +61,24 @@ export function TileMenu(props: TileMenuProps) {
         style={{ left: `${props.x}px`, top: `${props.y}px` }}
         onKeyDown={onKeyDown}
       >
-        <For each={props.items}>
+        <Keyed each={props.items} by={(item) => item.label}>
           {(item) => (
             <button
               type="button"
               role="menuitem"
               class={styles.item}
-              data-danger={item.danger || undefined}
-              disabled={item.disabled}
+              data-danger={item().danger || undefined}
+              disabled={item().disabled}
               tabIndex={-1}
               onClick={() => {
                 props.onClose()
-                item.run()
+                item().run()
               }}
             >
-              {item.label}
+              {item().label}
             </button>
           )}
-        </For>
+        </Keyed>
       </div>
     </>
   )
