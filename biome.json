@@ -1,0 +1,106 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "includes": ["**", "!.output", "!.wxt", "!src/ui/icon/svg"]
+  },
+  "formatter": {
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "semicolons": "asNeeded"
+    }
+  },
+  "linter": {
+    "rules": {
+      "preset": "recommended",
+      "suspicious": {
+        "noExplicitAny": "error"
+      },
+      "style": {
+        "useImportType": "error",
+        "noNonNullAssertion": "error"
+      }
+    }
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["src/core/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["wxt", "wxt/*", "#imports", "@wxt-dev/*"],
+                    "message": "core/ is plain logic: no extension APIs. Put browser code in platform/."
+                  },
+                  {
+                    "group": [
+                      "**/platform",
+                      "**/platform/**",
+                      "**/ui",
+                      "**/ui/**",
+                      "**/entrypoints/**"
+                    ],
+                    "message": "core/ must not depend on platform/, ui/ or entrypoints."
+                  },
+                  {
+                    "group": ["solid-js", "solid-js/*"],
+                    "message": "core/ stays framework-free; Solid is for ui/ and entrypoints."
+                  }
+                ]
+              }
+            },
+            "noRestrictedGlobals": {
+              "level": "error",
+              "options": {
+                "deniedGlobals": {
+                  "chrome": "core/ is plain logic: no extension APIs. Put browser code in platform/.",
+                  "browser": "core/ is plain logic: no extension APIs. Put browser code in platform/."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/platform/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["**/ui", "**/ui/**", "**/entrypoints/**", "solid-js", "solid-js/*"],
+                    "message": "platform/ adapts browser APIs only; it must not depend on UI code."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 280">
+  <title>Aloft</title>
+  <!-- The logo's bar and shadow, scaled up (bar 68×26 → 260×64), grouped and
+       centred: 64 bar + 28 gap + 16 shadow = 108 tall, so 86 above and below.
+       Inside the bar, 26 px of padding on both sides. -->
+  <rect width="440" height="280" fill="#2F6FEB"/>
+  <rect x="90" y="86" width="260" height="64" rx="32" fill="#FFFFFF"/>
+  <circle cx="128.5" cy="116" r="10" fill="none" stroke="#2F6FEB" stroke-width="5"/>
+  <path d="M136 123.5 L143.5 131" stroke="#2F6FEB" stroke-width="5" stroke-linecap="round"/>
+  <rect x="158" y="111" width="166" height="14" rx="7" fill="#2F6FEB" opacity="0.18"/>
+  <rect x="145" y="178" width="150" height="16" rx="8" fill="#FFFFFF" opacity="0.45"/>
+</svg>

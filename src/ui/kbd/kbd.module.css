@@ -1,0 +1,16 @@
+.kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: var(--al-kbd-size);
+  height: var(--al-kbd-size);
+  padding: 0 var(--al-space-1);
+  border-radius: var(--al-kbd-radius);
+  border: 1px solid var(--al-border);
+  background: var(--al-keycap);
+  color: var(--al-keycap-text);
+  font-family: var(--al-font-family);
+  font-size: var(--al-font-size-xs);
+  font-weight: var(--al-font-weight-medium);
+}

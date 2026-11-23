@@ -1,0 +1,23 @@
+.tile {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--al-icon-tile);
+  height: var(--al-icon-tile);
+  border-radius: var(--al-icon-radius);
+  background: var(--al-keycap);
+  color: var(--al-muted);
+}
+
+.image {
+  display: block;
+  width: var(--al-icon-size);
+  height: var(--al-icon-size);
+}
+
+.letter {
+  font-size: var(--al-font-size-xs);
+  font-weight: var(--al-font-weight-semibold);
+  text-transform: uppercase;
+}

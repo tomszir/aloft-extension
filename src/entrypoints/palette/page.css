@@ -1,0 +1,32 @@
+@import "../../ui/tokens.css";
+
+/* Must match the iframe element's color-scheme, or Chrome paints an opaque
+   backdrop behind the frame. */
+:root {
+  color-scheme: normal;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  background: transparent;
+  font-family: var(--al-font-family);
+  font-size: var(--al-font-size-md);
+  line-height: var(--al-line-height);
+  color: var(--al-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+:root[data-host="overlay"] body {
+  background: var(--al-scrim);
+}
+
+:root[data-host="tab"] body,
+:root[data-host="newtab"] body {
+  background: var(--al-page);
+}

@@ -1,0 +1,24 @@
+[tools]
+node = "24"
+pnpm = "12.15.0"
+lefthook = "2.2.2"
+
+[tasks.setup]
+description = "One-time setup after cloning (safe to re-run)"
+run = ["pnpm install --frozen-lockfile", "lefthook install"]
+
+[tasks.dev]
+description = "Run the extension in Helium with live reload"
+run = "pnpm dev"
+
+[tasks.check]
+description = "All static checks (what CI runs)"
+run = ["pnpm biome check .", "pnpm typecheck"]
+
+[tasks.zip]
+description = "Build the Web Store upload zip into .output/"
+run = "pnpm zip"
+
+[tasks."icons:vendor"]
+description = "Re-vendor the pinned icons from vendor/icons.lock.json"
+run = "node scripts/vendor-icons.mjs"

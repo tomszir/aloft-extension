@@ -1,0 +1,41 @@
+{
+  "name": "aloft",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A floating command bar for Helium and other Chromium browsers.",
+  "license": "GPL-3.0-only",
+  "packageManager": "pnpm@12.15.0",
+  "scripts": {
+    "dev": "wxt",
+    "build": "wxt build",
+    "zip": "wxt zip",
+    "postinstall": "wxt prepare",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "fmt": "biome check --write .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "wxt build --mode e2e && playwright test",
+    "size": "node scripts/check-size.mjs",
+    "screenshots": "wxt build --mode e2e && node scripts/screenshots.ts",
+    "brand": "node scripts/brand.ts"
+  },
+  "dependencies": {
+    "solid-js": "1.9.20",
+    "valibot": "1.5.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.4",
+    "@playwright/test": "1.65.1",
+    "@solidjs/testing-library": "0.8.10",
+    "@types/node": "24.19.2",
+    "@wxt-dev/i18n": "0.2.9",
+    "@wxt-dev/module-solid": "1.1.4",
+    "happy-dom": "21.0.4",
+    "typescript": "7.0.2",
+    "vite-plugin-solid": "2.11.17",
+    "vitest": "5.1.1",
+    "wxt": "0.21.5"
+  }
+}

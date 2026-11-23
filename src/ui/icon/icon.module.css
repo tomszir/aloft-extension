@@ -1,0 +1,5 @@
+.icon {
+  flex: none;
+  width: var(--al-glyph-size, 1em);
+  height: var(--al-glyph-size, 1em);
+}

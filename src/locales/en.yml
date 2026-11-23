@@ -1,0 +1,49 @@
+extName: Aloft
+extDescription: A floating command bar for Helium and other Chromium browsers.
+commandOpen: Open Aloft
+paletteLabel: Aloft
+palettePlaceholder: Search or enter address
+resultsLabel: Results
+hintNavigate: Navigate
+hintNewTab: New tab
+hintCurrentTab: Current tab
+hintActions: Actions
+hintClose: Close
+sectionOpenTabs: Open tabs
+sectionHistory: History
+sectionBookmarks: Bookmarks
+sectionRecentlyClosed: Recently closed
+searchTheWeb: Search the web
+goToAddress: Go to address
+actionSearch: Search
+actionOpen: Open
+actionSwitch: Switch to tab
+actionRestore: Restore
+newTabTitle: New Tab
+onboardingTitle: Aloft is ready
+onboardingShortcut: Press $1 on any page to open Aloft.
+onboardingNoShortcut: Aloft has no shortcut set. Pick one to open it from any page.
+onboardingChangeShortcut: Change shortcut
+onboardingCtrlTTitle: Open with Ctrl+T
+onboardingCtrlTBody: To open Aloft over the page you're on when you press Ctrl+T, the browser has to let it draw on the sites you visit.
+onboardingPrivacy: Aloft never sends anything anywhere. Site access is only used to show the command bar on top of the current page.
+onboardingAllow: Allow on all sites
+onboardingAllowed: Done. Ctrl+T now opens Aloft over the page you're on.
+onboardingDenied: Access wasn't granted. You can try again here at any time.
+onboardingWithout: Without it, Ctrl+T shows Aloft as the new tab page instead.
+pinnedLabel: Pinned
+pinnedHint: 1–9 to open
+pinnedMenuLabel: Options for $1
+menuOpen: Open
+menuMoveLeft: Move left
+menuMoveRight: Move right
+menuUnpin: Unpin
+sectionActions: Actions
+actionRun: Run
+actionPin: Pin tab
+actionUnpin: Unpin tab
+actionDuplicate: Duplicate tab
+actionNewWindow: New window
+actionMoveToNewWindow: Move tab to new window
+actionCloseOtherTabs: Close other tabs
+actionReopenClosedTab: Reopen closed tab

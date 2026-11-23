@@ -1,0 +1,65 @@
+.row {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--al-space-4);
+  height: var(--al-row-height);
+  padding: 0 var(--al-space-4);
+  border-radius: var(--al-row-radius);
+  color: var(--al-text);
+  cursor: default;
+  outline: none;
+}
+
+.row[data-active] {
+  background: var(--al-selected);
+}
+
+.glyph {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--al-icon-tile);
+  height: var(--al-icon-tile);
+  border-radius: var(--al-icon-radius);
+  background: var(--al-keycap);
+  color: var(--al-muted);
+  --al-glyph-size: var(--al-glyph-small);
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: var(--al-space-3);
+  overflow: hidden;
+}
+
+.title {
+  flex: none;
+  max-width: 62%;
+  font-size: var(--al-font-size-md);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.subtitle {
+  min-width: 0;
+  font-size: var(--al-font-size-sm);
+  color: var(--al-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.action {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--al-space-3);
+  font-size: var(--al-font-size-sm);
+  color: var(--al-muted);
+}

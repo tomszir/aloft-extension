@@ -1,0 +1,45 @@
+/* Static design tokens. Theme colors and radii (--al-panel, --al-text,
+   --al-radius, …) are set at runtime by theme/apply-theme.ts, because users
+   can edit them. Components use only these variables, never raw values. */
+:root {
+  --al-font-family: system-ui, sans-serif;
+  --al-font-size-xs: 11px;
+  --al-font-size-sm: 12px;
+  --al-font-size-md: 14px;
+  --al-font-size-lg: 17px;
+  --al-font-size-xl: 22px;
+  --al-font-weight-medium: 500;
+  --al-font-weight-semibold: 600;
+  --al-line-height: 1.4;
+
+  --al-space-1: 4px;
+  --al-space-2: 6px;
+  --al-space-3: 8px;
+  --al-space-4: 12px;
+  --al-space-5: 16px;
+  --al-space-6: 18px;
+
+  --al-palette-width: 640px;
+  --al-palette-offset: max(48px, 14vh);
+  --al-input-height: 56px;
+  --al-row-height: 44px;
+  --al-footer-height: 38px;
+  --al-kbd-size: 18px;
+  --al-kbd-radius: 5px;
+  --al-menu-width: 200px;
+  --al-menu-item-height: 32px;
+  --al-tile-height: 52px;
+  --al-dot-size: 4px;
+  --al-badge-size: 16px;
+  --al-button-height: 34px;
+  --al-button-radius: 8px;
+  --al-page-width: 560px;
+  --al-icon-size: 16px;
+  --al-glyph-small: 14px;
+  --al-search-icon-size: 18px;
+  --al-icon-tile: 22px;
+  --al-icon-radius: 6px;
+
+  --al-duration-fast: 120ms;
+  --al-ease-out: cubic-bezier(0.2, 0, 0, 1);
+}

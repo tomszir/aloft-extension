@@ -1,0 +1,22 @@
+{
+  "sources": {
+    "lucide": {
+      "package": "lucide-static",
+      "version": "1.60.0",
+      "integrity": "sha512-Y8/IYjBYST40TuqzknGt1XJOcZp83UH5fLndgXlQCQ4lM97eZO3EQo6cIyDcBrprredIGDVxge8yslRyM4wD0Q==",
+      "path": "icons/{icon}.svg",
+      "license": "LICENSE"
+    }
+  },
+  "icons": [
+    "app-window",
+    "copy",
+    "copy-x",
+    "globe",
+    "pin",
+    "pin-off",
+    "search",
+    "square-arrow-out-up-right",
+    "undo-2"
+  ]
+}

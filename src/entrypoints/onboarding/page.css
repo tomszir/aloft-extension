@@ -1,0 +1,16 @@
+@import "../../ui/tokens.css";
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background: var(--al-page);
+  color: var(--al-text);
+  font-family: var(--al-font-family);
+  font-size: var(--al-font-size-md);
+  line-height: var(--al-line-height);
+  -webkit-font-smoothing: antialiased;
+}

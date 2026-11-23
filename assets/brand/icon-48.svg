@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <title>Aloft</title>
+  <rect x="4" y="4" width="40" height="40" rx="10" fill="#2F6FEB"/>
+  <rect x="10" y="16" width="28" height="11" rx="5.5" fill="#FFFFFF"/>
+  <rect x="16" y="32" width="16" height="3" rx="1.5" fill="#FFFFFF" opacity="0.5"/>
+</svg>
