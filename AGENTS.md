@@ -16,7 +16,7 @@ The repository is public: nothing private goes in it (personal notes, plans, lin
 | Store screenshots               | `pnpm screenshots`                                                                          |
 | Re-vendor icons from their lock | `mise run icons:vendor`                                                                     |
 
-Run all of the first four before opening a PR.
+Run all of the first four before opening a PR. The `pre-push` hook runs the end-to-end tests; CI runs them too but doesn't require them.
 
 ## Git
 

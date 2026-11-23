@@ -10,3 +10,10 @@ commit-msg:
   jobs:
     - name: conventional commit, no AI attribution
       run: node scripts/check-commit-msg.ts {1}
+
+# CI runs e2e too but doesn't require it: its runners hit timing races that
+# real use doesn't, so a green local run is what gates a push.
+pre-push:
+  jobs:
+    - name: e2e
+      run: pnpm test:e2e
