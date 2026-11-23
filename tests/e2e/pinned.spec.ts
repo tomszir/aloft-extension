@@ -3,6 +3,7 @@ import {
   activeTabUrl,
   expect,
   isPinned,
+  palettePainted,
   pressOpenAloft,
   sendPaletteKey,
   TEST_ORIGIN,
@@ -21,6 +22,7 @@ async function withPins(context: BrowserContext, background: Worker, names: stri
   const page = await context.newPage()
   await page.goto(`${TEST_ORIGIN}/Host`)
   await pressOpenAloft(background, page)
+  await palettePainted(page)
   return page
 }
 

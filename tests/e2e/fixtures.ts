@@ -164,3 +164,17 @@ export async function pressOpenAloft(background: Worker, page: Page): Promise<vo
     await hooks.openAloft(tabs.find((t) => t.url === url))
   }, page.url())
 }
+
+/**
+ * Before clicking in the palette: until its frame has painted, Chromium sends
+ * clicks to the page under it, though Playwright already counts it as visible.
+ */
+export async function palettePainted(page: Page): Promise<void> {
+  await page
+    .locator('iframe[title="Aloft"]')
+    .contentFrame()
+    .locator('body')
+    .evaluate(
+      () => new Promise((painted) => requestAnimationFrame(() => requestAnimationFrame(painted))),
+    )
+}
