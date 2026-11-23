@@ -75,19 +75,24 @@ export async function activeTabUrl(background: Worker): Promise<string | undefin
 }
 
 /**
- * For keys that make Aloft remove its own frame (Esc, Alt+digit). A real key
+ * For keys that make Aloft remove its own frame (Esc, Enter, Alt+digit). A real key
  * press waits for the keyup to be acknowledged by a frame that no longer
- * exists, and sometimes hangs until the test times out.
+ * exists, and sometimes hangs until the test times out. dispatchEvent has the
+ * same race on slow machines, so the event fires only after the call returns.
  */
 export async function sendPaletteKey(
   page: Page,
-  init: { key: string; code?: string; altKey?: boolean },
+  init: { key: string; code?: string; altKey?: boolean; shiftKey?: boolean },
 ): Promise<void> {
   await page
     .locator('iframe[title="Aloft"]')
     .contentFrame()
     .getByRole('combobox')
-    .dispatchEvent('keydown', { bubbles: true, ...init })
+    .evaluate((input, options) => {
+      setTimeout(() =>
+        input.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, ...options })),
+      )
+    }, init)
 }
 
 type TabCall = 'pin' | 'unpin' | 'discard'
@@ -158,4 +163,18 @@ export async function pressOpenAloft(background: Worker, page: Page): Promise<vo
     const tabs = await api.tabs.query({})
     await hooks.openAloft(tabs.find((t) => t.url === url))
   }, page.url())
+}
+
+/**
+ * Before clicking in the palette: until its frame has painted, Chromium sends
+ * clicks to the page under it, though Playwright already counts it as visible.
+ */
+export async function palettePainted(page: Page): Promise<void> {
+  await page
+    .locator('iframe[title="Aloft"]')
+    .contentFrame()
+    .locator('body')
+    .evaluate(
+      () => new Promise((painted) => requestAnimationFrame(() => requestAnimationFrame(painted))),
+    )
 }

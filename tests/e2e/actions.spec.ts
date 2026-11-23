@@ -1,9 +1,10 @@
 import type { Page } from '@playwright/test'
-import { expect, isPinned, pressOpenAloft, TEST_ORIGIN, test } from './fixtures'
+import { expect, isPinned, palettePainted, pressOpenAloft, TEST_ORIGIN, test } from './fixtures'
 
 const palette = (page: Page) => page.locator('iframe[title="Aloft"]').contentFrame()
 
 async function runAction(page: Page, query: string, name: string) {
+  await palettePainted(page)
   await palette(page).getByRole('combobox').fill(query)
   await palette(page)
     .getByRole('option', { name: new RegExp(name) })
