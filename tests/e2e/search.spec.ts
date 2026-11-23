@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test'
-import { activeTabUrl, expect, pressOpenAloft, TEST_ORIGIN, test } from './fixtures'
+import { activeTabUrl, expect, pressOpenAloft, sendPaletteKey, TEST_ORIGIN, test } from './fixtures'
 
 const palette = (page: Page) => page.locator('iframe[title="Aloft"]').contentFrame()
 
@@ -15,7 +15,7 @@ test('finds an open tab by title and switches to it', async ({ context, backgrou
   await expect(tabs.getByRole('option', { name: /Alpha notes/ })).toBeVisible()
 
   await page.keyboard.press('ArrowDown')
-  await page.keyboard.press('Enter')
+  await sendPaletteKey(page, { key: 'Enter' })
 
   await expect.poll(() => activeTabUrl(background)).toBe(`${TEST_ORIGIN}/Alpha%20notes`)
   await expect(page.locator('iframe[title="Aloft"]')).toHaveCount(0)
@@ -30,7 +30,7 @@ test('an address opens in a new tab with Enter', async ({ context, background })
   await expect(palette(page).getByRole('option').first()).toContainText('aloft.test/Opened')
 
   const opened = context.waitForEvent('page')
-  await page.keyboard.press('Enter')
+  await sendPaletteKey(page, { key: 'Enter' })
   await expect(await opened).toHaveURL(`${TEST_ORIGIN}/Opened`)
   await expect(page).toHaveURL(`${TEST_ORIGIN}/Start`)
   await expect(page.locator('iframe[title="Aloft"]')).toHaveCount(0)
@@ -43,7 +43,7 @@ test('Shift+Enter opens in the current tab instead', async ({ context, backgroun
 
   await palette(page).getByRole('combobox').fill('aloft.test/Here')
   await expect(palette(page).getByRole('option').first()).toContainText('aloft.test/Here')
-  await page.keyboard.press('Shift+Enter')
+  await sendPaletteKey(page, { key: 'Enter', shiftKey: true })
 
   await expect(page).toHaveURL(`${TEST_ORIGIN}/Here`)
 })
