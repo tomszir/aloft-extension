@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from 'node:fs/promises'
+import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import {
@@ -41,11 +41,17 @@ export const test = base.extend<{ context: BrowserContext; background: Worker }>
     // Some failures only happen on CI's slower runners, so keep a trace of
     // them there. The built-in trace option doesn't cover a context we launch.
     const trace = Boolean(process.env.CI)
-    if (trace) await context.tracing.start({ screenshots: true, snapshots: true })
+    const logs: string[] = []
+    if (trace) {
+      await context.tracing.start({ screenshots: true, snapshots: true })
+      context.on('console', (m) => logs.push(`${m.type()} ${m.location().url}: ${m.text()}`))
+      context.on('weberror', (e) => logs.push(`error: ${e.error().stack ?? e.error().message}`))
+    }
     await use(context)
     if (trace) {
       const failed = testInfo.status !== testInfo.expectedStatus
       await context.tracing.stop(failed ? { path: testInfo.outputPath('trace.zip') } : {})
+      if (failed) await writeFile(testInfo.outputPath('console.txt'), logs.join('\n'))
     }
     await context.close()
     await rm(profile, { recursive: true, force: true })
