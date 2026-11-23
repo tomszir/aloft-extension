@@ -11,7 +11,7 @@ mise run setup   # dependencies and git hooks
 mise run dev     # a browser with Aloft loaded and live reload
 ```
 
-Before opening a PR, run `mise run check`, `pnpm test`, `pnpm build && pnpm size` and `pnpm test:e2e`.
+Before opening a PR, run `mise run check`, `pnpm test`, `pnpm build && pnpm size` and `pnpm test:e2e`. The `pre-push` hook runs the end-to-end tests, since CI doesn't require them.
 
 ## Commits and PRs
 
