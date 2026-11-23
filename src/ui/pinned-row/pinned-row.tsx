@@ -1,9 +1,10 @@
-import { For, Show } from 'solid-js'
+import { Show } from 'solid-js'
 import { i18n } from '#i18n'
 import { MAX_SHORTCUTS } from '../../core/pinned'
 import type { TabEntry } from '../../core/results'
 import { Favicon } from '../favicon/favicon'
 import { Kbd } from '../kbd/kbd'
+import { Keyed } from '../keyed/keyed'
 import styles from './pinned-row.module.css'
 
 export interface PinnedRowProps {
@@ -27,20 +28,20 @@ export function PinnedRow(props: PinnedRowProps) {
         </span>
       </div>
       <div class={styles.grid}>
-        <For each={props.pins}>
+        <Keyed each={props.pins} by={(pin) => pin.tabId}>
           {(pin, index) => {
             const slot = () => (index() < MAX_SHORTCUTS ? String(index() + 1) : undefined)
             const openMenu = (target: HTMLElement) =>
-              props.onMenu(pin, target.getBoundingClientRect())
+              props.onMenu(pin(), target.getBoundingClientRect())
             return (
               <button
                 type="button"
                 class={styles.tile}
-                data-loaded={pin.loaded || undefined}
-                aria-label={pin.title}
+                data-loaded={pin().loaded || undefined}
+                aria-label={pin().title}
                 aria-keyshortcuts={slot() ? `Alt+${slot()}` : undefined}
-                title={pin.title}
-                onClick={() => props.onOpen(pin)}
+                title={pin().title}
+                onClick={() => props.onOpen(pin())}
                 onContextMenu={(event) => {
                   event.preventDefault()
                   openMenu(event.currentTarget)
@@ -52,8 +53,8 @@ export function PinnedRow(props: PinnedRowProps) {
                   }
                 }}
               >
-                <Favicon src={props.favicon(pin.url)} fallback={pin.title.charAt(0)} />
-                <Show when={pin.loaded}>
+                <Favicon src={props.favicon(pin().url)} fallback={pin().title.charAt(0)} />
+                <Show when={pin().loaded}>
                   <span class={styles.loaded} aria-hidden="true" />
                 </Show>
                 <Show when={props.altHeld && slot()}>
@@ -66,7 +67,7 @@ export function PinnedRow(props: PinnedRowProps) {
               </button>
             )
           }}
-        </For>
+        </Keyed>
       </div>
     </section>
   )
