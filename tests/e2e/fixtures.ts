@@ -46,15 +46,10 @@ export const test = base.extend<{ context: BrowserContext; background: Worker }>
       await context.tracing.start({ screenshots: true, snapshots: true })
       context.on('console', (m) => logs.push(`${m.type()} ${m.location().url}: ${m.text()}`))
       context.on('weberror', (e) => logs.push(`error: ${e.error().stack ?? e.error().message}`))
-      const listen = (w: Worker) =>
-        w.on('console', (m) => logs.push(`worker ${m.type()}: ${m.text()}`))
-      context.serviceWorkers().forEach(listen)
-      context.on('serviceworker', listen)
     }
     await use(context)
     if (trace) {
       const failed = testInfo.status !== testInfo.expectedStatus
-      if (failed) logs.push(...(await extensionState(context)))
       await context.tracing.stop(failed ? { path: testInfo.outputPath('trace.zip') } : {})
       if (failed) await writeFile(testInfo.outputPath('console.txt'), logs.join('\n'))
     }
@@ -68,49 +63,6 @@ export const test = base.extend<{ context: BrowserContext; background: Worker }>
 })
 
 export const expect = test.expect
-
-/** What the extension sees when a test fails: its tabs, and each palette's host tab. */
-async function extensionState(context: BrowserContext): Promise<string[]> {
-  const probe = async (label: string, run: () => Promise<unknown>) => {
-    const timeout = new Promise((done) => setTimeout(() => done('timed out after 2s'), 2000))
-    try {
-      return `${label}: ${JSON.stringify(await Promise.race([run(), timeout]))}`
-    } catch (error) {
-      return `${label}: threw ${String(error)}`
-    }
-  }
-  const out: string[] = []
-  const worker = context.serviceWorkers()[0]
-  if (worker)
-    out.push(
-      await probe('worker tabs', () =>
-        worker.evaluate(async () => {
-          const api = Reflect.get(globalThis, 'chrome') as {
-            tabs: {
-              query: (q: object) => Promise<{ id?: number; url?: string; active?: boolean }[]>
-            }
-          }
-          return (await api.tabs.query({})).map((t) => `${t.id} ${t.active ? '*' : ''}${t.url}`)
-        }),
-      ),
-    )
-  for (const page of context.pages()) {
-    for (const frame of page.frames()) {
-      if (!frame.url().includes('/palette.html')) continue
-      out.push(
-        await probe(`palette in ${page.url()}: getCurrent`, () =>
-          frame.evaluate(async () => {
-            const api = Reflect.get(globalThis, 'chrome') as {
-              tabs: { getCurrent: () => Promise<{ id?: number } | undefined> }
-            }
-            return (await api.tabs.getCurrent())?.id ?? 'undefined'
-          }),
-        ),
-      )
-    }
-  }
-  return out
-}
 
 export async function activeTabUrl(background: Worker): Promise<string | undefined> {
   return background.evaluate(async () => {
