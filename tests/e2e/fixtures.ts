@@ -19,7 +19,7 @@ export const TEST_ORIGIN = 'https://aloft.test'
 
 export const test = base.extend<{ context: BrowserContext; background: Worker }>({
   // biome-ignore lint/correctness/noEmptyPattern: Playwright requires a destructuring pattern here.
-  context: async ({}, use) => {
+  context: async ({}, use, testInfo) => {
     const profile = await mkdtemp(join(tmpdir(), 'aloft-e2e-'))
     const context = await chromium.launchPersistentContext(profile, {
       // Playwright's default headless build can't load extensions; its full
@@ -38,7 +38,15 @@ export const test = base.extend<{ context: BrowserContext; background: Worker }>
         body: `<!doctype html><title>${title || 'Test page'}</title><input id="field" aria-label="Field">`,
       })
     })
+    // Some failures only happen on CI's slower runners, so keep a trace of
+    // them there. The built-in trace option doesn't cover a context we launch.
+    const trace = Boolean(process.env.CI)
+    if (trace) await context.tracing.start({ screenshots: true, snapshots: true })
     await use(context)
+    if (trace) {
+      const failed = testInfo.status !== testInfo.expectedStatus
+      await context.tracing.stop(failed ? { path: testInfo.outputPath('trace.zip') } : {})
+    }
     await context.close()
     await rm(profile, { recursive: true, force: true })
   },
