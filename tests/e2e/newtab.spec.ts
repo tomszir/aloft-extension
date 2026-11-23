@@ -1,13 +1,24 @@
+import type { BrowserContext, Page } from '@playwright/test'
 import { activeTabUrl, expect, pressNewTab, setSettings, TEST_ORIGIN, test } from './fixtures'
 
 const NEW_TAB_PAGE = /^chrome-extension:\/\/[^/]+\/newtab\.html$/
 
+const onboardingPage = async (context: BrowserContext) => {
+  const isOnboarding = (p: Page) => p.url().endsWith('/onboarding.html')
+  return context.pages().find(isOnboarding) ?? (await context.waitForEvent('page', isOnboarding))
+}
+
+// A fresh profile opens the onboarding tab whenever the install finishes. If
+// that lands mid-test it becomes the most recent tab, which is where Ctrl+T
+// returns to, and Aloft can't draw on its own pages.
+test.beforeEach(async ({ context }) => {
+  await onboardingPage(context)
+})
+
 test('first install opens the onboarding page, which sees the granted access', async ({
   context,
 }) => {
-  const onboarding =
-    context.pages().find((p) => p.url().endsWith('/onboarding.html')) ??
-    (await context.waitForEvent('page', (p) => p.url().endsWith('/onboarding.html')))
+  const onboarding = await onboardingPage(context)
   await expect(onboarding.getByRole('heading', { name: 'Aloft is ready' })).toBeVisible()
   await expect(onboarding.getByText('Ctrl+T now opens Aloft')).toBeVisible()
 })
