@@ -7,6 +7,5 @@
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
     "verbatimModuleSyntax": true
-  },
-  "exclude": ["node_modules", ".output", "video"]
+  }
 }

@@ -1,4 +1,4 @@
-// The demo browser behind the store screenshots and the promo video: the real
+// The demo browser behind the store screenshots and the marquee tile: the real
 // extension, with invented sites served on a fake domain, so there are no real
 // brands and nothing leaves the machine. Needs the e2e build (`wxt build
 // --mode e2e`), which has the site access the overlay needs.

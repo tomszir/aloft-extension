@@ -19,8 +19,6 @@
     "test:e2e": "wxt build --mode e2e && playwright test",
     "size": "node scripts/check-size.mjs",
     "screenshots": "wxt build --mode e2e && node scripts/screenshots.ts",
-    "video:frames": "wxt build --mode e2e && node scripts/video-frames.ts",
-    "video": "pnpm video:frames && pnpm --dir video install --frozen-lockfile && pnpm --dir video render",
     "brand": "node scripts/brand.ts"
   },
   "dependencies": {
