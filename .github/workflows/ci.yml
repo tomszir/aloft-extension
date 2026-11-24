@@ -36,12 +36,16 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
+    # A normal run takes about a minute; anything stuck shouldn't hold the
+    # runner for GitHub's six-hour default.
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
       - uses: jdx/mise-action@v3
       - run: pnpm install --frozen-lockfile
-      # Browsers are cached per Playwright version; the system libraries they
-      # need are apt packages, so those are installed on every run.
+      # Browsers are cached per Playwright version. No --with-deps: the runner
+      # image ships Google Chrome, so Chromium's libraries are already there,
+      # and apt's mirror sometimes takes minutes.
       - id: playwright
         run: echo "version=$(pnpm exec playwright --version | cut -d' ' -f2)" >> "$GITHUB_OUTPUT"
       - id: browsers
@@ -50,9 +54,7 @@ jobs:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
       - if: steps.browsers.outputs.cache-hit != 'true'
-        run: pnpm exec playwright install --with-deps chromium
-      - if: steps.browsers.outputs.cache-hit == 'true'
-        run: pnpm exec playwright install-deps chromium
+        run: pnpm exec playwright install chromium
       - run: pnpm test:e2e
       - uses: actions/upload-artifact@v5
         if: failure()
