@@ -1,4 +1,4 @@
-import { createMemo, createSignal, onCleanup, onMount, Show } from 'solid-js'
+import { createEffect, createMemo, createSignal, on, onCleanup, onMount, Show } from 'solid-js'
 import { i18n } from '#i18n'
 import { shortcutSlot } from '../../core/pinned'
 import type { Chip } from '../../core/query'
@@ -51,6 +51,21 @@ export interface PaletteProps {
 
 const RESULTS_ID = 'al-results'
 
+function slideSelection(from: HTMLElement, to: HTMLElement): void {
+  if (typeof to.animate !== 'function') return
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
+  // Tokens live on :root, where themes set them too.
+  const style = getComputedStyle(document.documentElement)
+  const duration = Number.parseFloat(style.getPropertyValue('--al-duration-select'))
+  if (!(duration > 0)) return
+  const distance = from.getBoundingClientRect().top - to.getBoundingClientRect().top
+  to.animate([{ transform: `translateY(${distance}px)` }, { transform: 'none' }], {
+    duration,
+    easing: style.getPropertyValue('--al-ease-out').trim() || 'ease-out',
+    pseudoElement: '::before',
+  })
+}
+
 const SECTION_LABEL: Record<SectionId, (() => string) | undefined> = {
   keywords: () => i18n.t('sectionKeywords'),
   top: undefined,
@@ -91,6 +106,22 @@ export function Palette(props: PaletteProps) {
   }
   const activeResult = createMemo(() =>
     props.sections.flatMap((s) => s.results).find((r) => r.id === props.activeId),
+  )
+
+  // The selection slides from the row it was on when it moves through the same
+  // results. When the results change under it, it just appears on the new row:
+  // sliding on every keystroke would only make typing feel slower.
+  let fromRow: HTMLElement | undefined
+  createEffect(
+    on([() => props.activeId, () => props.query, () => props.chip], ([id], previous) => {
+      const row = id ? document.getElementById(optionIds().get(id) ?? '') : null
+      const from = fromRow
+      fromRow = row ?? undefined
+      const sameResults =
+        previous !== undefined && previous[1] === props.query && previous[2] === props.chip
+      if (!row || !from || from === row || !from.isConnected || !sameResults) return
+      slideSelection(from, row)
+    }),
   )
 
   // Number badges appear only while Alt is held, like the browser's own

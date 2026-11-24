@@ -102,11 +102,38 @@ export default defineContentScript({
       if (isCloseOverlayMessage(message)) close()
     }
 
+    let closing = false
     function close() {
+      if (closing) return
+      closing = true
       browser.runtime.onMessage.removeListener(onMessage)
-      ui.remove()
-      host.remove()
       delete scope[OPEN]
+      const remove = () => {
+        ui.remove()
+        host.remove()
+      }
+      // The page gets focus back as the fade starts, so typing straight after
+      // Esc lands there. A modal dialog keeps the page inert, so the frame
+      // fades in a plain, inert one instead, which clicks pass through.
+      const iframe = shadow.querySelector('iframe')
+      const fade = !reduceMotion && iframe !== null
+      dialog.inert = true
+      dialog.close()
+      if (fade) {
+        dialog.show()
+        Object.assign(iframe.style, {
+          pointerEvents: 'none',
+          // Quicker than opening: closing should never feel like waiting.
+          transition: 'opacity 80ms ease-in',
+          opacity: '0',
+        })
+        // transitionend doesn't fire in a background tab, which a result
+        // opened in a new tab leaves this one as.
+        setTimeout(remove, 100)
+      } else {
+        remove()
+      }
+      // After show(), which would otherwise take focus back into the dialog.
       if (previousFocus instanceof HTMLElement) previousFocus.focus({ preventScroll: true })
     }
 

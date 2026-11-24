@@ -1,4 +1,6 @@
 .row {
+  position: relative;
+  isolation: isolate;
   box-sizing: border-box;
   flex: none;
   display: flex;
@@ -12,8 +14,20 @@
   outline: none;
 }
 
-.row[data-active] {
+/* The selection is drawn on a layer of its own, so the palette can slide it
+   from the row it was on without moving the row. */
+.row::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
   background: var(--al-selected);
+  opacity: 0;
+}
+
+.row[data-active]::before {
+  opacity: 1;
 }
 
 .glyph {

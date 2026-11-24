@@ -1,4 +1,5 @@
 .chip {
+  animation: chip-in var(--al-duration-fast) var(--al-ease-out);
   flex: none;
   display: inline-flex;
   align-items: center;
@@ -16,4 +17,18 @@
 .chip[data-colored] {
   background: color-mix(in srgb, var(--al-chip-color) var(--al-chip-tint), var(--al-panel));
   color: color-mix(in srgb, var(--al-chip-color) var(--al-chip-ink), var(--al-text));
+}
+
+/* The same entrance as the palette, so everything that appears moves alike. */
+@keyframes chip-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chip {
+    animation: none;
+  }
 }

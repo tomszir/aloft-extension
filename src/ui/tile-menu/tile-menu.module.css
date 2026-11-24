@@ -8,6 +8,7 @@
 }
 
 .menu {
+  animation: menu-in var(--al-duration-fast) var(--al-ease-out);
   position: fixed;
   min-width: var(--al-menu-width);
   box-sizing: border-box;
@@ -45,4 +46,18 @@
 
 .item[data-danger] {
   color: var(--al-danger);
+}
+
+/* The same entrance as the palette, so everything that appears moves alike. */
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu {
+    animation: none;
+  }
 }

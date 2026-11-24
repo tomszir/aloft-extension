@@ -27,6 +27,24 @@ test('opens over the page, takes focus, and Esc gives it back', async ({ context
   await expect(page.locator('#field')).toBeFocused()
 })
 
+test('typing straight after Esc lands in the page, while the bar fades out', async ({
+  context,
+  background,
+}) => {
+  const page = await context.newPage()
+  await page.goto(`${TEST_ORIGIN}/`)
+  await page.locator('#field').focus()
+  await pressOpenAloft(background, page)
+  const frame = page.locator('iframe[title="Aloft"]')
+  await expect(frame.contentFrame().getByRole('combobox')).toBeFocused()
+
+  await sendPaletteKey(page, { key: 'Escape' })
+  await expect(page.locator('#field')).toBeFocused()
+  await page.keyboard.type('hi')
+  await expect(page.locator('#field')).toHaveValue('hi')
+  await expect(frame).toHaveCount(0)
+})
+
 test('the page cannot read anything inside the palette', async ({ context, background }) => {
   const page = await context.newPage()
   await page.goto(`${TEST_ORIGIN}/`)
