@@ -127,3 +127,37 @@ for (const [name, open] of [
     await expect(page.locator('dialog[open], :popover-open')).toHaveCount(1)
   })
 }
+
+// A site that declares dark support makes the frame's "normal" color-scheme
+// resolve to dark, unlike the palette inside it, and Chrome then paints an
+// opaque backdrop over the whole page.
+test('the page stays visible behind the palette on sites that declare dark mode', async ({
+  context,
+  background,
+}) => {
+  await context.route(`${TEST_ORIGIN}/dark-aware`, (route) =>
+    route.fulfill({
+      contentType: 'text/html',
+      body: '<!doctype html><meta name="color-scheme" content="light dark"><title>Dark aware</title><body style="margin:0;background:#cc3333">',
+    }),
+  )
+  const page = await context.newPage()
+  await page.emulateMedia({ colorScheme: 'dark' })
+  await page.goto(`${TEST_ORIGIN}/dark-aware`)
+  await pressOpenAloft(background, page)
+  await palettePainted(page)
+
+  // A corner far from the panel: the page's red, dimmed, not an opaque gray.
+  const shot = await page.screenshot({ clip: { x: 8, y: 680, width: 1, height: 1 } })
+  const [red = 0, green = 0, blue = 0] = await page.evaluate(async (png) => {
+    const image = new Image()
+    image.src = `data:image/png;base64,${png}`
+    await image.decode()
+    const canvas = new OffscreenCanvas(1, 1)
+    const context2d = canvas.getContext('2d')
+    context2d?.drawImage(image, 0, 0)
+    return [...(context2d?.getImageData(0, 0, 1, 1).data ?? [])]
+  }, shot.toString('base64'))
+  expect(red).toBeGreaterThan(green * 2)
+  expect(blue).toBeLessThan(red / 2)
+})

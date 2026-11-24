@@ -1,9 +1,12 @@
 @import "../../ui/tokens.css";
 
 /* Must match the iframe element's color-scheme, or Chrome paints an opaque
-   backdrop behind the frame. */
+   backdrop behind the frame. Explicit on both sides: on the iframe, "normal"
+   would follow the page's own color-scheme declaration, which differs from
+   this document's whenever a site declares dark. The palette draws all of its
+   own colors, so this only decides that match. */
 :root {
-  color-scheme: normal;
+  color-scheme: light;
 }
 
 html,
