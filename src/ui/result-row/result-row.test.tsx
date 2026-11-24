@@ -1,5 +1,6 @@
 import { render, screen } from '@solidjs/testing-library'
 import { describe, expect, it, vi } from 'vitest'
+import { builtInKeyword } from '../../core/keywords'
 import type { Result } from '../../core/results'
 import { ResultRow } from './result-row'
 
@@ -44,5 +45,34 @@ describe('ResultRow', () => {
   it('gives the selected row a keycap that stands out from it', () => {
     const { container } = renderRow(tab, true)
     expect(container.querySelector('kbd')?.hasAttribute('data-selected')).toBe(true)
+  })
+
+  describe('keyword rows', () => {
+    const claude = builtInKeyword('claude')
+
+    it('sends the typed text to an ask site, under the site’s letter', async () => {
+      renderRow(
+        {
+          kind: 'site',
+          id: 'site',
+          keyword: claude,
+          query: 'hello',
+          url: 'https://claude.ai/new?q=hello',
+        },
+        true,
+      )
+      expect(screen.getByRole('option').textContent).toContain('keywordAsk')
+      expect(screen.getByRole('option').textContent).toContain('actionAsk')
+      expect((await screen.findByTestId('favicon-letter')).textContent).toBe('C')
+    })
+
+    it('opens the site when nothing is typed', () => {
+      renderRow(
+        { kind: 'site', id: 'site', keyword: claude, query: '', url: 'https://claude.ai/new' },
+        true,
+      )
+      expect(screen.getByRole('option').textContent).toContain('keywordOpen')
+      expect(screen.getByRole('option').textContent).toContain('claude.ai/new')
+    })
   })
 })

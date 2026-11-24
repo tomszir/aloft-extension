@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { builtInKeyword } from './keywords'
 import { applyInput, EMPTY_QUERY, parseQuery } from './query'
 import {
   type BuildOptions,
@@ -163,6 +164,37 @@ describe('buildSections', () => {
   it('carries the browser shortcut along as a hint', () => {
     const [section] = buildSections(parseQuery('new', 'actions'), data, options)
     expect(section?.results[0]).toMatchObject({ kind: 'action', hint: 'Ctrl+N' })
+  })
+})
+
+describe('keywords', () => {
+  const github = builtInKeyword('github')
+
+  it('offers a keyword the input names, above the usual results', () => {
+    expect(ids('gh', { ...options, offeredKeyword: github }).slice(0, 2)).toEqual([
+      'keyword',
+      'search',
+    ])
+  })
+
+  it('inside a chip, sends the text to the site and lists only that site’s pages', () => {
+    const results = flatten(buildSections(parseQuery('aloft', github), data, options))
+    expect(results[0]).toMatchObject({
+      kind: 'site',
+      query: 'aloft',
+      url: 'https://github.com/search?q=aloft',
+    })
+    expect(results.slice(1).map((r) => r.id)).toEqual([
+      'history:https://github.com/tomszir/aloft/',
+      'history:https://github.com/tomszir/aloft/issues#top',
+    ])
+  })
+
+  it('with nothing typed in the chip, offers the site itself', () => {
+    const results = flatten(buildSections(parseQuery('', github), data, options))
+    expect(results).toEqual([
+      { kind: 'site', id: 'site', keyword: github, query: '', url: 'https://github.com' },
+    ])
   })
 })
 

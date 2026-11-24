@@ -56,9 +56,13 @@ export async function openResult(
       await browser.sessions.restore(result.sessionId)
       return
     case 'url':
+    case 'site':
     case 'history':
     case 'bookmark':
       await openUrl(result.url, disposition, context)
+      return
+    case 'keyword':
+      // Offers a chip; the palette enters it instead of opening anything.
       return
   }
 }

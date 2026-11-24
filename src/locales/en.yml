@@ -19,6 +19,12 @@ sectionRecentlyClosed: Recently closed
 searchTheWeb: Search the web
 goToAddress: Go to address
 actionSearch: Search
+actionAsk: Ask
+actionChoose: Choose
+keywordSearch: Search $1
+keywordAsk: Ask $1
+keywordOpen: Open $1
+keywordOfferHint: Space or Tab to type here
 actionOpen: Open
 actionSwitch: Switch to tab
 actionRestore: Restore

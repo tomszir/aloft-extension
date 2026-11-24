@@ -1,12 +1,22 @@
 import { createEffect, createMemo, createSignal, on, onCleanup } from 'solid-js'
 import { browser } from 'wxt/browser'
 import { actionEntries } from '../../app/action-entries'
+import { useKeywords } from '../../app/use-keywords'
 import { useSettings } from '../../app/use-settings'
 import { useTheme } from '../../app/use-theme'
 import { useZoomCorrection } from '../../app/use-zoom-correction'
 import { availableActions } from '../../core/actions'
+import { keywordHost } from '../../core/keywords'
 import { dropIndex, moveIndex, pinnedRow } from '../../core/pinned'
-import { applyInput, EMPTY_QUERY, leaveChip, parseQuery, type QueryState } from '../../core/query'
+import {
+  applyInput,
+  EMPTY_QUERY,
+  enterKeyword,
+  leaveChip,
+  offeredKeyword,
+  parseQuery,
+  type QueryState,
+} from '../../core/query'
 import {
   type BookmarkEntry,
   buildSections,
@@ -45,6 +55,7 @@ export interface AppProps {
 
 export function App(props: AppProps) {
   const { settings } = useSettings()
+  const keywords = useKeywords()
   useTheme(settings)
   if (props.host === 'overlay') useZoomCorrection(props.hostTab.then((tab) => tab?.id))
 
@@ -62,6 +73,7 @@ export function App(props: AppProps) {
 
   const [query, setQuery] = createSignal<QueryState>(EMPTY_QUERY)
   const parsed = createMemo(() => parseQuery(query().text, query().chip))
+  const offered = createMemo(() => offeredKeyword(query(), keywords()))
 
   // Each keystroke starts a lookup; only the latest one may land, or a slow
   // early query could overwrite the results for what was typed after it.
@@ -69,15 +81,19 @@ export function App(props: AppProps) {
   createEffect(
     on(parsed, async (q) => {
       const id = ++lookup
-      if (q.kind !== 'text') {
+      const searchable = q.kind === 'text' || (q.kind === 'keyword' && q.text !== '')
+      if (!searchable) {
         setHistory([])
         setBookmarks([])
         return
       }
       const { sources } = settings()
       const [h, b] = await Promise.all([
-        sources.history ? searchHistory(q.text) : [],
-        sources.bookmarks ? searchBookmarks(q.text) : [],
+        // The site's name narrows the browser's own search to its pages.
+        sources.history
+          ? searchHistory(q.kind === 'keyword' ? `${keywordHost(q.keyword)} ${q.text}` : q.text)
+          : [],
+        sources.bookmarks && q.kind === 'text' ? searchBookmarks(q.text) : [],
       ])
       if (id !== lookup) return
       setHistory(h)
@@ -122,6 +138,7 @@ export function App(props: AppProps) {
         sources: settings().sources,
         hostTabId: hostTab()?.id,
         pinnedRowShown: pins().length > 0,
+        offeredKeyword: offered(),
         now: Date.now(),
       },
     ),
@@ -170,6 +187,10 @@ export function App(props: AppProps) {
   }
 
   async function activate(result: Result, shift: boolean): Promise<void> {
+    if (result.kind === 'keyword') {
+      setQuery(enterKeyword(result.keyword))
+      return
+    }
     if (props.host === 'preview') return
     const host = hostTab() ?? (await props.hostTab)
     if (host === undefined) return
@@ -204,7 +225,12 @@ export function App(props: AppProps) {
       sections={sections()}
       activeId={effectiveActiveId()}
       favicon={pageFavicon}
-      onQuery={(text) => setQuery(applyInput(query(), text))}
+      onQuery={(text) => setQuery(applyInput(query(), text, keywords()))}
+      onTab={() => {
+        const keyword = offered()
+        if (keyword) setQuery(enterKeyword(keyword))
+        return keyword !== undefined
+      }}
       onLeaveChip={() => setQuery(leaveChip(query()))}
       onMove={move}
       onHover={setActiveId}
