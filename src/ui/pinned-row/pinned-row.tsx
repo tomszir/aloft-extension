@@ -3,7 +3,6 @@ import { i18n } from '#i18n'
 import { MAX_SHORTCUTS } from '../../core/pinned'
 import { type TabEntry, tileLetter } from '../../core/results'
 import { Favicon } from '../favicon/favicon'
-import { Icon } from '../icon/icon'
 import { Kbd } from '../kbd/kbd'
 import { Keyed } from '../keyed/keyed'
 import styles from './pinned-row.module.css'
@@ -64,11 +63,6 @@ export function PinnedRow(props: PinnedRowProps) {
                       letter={tileLetter(pin().title, pin().url)}
                     />
                   </span>
-                  <Show when={!pin().loaded}>
-                    <span class={styles.asleep} data-testid="pin-asleep">
-                      <Icon name="moon" />
-                    </span>
-                  </Show>
                   <Show when={props.altHeld && slot()}>
                     {(n) => (
                       <span class={styles.badge} aria-hidden="true">

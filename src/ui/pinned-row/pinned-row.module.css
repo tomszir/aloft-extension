@@ -81,18 +81,22 @@
   white-space: nowrap;
 }
 
+.pin[data-asleep] .tile {
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--al-border);
+}
+
+.pin[data-asleep]:hover .tile {
+  background: var(--al-selected);
+}
+
+.pin[data-asleep] .icon {
+  filter: grayscale(1);
+}
+
 .pin[data-asleep] .icon,
 .pin[data-asleep] .name {
   opacity: var(--al-asleep-opacity);
-}
-
-.asleep {
-  --al-glyph-size: var(--al-asleep-glyph);
-  position: absolute;
-  right: var(--al-space-1);
-  bottom: var(--al-space-1);
-  display: flex;
-  color: var(--al-muted);
 }
 
 .badge {
