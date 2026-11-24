@@ -7,6 +7,7 @@ import { useTheme } from '../../app/use-theme'
 import { useZoomCorrection } from '../../app/use-zoom-correction'
 import { availableActions } from '../../core/actions'
 import { keywordHost } from '../../core/keywords'
+import { EMPTY_LEARNED, learnedPages } from '../../core/learned'
 import { dropIndex, moveIndex, pinnedRow } from '../../core/pinned'
 import {
   applyInput,
@@ -30,10 +31,13 @@ import {
 } from '../../core/results'
 import { runAction } from '../../platform/actions'
 import { pageFavicon } from '../../platform/favicon'
+import { loadLearned, savePick } from '../../platform/learned'
 import { CLOSE_OVERLAY, type CloseOverlayMessage } from '../../platform/messages'
 import { type Disposition, type HostTab, openResult } from '../../platform/open-result'
 import { movePinned, unpin } from '../../platform/pinned'
 import {
+  loadBookmarks,
+  loadRecentHistory,
   loadRecentlyClosed,
   loadTabs,
   searchBookmarks,
@@ -64,13 +68,28 @@ export function App(props: AppProps) {
   const [tabs, setTabs] = createSignal<TabEntry[]>([])
   const [closed, setClosed] = createSignal<ClosedEntry[]>([])
   const [history, setHistory] = createSignal<HistoryEntry[]>([])
+  const [recentHistory, setRecentHistory] = createSignal<HistoryEntry[]>([])
   const [bookmarks, setBookmarks] = createSignal<BookmarkEntry[]>([])
+  const [learned, setLearned] = createSignal(EMPTY_LEARNED)
   void props.hostTab.then(setHostTab)
   const reloadTabs = () => void loadTabs().then(setTabs)
   reloadTabs()
   // Pins move, hibernate and wake while Aloft is open; keep the row truthful.
   onCleanup(watchTabs(reloadTabs))
   void loadRecentlyClosed().then(setClosed)
+  // Read once on open: the browser's own searches match whole words only, so
+  // these are what initials and typos are matched against.
+  void loadRecentHistory().then(setRecentHistory)
+  void loadLearned().then(setLearned)
+  // Reading every bookmark keeps the browser busy for long enough with a
+  // large library (about 95 ms for 20,000) to delay the palette appearing, so
+  // it waits until the palette has faded in; the browser's own word search
+  // covers what's typed until then.
+  const [allBookmarks, setAllBookmarks] = createSignal<BookmarkEntry[]>()
+  const bookmarksTimer = setTimeout(() => {
+    if (settings().sources.bookmarks) void loadBookmarks().then(setAllBookmarks)
+  }, 150)
+  onCleanup(() => clearTimeout(bookmarksTimer))
 
   const [query, setQuery] = createSignal<QueryState>(EMPTY_QUERY)
   const parsed = createMemo(() => parseQuery(query().text, query().chip))
@@ -95,7 +114,8 @@ export function App(props: AppProps) {
         sources.history
           ? searchHistory(q.kind === 'keyword' ? `${keywordHost(q.keyword)} ${q.text}` : q.text)
           : [],
-        sources.bookmarks && q.kind === 'text' ? searchBookmarks(q.text) : [],
+        // Once every bookmark is here, asking the browser again only costs time.
+        sources.bookmarks && q.kind === 'text' && !allBookmarks() ? searchBookmarks(q.text) : [],
       ])
       if (id !== lookup) return
       setHistory(h)
@@ -126,13 +146,19 @@ export function App(props: AppProps) {
     )
   })
 
+  const learning = () => settings().learnFromPicks
+  const learnedForQuery = createMemo(() => {
+    const q = parsed()
+    return learning() && q.kind === 'text' ? learnedPages(learned(), q.text, Date.now()) : []
+  })
+
   const sections = createMemo(() =>
     buildSections(
       parsed(),
       {
         tabs: tabs(),
-        history: history(),
-        bookmarks: bookmarks(),
+        history: [...history(), ...recentHistory()],
+        bookmarks: allBookmarks() ?? bookmarks(),
         closed: closed(),
         actions: actions(),
       },
@@ -142,6 +168,7 @@ export function App(props: AppProps) {
         pinnedRowShown: pins().length > 0,
         offeredKeyword: offered(),
         listedKeywords: listed(),
+        learned: learnedForQuery(),
         now: Date.now(),
       },
     ),
@@ -208,11 +235,20 @@ export function App(props: AppProps) {
     const disposition: Disposition =
       props.host === 'overlay' ? (shift ? flipped : preferred) : 'current-tab'
 
-    await openResult(result, disposition, {
-      host,
-      openTabs: tabs(),
-      switchToOpenTabs: settings().switchToOpenTabs,
-    })
+    const q = parsed()
+    const learnable =
+      learning() &&
+      q.kind === 'text' &&
+      (result.kind === 'tab' || result.kind === 'history' || result.kind === 'bookmark')
+    // Saved alongside opening, not before it, so remembering never slows Enter.
+    await Promise.all([
+      learnable ? savePick(q.text, { url: result.url, title: result.title }) : undefined,
+      openResult(result, disposition, {
+        host,
+        openTabs: tabs(),
+        switchToOpenTabs: settings().switchToOpenTabs,
+      }),
+    ])
     // Navigating the host tab replaces the palette anyway; everywhere else it
     // would be left behind.
     const navigatesHost =

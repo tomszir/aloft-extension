@@ -72,6 +72,10 @@ settingsEnterCurrentTab: The current tab
 settingsEnterNote: Shift+Enter opens it in the other one.
 settingsSwitchToOpenTabs: Switch to a page that's already open instead of opening it again
 settingsSources: Show results from
+settingsLearnFromPicks: Learn from what you pick
+settingsLearnFromPicksNote: A page you pick a few times for the same text moves to the top, so Enter opens it. What Aloft learns stays on this device and fades after a few weeks.
+settingsForgetPicks: Forget what Aloft learned
+settingsPicksForgotten: Forgotten.
 settingsShowPinned: Show pinned tabs above the results
 settingsKeywords: Keywords
 settingsKeywordsNote: Type a keyword, then Space or Tab, to search a site or ask an AI from Aloft. Type @ in Aloft to see them all; starting with @ always works. What you type becomes part of the site's address, so it's saved in your history.

@@ -78,7 +78,7 @@
   gap: var(--al-space-4);
 }
 
-.access {
+.noteBody {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -98,4 +98,10 @@
 .legend {
   padding: 0;
   margin-bottom: var(--al-space-4);
+}
+
+.forget {
+  display: flex;
+  align-items: center;
+  gap: var(--al-space-3);
 }

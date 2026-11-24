@@ -13,6 +13,8 @@ export const SettingsSchema = v.object({
   /** Shift+Enter always does the other one. */
   enterOpensIn: v.picklist(['new-tab', 'current-tab']),
   switchToOpenTabs: v.boolean(),
+  /** Puts the page picked most often for the same text at the top. */
+  learnFromPicks: v.boolean(),
   sources: v.object({
     tabs: v.boolean(),
     history: v.boolean(),
@@ -40,6 +42,7 @@ export const DEFAULT_SETTINGS: Settings = {
   openWithCtrlL: false,
   enterOpensIn: 'new-tab',
   switchToOpenTabs: true,
+  learnFromPicks: true,
   sources: { tabs: true, history: true, bookmarks: true, recentlyClosed: true },
   pinned: { showInAloft: true },
   appearance: {

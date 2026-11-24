@@ -1,4 +1,4 @@
-import { browser } from 'wxt/browser'
+import { type Browser, browser } from 'wxt/browser'
 import type { BookmarkEntry, ClosedEntry, HistoryEntry, TabEntry } from '../core/results'
 
 // Aloft's own pages and blank about: pages are never worth switching to or
@@ -54,8 +54,12 @@ export function watchTabs(onChange: () => void): () => void {
   }
 }
 
-export async function searchHistory(text: string): Promise<HistoryEntry[]> {
-  const items = await browser.history.search({ text, startTime: 0, maxResults: 50 })
+/**
+ * Matches the way the browser does, by whole words. Initials and typos only
+ * reach what `loadRecentHistory` and the learned picks bring in.
+ */
+export async function searchHistory(text: string, maxResults = 50): Promise<HistoryEntry[]> {
+  const items = await browser.history.search({ text, startTime: 0, maxResults })
   return items.flatMap((h) =>
     h.url && isWorthListing(h.url)
       ? [
@@ -70,10 +74,31 @@ export async function searchHistory(text: string): Promise<HistoryEntry[]> {
   )
 }
 
+/** The most recently visited pages, matched in Aloft rather than by the browser. */
+export const loadRecentHistory = () => searchHistory('', 500)
+
+/** Bookmarks the browser matches by whole words, as fast as typing. */
 export async function searchBookmarks(text: string): Promise<BookmarkEntry[]> {
   const nodes = await browser.bookmarks.search(text)
   // Folders match too; they have no URL to open.
   return nodes.flatMap((b) => (b.url ? [{ id: b.id, title: b.title || b.url, url: b.url }] : []))
+}
+
+/**
+ * Every bookmark, so Aloft can match them by initials and typos. Slow for
+ * large libraries: about 25 ms for 5,000 bookmarks and 95 ms for 20,000.
+ */
+export async function loadBookmarks(): Promise<BookmarkEntry[]> {
+  const out: BookmarkEntry[] = []
+  const walk = (nodes: readonly Browser.bookmarks.BookmarkTreeNode[]) => {
+    for (const node of nodes) {
+      // Folders have no URL to open.
+      if (node.url) out.push({ id: node.id, title: node.title || node.url, url: node.url })
+      if (node.children) walk(node.children)
+    }
+  }
+  walk(await browser.bookmarks.getTree())
+  return out
 }
 
 export async function loadRecentlyClosed(): Promise<ClosedEntry[]> {
