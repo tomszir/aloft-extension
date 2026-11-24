@@ -3,6 +3,7 @@ import { i18n } from '#i18n'
 import { MAX_SHORTCUTS } from '../../core/pinned'
 import { type TabEntry, tileLetter } from '../../core/results'
 import { Favicon } from '../favicon/favicon'
+import { Icon } from '../icon/icon'
 import { Kbd } from '../kbd/kbd'
 import { Keyed } from '../keyed/keyed'
 import styles from './pinned-row.module.css'
@@ -36,11 +37,13 @@ export function PinnedRow(props: PinnedRowProps) {
             return (
               <button
                 type="button"
-                class={styles.tile}
-                data-loaded={pin().loaded || undefined}
+                class={styles.pin}
+                data-asleep={!pin().loaded || undefined}
                 aria-label={pin().title}
                 aria-keyshortcuts={slot() ? `Alt+${slot()}` : undefined}
-                title={pin().title}
+                // Also the accessible description, so screen readers hear that
+                // a pin is asleep.
+                title={pin().loaded ? pin().title : i18n.t('pinnedAsleepTitle', [pin().title])}
                 onClick={() => props.onOpen(pin())}
                 onContextMenu={(event) => {
                   event.preventDefault()
@@ -53,21 +56,30 @@ export function PinnedRow(props: PinnedRowProps) {
                   }
                 }}
               >
-                <Favicon
-                  pageUrl={pin().url}
-                  load={props.favicon}
-                  letter={tileLetter(pin().title, pin().url)}
-                />
-                <Show when={pin().loaded}>
-                  <span class={styles.loaded} aria-hidden="true" />
-                </Show>
-                <Show when={props.altHeld && slot()}>
-                  {(n) => (
-                    <span class={styles.badge} aria-hidden="true">
-                      {n()}
+                <span class={styles.tile}>
+                  <span class={styles.icon}>
+                    <Favicon
+                      pageUrl={pin().url}
+                      load={props.favicon}
+                      letter={tileLetter(pin().title, pin().url)}
+                    />
+                  </span>
+                  <Show when={!pin().loaded}>
+                    <span class={styles.asleep} data-testid="pin-asleep">
+                      <Icon name="moon" />
                     </span>
-                  )}
-                </Show>
+                  </Show>
+                  <Show when={props.altHeld && slot()}>
+                    {(n) => (
+                      <span class={styles.badge} aria-hidden="true">
+                        {n()}
+                      </span>
+                    )}
+                  </Show>
+                </span>
+                <span class={styles.name} aria-hidden="true">
+                  {pin().title}
+                </span>
               </button>
             )
           }}

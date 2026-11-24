@@ -31,37 +31,68 @@
   gap: var(--al-space-3);
 }
 
+.pin {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--al-space-2);
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: default;
+}
+
+.pin:focus-visible {
+  outline: none;
+}
+
 .tile {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   height: var(--al-tile-height);
-  padding: 0;
-  border: 0;
   border-radius: var(--al-tile-radius);
   background: var(--al-keycap);
-  cursor: default;
 }
 
-.tile:hover {
+.pin:hover .tile {
   background: var(--al-selected);
 }
 
-.tile:focus-visible {
+.pin:focus-visible .tile {
   outline: 2px solid var(--al-accent);
   outline-offset: -2px;
 }
 
-.loaded {
+.icon {
+  display: flex;
+}
+
+.name {
+  overflow: hidden;
+  font-size: var(--al-font-size-xs);
+  color: var(--al-muted);
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pin[data-asleep] .icon,
+.pin[data-asleep] .name {
+  opacity: var(--al-asleep-opacity);
+}
+
+.asleep {
+  --al-glyph-size: var(--al-asleep-glyph);
   position: absolute;
-  bottom: var(--al-space-2);
-  left: 50%;
-  width: var(--al-dot-size);
-  height: var(--al-dot-size);
-  border-radius: 50%;
-  background: var(--al-muted);
-  transform: translateX(-50%);
+  right: var(--al-space-1);
+  bottom: var(--al-space-1);
+  display: flex;
+  color: var(--al-muted);
 }
 
 .badge {

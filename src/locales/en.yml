@@ -37,6 +37,7 @@ onboardingWithout: Without it, Ctrl+T shows Aloft as the new tab page instead.
 pinnedLabel: Pinned
 pinnedHint: 1–9 to open
 pinnedMenuLabel: Options for $1
+pinnedAsleepTitle: $1 (asleep)
 menuOpen: Open
 menuMoveLeft: Move left
 menuMoveRight: Move right
