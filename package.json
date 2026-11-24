@@ -3,7 +3,7 @@
   "version": "0.3.0",
   "private": true,
   "type": "module",
-  "description": "A floating command bar for Helium and other Chromium browsers.",
+  "description": "A floating command bar for your tabs, history and bookmarks.",
   "license": "GPL-3.0-only",
   "packageManager": "pnpm@12.15.0",
   "scripts": {
