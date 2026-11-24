@@ -39,6 +39,8 @@ export interface PaletteProps {
   pinShortcuts: readonly TabEntry[]
   onOpenPin: (pin: TabEntry) => void
   onMovePin: (pin: TabEntry, direction: 'left' | 'right') => void
+  /** Moves a dragged pin to a position in the row. Without it, pins can't be dragged. */
+  onReorderPin?: (pin: TabEntry, position: number) => void
   onUnpin: (pin: TabEntry) => void
 }
 
@@ -201,6 +203,7 @@ export function Palette(props: PaletteProps) {
             favicon={props.favicon}
             onOpen={(pin) => props.onOpenPin(pin)}
             onMenu={(pin, anchor) => setMenu({ pin, x: anchor.left, y: anchor.bottom + 4 })}
+            onReorder={props.onReorderPin}
           />
         </Show>
         <div

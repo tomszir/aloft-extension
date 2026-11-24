@@ -30,6 +30,7 @@
   --al-menu-item-height: 32px;
   --al-tile-height: 44px;
   --al-asleep-opacity: 0.55;
+  --al-slot-border: 1.5px;
   --al-badge-size: 16px;
   --al-button-height: 34px;
   --al-button-radius: 8px;
@@ -49,5 +50,10 @@
   --al-preview-height: 460px;
 
   --al-duration-fast: 120ms;
+  --al-duration-move: 200ms;
+  --al-duration-drop: 280ms;
   --al-ease-out: cubic-bezier(0.2, 0, 0, 1);
+  /* Overshoots a little, so a dropped tile lands with a bit of weight. */
+  --al-ease-spring: cubic-bezier(0.3, 1.35, 0.5, 1);
+  --al-lift-scale: 1.04;
 }

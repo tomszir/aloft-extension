@@ -26,6 +26,7 @@
 }
 
 .grid {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: var(--al-space-3);
@@ -43,6 +44,26 @@
   color: inherit;
   font: inherit;
   cursor: default;
+  touch-action: none;
+  user-select: none;
+}
+
+/* Only while dragging: the commit after a drop swaps transforms for DOM order
+   in one frame, and a transition there would animate a move that already
+   happened. */
+.grid[data-dragging] .pin {
+  transition: transform var(--al-duration-move) var(--al-ease-out);
+}
+
+.grid[data-dragging] .pin[data-lifted] {
+  z-index: 1;
+  cursor: grabbing;
+  transition: none;
+}
+
+.grid[data-dragging] .pin[data-settling] {
+  z-index: 1;
+  transition: transform var(--al-duration-drop) var(--al-ease-spring);
 }
 
 .pin:focus-visible {
@@ -57,6 +78,9 @@
   height: var(--al-tile-height);
   border-radius: var(--al-tile-radius);
   background: var(--al-keycap);
+  transition:
+    scale var(--al-duration-drop) var(--al-ease-spring),
+    box-shadow var(--al-duration-drop) var(--al-ease-out);
 }
 
 .pin:hover .tile {
@@ -79,6 +103,7 @@
   text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
+  transition: opacity var(--al-duration-fast) var(--al-ease-out);
 }
 
 .pin[data-asleep] .tile {
@@ -97,6 +122,42 @@
 .pin[data-asleep] .icon,
 .pin[data-asleep] .name {
   opacity: var(--al-asleep-opacity);
+}
+
+.grid .pin[data-lifted] .tile {
+  scale: var(--al-lift-scale);
+  background: var(--al-selected);
+  box-shadow: var(--al-lift-shadow);
+}
+
+.pin[data-lifted] .icon {
+  filter: none;
+  opacity: 1;
+}
+
+.pin[data-lifted] .name {
+  opacity: 0;
+}
+
+.slot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  border: var(--al-slot-border) dashed color-mix(in srgb, var(--al-accent) 55%, transparent);
+  border-radius: var(--al-tile-radius);
+  background: color-mix(in srgb, var(--al-accent) 7%, transparent);
+  pointer-events: none;
+  transition: transform var(--al-duration-move) var(--al-ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grid[data-dragging] .pin,
+  .grid[data-dragging] .pin[data-settling],
+  .tile,
+  .slot {
+    transition: none;
+  }
 }
 
 .badge {

@@ -5,7 +5,7 @@ import { useSettings } from '../../app/use-settings'
 import { useTheme } from '../../app/use-theme'
 import { useZoomCorrection } from '../../app/use-zoom-correction'
 import { availableActions } from '../../core/actions'
-import { moveIndex, pinnedRow } from '../../core/pinned'
+import { dropIndex, moveIndex, pinnedRow } from '../../core/pinned'
 import { applyInput, EMPTY_QUERY, leaveChip, parseQuery, type QueryState } from '../../core/query'
 import {
   type BookmarkEntry,
@@ -220,6 +220,15 @@ export function App(props: AppProps) {
         const index = moveIndex(pinShortcuts(), pin.tabId, direction)
         if (index !== undefined) void movePinned(pin.tabId, index)
       }}
+      onReorderPin={
+        // The preview never acts on what it shows, so its pins stay put.
+        props.host === 'preview'
+          ? undefined
+          : (pin, position) => {
+              const index = dropIndex(pinShortcuts(), position)
+              if (index !== undefined) void movePinned(pin.tabId, index)
+            }
+      }
       onUnpin={(pin) => {
         if (props.host !== 'preview') void unpin(pin.tabId)
       }}
