@@ -47,7 +47,7 @@ The text and answers for the Web Store developer dashboard, kept here so they ch
 | Small promo tile   | 440×280  | `assets/brand/promo-440x280.png`                                    |
 | Marquee promo tile | 1400×560 | `docs/screenshots/marquee-1400x560.png`                             |
 
-All of them are generated: the screenshots and marquee tile by `pnpm screenshots`, the icon and small tile by `pnpm brand`. The promo video (`pnpm video`, see `video/`) goes on YouTube for the listing's video field.
+All of them are generated: the screenshots and marquee tile by `pnpm screenshots`, the icon and small tile by `pnpm brand`.
 
 ### Additional fields
 
