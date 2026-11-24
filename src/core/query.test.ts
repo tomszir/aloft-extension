@@ -1,13 +1,18 @@
 import { describe, expect, it } from 'vitest'
-import { parseQuery, toUrl } from './query'
+import { applyInput, EMPTY_QUERY, leaveChip, parseQuery, toUrl } from './query'
 
 describe('parseQuery', () => {
   it('treats whitespace as empty', () => {
     expect(parseQuery('   ')).toEqual({ kind: 'empty' })
   })
 
-  it('switches to actions with >', () => {
-    expect(parseQuery('> pin ')).toEqual({ kind: 'actions', text: 'pin' })
+  it('lists actions inside the actions chip, even with nothing typed', () => {
+    expect(parseQuery(' pin ', 'actions')).toEqual({ kind: 'actions', text: 'pin' })
+    expect(parseQuery('', 'actions')).toEqual({ kind: 'actions', text: '' })
+  })
+
+  it('searches for > outside the chip', () => {
+    expect(parseQuery('> pin')).toMatchObject({ kind: 'text', text: '> pin' })
   })
 
   it('splits text into lowercase terms', () => {
@@ -17,6 +22,30 @@ describe('parseQuery', () => {
       terms: ['hyprland', 'rules'],
       url: null,
     })
+  })
+})
+
+describe('applyInput', () => {
+  it('turns a leading > into the actions chip and keeps what follows', () => {
+    expect(applyInput(EMPTY_QUERY, '>')).toEqual({ chip: 'actions', text: '' })
+    expect(applyInput(EMPTY_QUERY, '  > pin')).toEqual({ chip: 'actions', text: 'pin' })
+  })
+
+  it('leaves other text and text inside a chip as typed', () => {
+    expect(applyInput(EMPTY_QUERY, 'a > b')).toEqual({ chip: null, text: 'a > b' })
+    expect(applyInput({ chip: 'actions', text: '' }, '>')).toEqual({ chip: 'actions', text: '>' })
+  })
+})
+
+describe('leaveChip', () => {
+  it('gives back the text that made the chip', () => {
+    expect(leaveChip({ chip: 'actions', text: '' })).toEqual({ chip: null, text: '>' })
+    expect(leaveChip({ chip: 'actions', text: 'pin ' })).toEqual({ chip: null, text: '> pin' })
+  })
+
+  it('does nothing without a chip', () => {
+    const state = { chip: null, text: 'aloft' }
+    expect(leaveChip(state)).toBe(state)
   })
 })
 

@@ -13,4 +13,5 @@
   font-family: var(--al-font-family);
   font-size: var(--al-font-size-xs);
   font-weight: var(--al-font-weight-medium);
+  font-variant-numeric: tabular-nums;
 }

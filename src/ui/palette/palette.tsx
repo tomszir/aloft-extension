@@ -1,6 +1,7 @@
 import { createMemo, createSignal, onCleanup, onMount, Show } from 'solid-js'
 import { i18n } from '#i18n'
 import { shortcutSlot } from '../../core/pinned'
+import type { Chip } from '../../core/query'
 import type { Result, Section, SectionId, TabEntry } from '../../core/results'
 import { Icon } from '../icon/icon'
 import { Kbd } from '../kbd/kbd'
@@ -16,10 +17,13 @@ export type Move = 'next' | 'previous' | 'first' | 'last'
 export interface PaletteProps {
   position: PalettePosition
   query: string
+  chip: Chip | null
   sections: readonly Section[]
   activeId: string | undefined
   favicon: (pageUrl: string) => string
   onQuery: (text: string) => void
+  /** Backspace on an empty input or Esc while a chip is shown. */
+  onLeaveChip: () => void
   onMove: (move: Move) => void
   onHover: (resultId: string) => void
   onActivate: (result: Result, shift: boolean) => void
@@ -65,6 +69,8 @@ export function Palette(props: PaletteProps) {
     }
     return ids
   })
+  const placeholder = () =>
+    props.chip === 'actions' ? i18n.t('placeholderActions') : i18n.t('palettePlaceholder')
   const activeResult = createMemo(() =>
     props.sections.flatMap((s) => s.results).find((r) => r.id === props.activeId),
   )
@@ -118,12 +124,18 @@ export function Palette(props: PaletteProps) {
     }
     if (event.key === 'Escape') {
       event.preventDefault()
-      props.onClose()
+      if (props.chip) props.onLeaveChip()
+      else props.onClose()
       return
     }
     // Result keys belong to the search box; on a focused tile, Enter is the
     // tile's own click.
     if (event.target !== input) return
+    if (event.key === 'Backspace' && props.chip && input.value === '') {
+      event.preventDefault()
+      props.onLeaveChip()
+      return
+    }
     const move = MOVES[event.key]
     if (move) {
       event.preventDefault()
@@ -153,9 +165,13 @@ export function Palette(props: PaletteProps) {
         onKeyDown={onKeyDown}
       >
         <div class={styles.inputRow}>
-          <span class={styles.searchIcon}>
-            <Icon name="search" />
+          {/* The icon shows the mode; the chip only names it. */}
+          <span class={styles.searchIcon} data-mode={props.chip ?? 'search'}>
+            <Icon name={props.chip === 'actions' ? 'terminal' : 'search'} />
           </span>
+          <Show when={props.chip === 'actions'}>
+            <span class={styles.modeChip}>{i18n.t('sectionActions')}</span>
+          </Show>
           <input
             ref={input}
             class={styles.input}
@@ -167,14 +183,11 @@ export function Palette(props: PaletteProps) {
             aria-activedescendant={props.activeId ? optionIds().get(props.activeId) : undefined}
             autocomplete="off"
             spellcheck={false}
-            placeholder={i18n.t('palettePlaceholder')}
-            aria-label={i18n.t('palettePlaceholder')}
+            placeholder={placeholder()}
+            aria-label={placeholder()}
             value={props.query}
             onInput={(event) => props.onQuery(event.currentTarget.value)}
           />
-          <Show when={props.query.trimStart().startsWith('>')}>
-            <span class={styles.modeChip}>{i18n.t('sectionActions')}</span>
-          </Show>
         </div>
         <Show when={props.pins.length > 0}>
           <PinnedRow
@@ -223,20 +236,34 @@ export function Palette(props: PaletteProps) {
             <Kbd>↑</Kbd>
             <Kbd>↓</Kbd> {i18n.t('hintNavigate')}
           </span>
-          <Show when={props.showOpenHints ?? true}>
+          <Show
+            when={props.chip === 'actions'}
+            fallback={
+              <>
+                <Show when={props.showOpenHints ?? true}>
+                  <span class={styles.hint}>
+                    <Kbd>↵</Kbd> {i18n.t('hintNewTab')}
+                  </span>
+                  <span class={styles.hint}>
+                    <Kbd>⇧ ↵</Kbd> {i18n.t('hintCurrentTab')}
+                  </span>
+                </Show>
+                <span class={`${styles.hint} ${styles.hintEnd}`}>
+                  <Kbd>&gt;</Kbd> {i18n.t('hintActions')}
+                </span>
+                <span class={styles.hint}>
+                  <Kbd>Esc</Kbd> {i18n.t('hintClose')}
+                </span>
+              </>
+            }
+          >
             <span class={styles.hint}>
-              <Kbd>↵</Kbd> {i18n.t('hintNewTab')}
+              <Kbd>↵</Kbd> {i18n.t('hintRun')}
             </span>
-            <span class={styles.hint}>
-              <Kbd>⇧ ↵</Kbd> {i18n.t('hintCurrentTab')}
+            <span class={`${styles.hint} ${styles.hintEnd}`}>
+              <Kbd>Esc</Kbd> {i18n.t('hintBack')}
             </span>
           </Show>
-          <span class={`${styles.hint} ${styles.hintEnd}`}>
-            <Kbd>&gt;</Kbd> {i18n.t('hintActions')}
-          </span>
-          <span class={styles.hint}>
-            <Kbd>Esc</Kbd> {i18n.t('hintClose')}
-          </span>
         </footer>
       </div>
       {/* Outside the panel, which clips overflow, so the menu can extend past it. */}

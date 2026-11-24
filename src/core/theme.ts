@@ -159,6 +159,17 @@ export function mix(a: string, b: string, t: number): string {
   return toHex([lerp(ar, br), lerp(ag, bg), lerp(ab, bb)])
 }
 
+// Light accents are often only just readable on white, so a tint behind them
+// can drop small text below WCAG AA. Moves `color` toward `toward` in small
+// steps, keeping as much of the original as it can.
+function readableOn(color: string, background: string, toward: string): string {
+  for (let step = 0; step <= 20; step++) {
+    const candidate = mix(color, toward, step / 20)
+    if (contrastRatio(candidate, background) >= 4.5) return candidate
+  }
+  return toward
+}
+
 const linear = (channel: number): number => {
   const s = channel / 255
   return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4
@@ -184,6 +195,10 @@ export interface ThemeTokens {
   text: string
   muted: string
   accent: string
+  /** A wash of the accent over the panel, for chips. */
+  accentSoft: string
+  /** The accent, darkened or lightened toward the text until it reads on accentSoft. */
+  accentSoftText: string
   onAccent: string
   keycap: string
   keycapText: string
@@ -195,6 +210,7 @@ export interface ThemeTokens {
 
 export function deriveTokens(theme: Theme): ThemeTokens {
   const c = theme.colors
+  const accentSoft = mix(c.panel, c.accent, 0.16)
   const onAccent =
     contrastRatio(c.accent, '#141414') >= contrastRatio(c.accent, '#FFFFFF') ? '#141414' : '#FFFFFF'
   return {
@@ -205,6 +221,8 @@ export function deriveTokens(theme: Theme): ThemeTokens {
     text: c.text,
     muted: c.muted,
     accent: c.accent,
+    accentSoft,
+    accentSoftText: readableOn(c.accent, accentSoft, c.text),
     onAccent,
     keycap: mix(c.panel, c.selected, 0.7),
     keycapText: mix(c.muted, c.text, 0.5),
@@ -224,6 +242,8 @@ export function tokensToCssVars(tokens: ThemeTokens): Record<`--al-${string}`, s
     '--al-text': tokens.text,
     '--al-muted': tokens.muted,
     '--al-accent': tokens.accent,
+    '--al-accent-soft': tokens.accentSoft,
+    '--al-accent-soft-text': tokens.accentSoftText,
     '--al-on-accent': tokens.onAccent,
     '--al-keycap': tokens.keycap,
     '--al-keycap-text': tokens.keycapText,

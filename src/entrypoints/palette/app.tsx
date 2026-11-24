@@ -6,7 +6,7 @@ import { useTheme } from '../../app/use-theme'
 import { useZoomCorrection } from '../../app/use-zoom-correction'
 import { availableActions } from '../../core/actions'
 import { moveIndex, pinnedRow } from '../../core/pinned'
-import { parseQuery } from '../../core/query'
+import { applyInput, EMPTY_QUERY, leaveChip, parseQuery, type QueryState } from '../../core/query'
 import {
   type BookmarkEntry,
   buildSections,
@@ -59,8 +59,8 @@ export function App(props: AppProps) {
   onCleanup(watchTabs(reloadTabs))
   void loadRecentlyClosed().then(setClosed)
 
-  const [query, setQuery] = createSignal('')
-  const parsed = createMemo(() => parseQuery(query()))
+  const [query, setQuery] = createSignal<QueryState>(EMPTY_QUERY)
+  const parsed = createMemo(() => parseQuery(query().text, query().chip))
 
   // Each keystroke starts a lookup; only the latest one may land, or a slow
   // early query could overwrite the results for what was typed after it.
@@ -164,7 +164,7 @@ export function App(props: AppProps) {
   // Esc on the new tab page only clears: closing it could close the window,
   // as it's often a window's only tab.
   async function dismiss(): Promise<void> {
-    if (props.host === 'newtab') setQuery('')
+    if (props.host === 'newtab') setQuery(EMPTY_QUERY)
     else await close()
   }
 
@@ -197,11 +197,13 @@ export function App(props: AppProps) {
   return (
     <Palette
       position={settings().appearance.position}
-      query={query()}
+      query={query().text}
+      chip={query().chip}
       sections={sections()}
       activeId={effectiveActiveId()}
       favicon={faviconUrl}
-      onQuery={setQuery}
+      onQuery={(text) => setQuery(applyInput(query(), text))}
+      onLeaveChip={() => setQuery(leaveChip(query()))}
       onMove={move}
       onHover={setActiveId}
       onActivate={(result, shift) => void activate(result, shift)}

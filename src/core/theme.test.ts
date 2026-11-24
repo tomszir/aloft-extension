@@ -79,6 +79,14 @@ describe('color math', () => {
       expect(contrastRatio(t.onAccent, t.accent)).toBeGreaterThanOrEqual(4.5)
     }
   })
+
+  it('keeps chip text readable on the accent wash, changing the accent only when needed', () => {
+    for (const theme of PRESET_THEMES) {
+      const t = deriveTokens(theme)
+      expect(contrastRatio(t.accentSoftText, t.accentSoft)).toBeGreaterThanOrEqual(4.5)
+    }
+    expect(deriveTokens(heliumDark).accentSoftText).toBe(heliumDark.colors.accent)
+  })
 })
 
 describe('import / export', () => {

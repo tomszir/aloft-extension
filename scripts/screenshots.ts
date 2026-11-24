@@ -234,6 +234,8 @@ try {
   await settle(host)
   await shoot(host, '3-actions')
 
+  // The first Esc only leaves the actions chip.
+  await frame.getByRole('combobox').dispatchEvent('keydown', { key: 'Escape', bubbles: true })
   await closeAloft(host)
   await setSettings(worker, { appearance: { colorScheme: 'light' } })
   await host.emulateMedia({ colorScheme: 'light' })

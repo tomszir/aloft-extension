@@ -55,3 +55,38 @@ test('reopens the last closed tab', async ({ context, background }) => {
   await runAction(page, '> undo', 'Reopen closed tab')
   await expect(await reopened).toHaveURL(`${TEST_ORIGIN}/Closed-one`)
 })
+
+test('> becomes a chip that Backspace and Esc turn back into text', async ({
+  context,
+  background,
+}) => {
+  const page = await context.newPage()
+  await page.goto(`${TEST_ORIGIN}/Host`)
+  await pressOpenAloft(background, page)
+  await palettePainted(page)
+  const input = palette(page).getByRole('combobox')
+  const footer = palette(page).getByRole('contentinfo')
+
+  await page.keyboard.type('>')
+  await expect(input).toHaveValue('')
+  await expect(input).toHaveAttribute('placeholder', 'Search actions')
+  await expect(footer).toContainText('Run')
+  await expect(footer).not.toContainText('New tab')
+
+  await page.keyboard.press('Backspace')
+  await expect(input).toHaveValue('>')
+  await expect(footer).toContainText('New tab')
+  await expect(palette(page).getByRole('group', { name: 'Actions' })).toHaveCount(0)
+
+  await page.keyboard.type('pin')
+  await expect(input).toHaveValue('pin')
+  await page.keyboard.press('Escape')
+  await expect(input).toHaveValue('> pin')
+  await expect(page.locator('iframe[title="Aloft"]')).toBeVisible()
+
+  await input.fill('> pin')
+  await palette(page)
+    .getByRole('option', { name: /Pin tab/ })
+    .click()
+  await expect.poll(() => isPinned(background, `${TEST_ORIGIN}/Host`)).toBe(true)
+})
