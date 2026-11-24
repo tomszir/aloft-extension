@@ -78,6 +78,27 @@ describe('ResultRow', () => {
       expect(screen.getByRole('option').textContent).not.toContain('keywordOfferHint')
     })
 
+    it('asks for the site’s icon, not the search address that changes as you type', () => {
+      const favicon = vi.fn(() => null)
+      render(() => (
+        <ResultRow
+          result={{
+            kind: 'site',
+            id: 'site',
+            keyword: claude,
+            query: 'hello',
+            url: 'https://claude.ai/new?q=hello',
+          }}
+          optionId="al-option-0"
+          active={false}
+          favicon={favicon}
+          onHover={vi.fn()}
+          onActivate={vi.fn()}
+        />
+      ))
+      expect(favicon).toHaveBeenCalledWith('https://claude.ai/new')
+    })
+
     it('opens the site when nothing is typed', () => {
       renderRow(
         { kind: 'site', id: 'site', keyword: claude, query: '', url: 'https://claude.ai/new' },

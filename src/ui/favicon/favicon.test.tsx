@@ -41,4 +41,26 @@ describe('Favicon', () => {
     fireEvent.load(image)
     expect(container.firstElementChild?.getAttribute('data-tone')).toBe('dark')
   })
+
+  it('shows an icon that is already known on the first render, with no empty tile', () => {
+    const { container } = render(() => (
+      <Favicon pageUrl="https://a.test/" load={() => 'known.png'} letter="A" />
+    ))
+    expect(container.querySelector('img')?.getAttribute('src')).toBe('known.png')
+  })
+
+  it('remembers an icon’s tone, so a remounted tile keeps its backing', () => {
+    const first = render(() => (
+      <Favicon pageUrl="https://a.test/" load={() => 'dark.png'} letter="A" tone={() => 'dark'} />
+    ))
+    const image = first.container.querySelector('img')
+    if (!image) throw new Error('no icon')
+    fireEvent.load(image)
+    first.unmount()
+
+    const { container } = render(() => (
+      <Favicon pageUrl="https://a.test/" load={() => 'dark.png'} letter="A" />
+    ))
+    expect(container.firstElementChild?.getAttribute('data-tone')).toBe('dark')
+  })
 })
