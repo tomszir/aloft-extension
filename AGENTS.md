@@ -23,8 +23,10 @@ Run all of the first four before opening a PR. The `pre-push` hook runs the end-
 - **Commits** follow [Conventional Commits](https://www.conventionalcommits.org): `type(scope): summary`.
   - Types: `feat` `fix` `perf` `refactor` `docs` `test` `build` `ci` `chore` `revert`.
   - The summary is imperative, lowercase, at most 72 characters, no trailing period.
+  - `feat`, `fix` and `perf` summaries become changelog lines, so describe what a user sees or can now do, not the implementation: `fix: stop the list jumping while a page loads`, not `fix: debounce onUpdated listener`. If a PR title can't say it that way, put the changelog wording in a `BEGIN_COMMIT_OVERRIDE` … `END_COMMIT_OVERRIDE` block in the PR body.
+  - Scope `feat`, `fix` and `perf` by the part of Aloft a user would name: `search`, `actions`, `pinned`, `overlay`, `newtab`, `onboarding`, `settings`, `theme`. Leave the scope out when none fits or the change spans several. Other types don't need one.
   - Add a body only when the why isn't obvious: a few short lines, no list of changed files.
-  - Breaking changes: `type!:` or a `BREAKING CHANGE:` footer.
+  - Breaking changes: `type!:` or a `BREAKING CHANGE:` footer. That covers anything that makes a user redo something: settings that don't carry over, a changed or removed shortcut or keyword, or an imported theme that stops loading. Mark these before 1.0 too, even though they only bump the minor version.
 - **No AI attribution**, anywhere: no `Co-Authored-By` trailers, no "Generated with/by" lines, no emoji signatures in commits, PR titles or PR bodies. The `commit-msg` hook and the `pr-title` CI job reject them.
 - **PRs**: one topic each, on a branch named `type/short-topic`.
   - The title is a conventional commit; PRs are squash-merged, so it becomes the commit on main.
