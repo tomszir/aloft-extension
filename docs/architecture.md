@@ -8,11 +8,12 @@ The palette shows tab titles, history and bookmarks. Anything drawn into a web p
 
 - **Private:** the page can't read a cross-origin extension frame.
 - **One code path:** `palette.html` is the overlay, the new-tab fallback and the settings preview.
-- **No relay:** extension pages inside a frame can call `chrome.tabs`, `history`, `bookmarks`, `sessions` and `search` directly.
+- **No relay in Chromium:** extension pages inside a frame can call `chrome.tabs`, `history`, `bookmarks`, `sessions` and `search` directly.
+- **Relay in Firefox:** an extension page framed inside a website gets only content-script APIs (`runtime`, `storage`, `i18n`), with no `tabs`, `history`, `bookmarks` or `sessions`. So in the Firefox build the overlay palette asks the background for results and actions over `runtime` messaging, and a long-lived port carries tab events back. The page can't see that traffic. The relay lives in `platform/` behind `import.meta.env.FIREFOX`, so the palette's UI code is the same in both builds. The new-tab fallback and the settings preview aren't framed by a website, so they call the APIs directly there too.
 - **Dimming** is the frame's own background, so it follows the theme. **Blur** is set on the iframe element in the page's document, because a filter inside the frame can't reach the page behind it.
 - **Small injected script:** the background reads settings and passes the overlay script only what it needs, so settings parsing and its libraries stay out of the code injected into pages.
-- **Closing:** the palette talks to its host content script with `chrome.tabs.sendMessage`, never `window.postMessage`, which the page could see.
-- **Not detectable by URL:** `palette.html` is web-accessible with `use_dynamic_url`.
+- **Closing:** the palette talks to its host content script with `chrome.tabs.sendMessage` (in Firefox, through the background relay), never `window.postMessage`, which the page could see.
+- **Not detectable by URL:** `palette.html` is web-accessible with `use_dynamic_url`. Firefox doesn't need it: its `moz-extension://` addresses already use a random id per install.
 
 ## How Aloft opens
 
@@ -44,7 +45,7 @@ Which browsers are supported, and what each one can't do: [browsers.md](browsers
 - **Check that an API exists** before relying on one that some browsers lack.
 - **Firefox differences are decided at build time:** WXT builds a separate Firefox package and sets `import.meta.env.FIREFOX`. Branches on it live in `platform/` only, so each build drops the other's code.
 - **Copy is browser-neutral.** UI text never claims something only one browser does (for example "Helium keeps pins in every window"). The store description is the one place Helium is named on purpose.
-- **Tested in** Helium and plain Chromium (`ALOFT_BROWSER`). Firefox is checked by hand with `web-ext` until there's an automated alternative, because Playwright can't load extensions into Firefox.
+- **Tested in** Helium and plain Chromium (`ALOFT_BROWSER`) with Playwright. Playwright can't load extensions into Firefox, so Firefox gets its own end-to-end tests with Puppeteer, which installs the extension over WebDriver BiDi. Until those exist, Firefox is checked by hand with `web-ext`.
 
 ## Layers
 
