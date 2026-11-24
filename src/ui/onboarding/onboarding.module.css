@@ -36,6 +36,13 @@
   border-radius: var(--al-radius);
 }
 
+.shortcut {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .text {
   margin: 0;
   line-height: 1.6;

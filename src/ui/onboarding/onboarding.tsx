@@ -23,13 +23,11 @@ export function Onboarding(props: OnboardingProps) {
         <h1 class={styles.title}>{i18n.t('onboardingTitle')}</h1>
       </header>
 
-      <section class={styles.card}>
+      <section class={`${styles.card} ${styles.shortcut}`}>
         <ShortcutSentence shortcut={props.shortcut} class={styles.text} />
-        <div>
-          <Button onClick={() => props.onChangeShortcut()}>
-            {i18n.t('onboardingChangeShortcut')}
-          </Button>
-        </div>
+        <Button onClick={() => props.onChangeShortcut()}>
+          {i18n.t('onboardingChangeShortcut')}
+        </Button>
       </section>
 
       <section class={styles.card} aria-labelledby="ctrl-t-title">
