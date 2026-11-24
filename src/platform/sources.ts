@@ -29,17 +29,8 @@ export async function loadTabs(): Promise<TabEntry[]> {
   })
 }
 
-/** Batched into one call per frame: closing a window fires an event per tab. */
-export function watchTabs(onChange: () => void): () => void {
-  let scheduled = false
-  const schedule = () => {
-    if (scheduled) return
-    scheduled = true
-    requestAnimationFrame(() => {
-      scheduled = false
-      onChange()
-    })
-  }
+/** Calls `listener` on every change to any tab. */
+export function onTabEvent(listener: () => void): () => void {
   const events = [
     browser.tabs.onCreated,
     browser.tabs.onRemoved,
@@ -48,11 +39,26 @@ export function watchTabs(onChange: () => void): () => void {
     browser.tabs.onAttached,
     browser.tabs.onDetached,
   ] as const
-  for (const event of events) event.addListener(schedule)
+  for (const event of events) event.addListener(listener)
   return () => {
-    for (const event of events) event.removeListener(schedule)
+    for (const event of events) event.removeListener(listener)
   }
 }
+
+/** Collapses a burst of calls into one per frame: closing a window fires an event per tab. */
+export function oncePerFrame(callback: () => void): () => void {
+  let scheduled = false
+  return () => {
+    if (scheduled) return
+    scheduled = true
+    requestAnimationFrame(() => {
+      scheduled = false
+      callback()
+    })
+  }
+}
+
+export const watchTabs = (onChange: () => void) => onTabEvent(oncePerFrame(onChange))
 
 /**
  * Matches the way the browser does, by whole words. Initials and typos only

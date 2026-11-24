@@ -1,5 +1,5 @@
 import { onCleanup } from 'solid-js'
-import { watchZoom, zoomCorrection } from '../platform/zoom'
+import { watchZoom, zoomCorrection } from '../platform/palette-api'
 
 // Only for the overlay: a palette in its own tab was zoomed by the user on
 // purpose, and undoing that would fight them.

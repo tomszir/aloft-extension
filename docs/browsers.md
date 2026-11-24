@@ -21,16 +21,16 @@ Why some browsers aren't supported:
 
 "Unchecked" means not tried yet. Replace it with the result once someone has checked.
 
-| Browser          | Alt+Q     | Ctrl+T                                                                                | Favicons                                      | Pinned tabs        |
-| ---------------- | --------- | ------------------------------------------------------------------------------------- | --------------------------------------------- | ------------------ |
-| Chrome, Chromium | yes       | yes                                                                                   | yes                                           | this window's pins |
-| Helium           | yes       | yes                                                                                   | yes                                           | persistent pins    |
-| Edge             | yes       | unchecked (Edge asks once to keep the new tab page)                                   | yes                                           | this window's pins |
-| Brave            | yes       | unchecked                                                                             | yes                                           | this window's pins |
-| Vivaldi          | yes       | only with Settings → Tabs → New Tab Page set to "Controlled by extension" (unchecked) | yes                                           | this window's pins |
-| Opera            | unchecked | unchecked (may not allow a new tab override)                                          | unchecked                                     | unchecked          |
-| Arc, Dia         | unchecked | unchecked (Cmd+T opens the browser's own command bar)                                 | unchecked                                     | unchecked          |
-| Firefox          | planned   | planned (works in a prototype)                                                        | letter tile unless the tab has a `data:` icon | this window's pins |
+| Browser          | Alt+Q                                 | Ctrl+T                                                                                | Favicons                                      | Pinned tabs        |
+| ---------------- | ------------------------------------- | ------------------------------------------------------------------------------------- | --------------------------------------------- | ------------------ |
+| Chrome, Chromium | yes                                   | yes                                                                                   | yes                                           | this window's pins |
+| Helium           | yes                                   | yes                                                                                   | yes                                           | persistent pins    |
+| Edge             | yes                                   | unchecked (Edge asks once to keep the new tab page)                                   | yes                                           | this window's pins |
+| Brave            | yes                                   | unchecked                                                                             | yes                                           | this window's pins |
+| Vivaldi          | yes                                   | only with Settings → Tabs → New Tab Page set to "Controlled by extension" (unchecked) | yes                                           | this window's pins |
+| Opera            | unchecked                             | unchecked (may not allow a new tab override)                                          | unchecked                                     | unchecked          |
+| Arc, Dia         | unchecked                             | unchecked (Cmd+T opens the browser's own command bar)                                 | unchecked                                     | unchecked          |
+| Firefox          | works in CI builds; not published yet | works in CI builds; not published yet                                                 | letter tile unless the tab has a `data:` icon | this window's pins |
 
 ## Decided gaps
 
