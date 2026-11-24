@@ -17,6 +17,13 @@ const OUTPUTS = [
 ]
 
 const executablePath = process.env.ALOFT_BROWSER || undefined
+
+// The promo tile sets words in Sora, the store images' typeface; inlined from
+// the package so nothing is fetched and every machine renders the same.
+const SORA = await readFile(
+  resolve('node_modules/@fontsource-variable/sora/files/sora-latin-wght-normal.woff2'),
+)
+const FONT_CSS = `@font-face{font-family:Sora;src:url(data:font/woff2;base64,${SORA.toString('base64')}) format('woff2');font-weight:100 900}`
 const browser = await chromium.launch(
   executablePath ? { executablePath, headless: true } : { channel: 'chromium', headless: true },
 )
@@ -25,7 +32,10 @@ try {
     const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: 1 })
     const source = await readFile(join(BRAND, svg), 'utf8')
     const sized = source.replace('<svg ', `<svg width="${width}" height="${height}" `)
-    await page.setContent(`<!doctype html><body style="margin:0">${sized}</body>`)
+    await page.setContent(
+      `<!doctype html><style>${FONT_CSS}</style><body style="margin:0">${sized}</body>`,
+    )
+    await page.evaluate(() => document.fonts.ready)
     await page.screenshot({ path: png, omitBackground: true })
     await page.close()
     console.log(png)
