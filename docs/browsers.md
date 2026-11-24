@@ -21,20 +21,20 @@ Why some browsers aren't supported:
 
 "Unchecked" means not tried yet. Replace it with the result once someone has checked.
 
-| Browser          | Alt+Q                                 | Ctrl+T                                                                                | Favicons                                      | Pinned tabs        |
-| ---------------- | ------------------------------------- | ------------------------------------------------------------------------------------- | --------------------------------------------- | ------------------ |
-| Chrome, Chromium | yes                                   | yes                                                                                   | yes                                           | this window's pins |
-| Helium           | yes                                   | yes                                                                                   | yes                                           | persistent pins    |
-| Edge             | yes                                   | unchecked (Edge asks once to keep the new tab page)                                   | yes                                           | this window's pins |
-| Brave            | yes                                   | unchecked                                                                             | yes                                           | this window's pins |
-| Vivaldi          | yes                                   | only with Settings → Tabs → New Tab Page set to "Controlled by extension" (unchecked) | yes                                           | this window's pins |
-| Opera            | unchecked                             | unchecked (may not allow a new tab override)                                          | unchecked                                     | unchecked          |
-| Arc, Dia         | unchecked                             | unchecked (Cmd+T opens the browser's own command bar)                                 | unchecked                                     | unchecked          |
-| Firefox          | works in CI builds; not published yet | works in CI builds; not published yet                                                 | letter tile unless the tab has a `data:` icon | this window's pins |
+| Browser          | Alt+Q                                 | Ctrl+T                                                                                | Favicons    | Pinned tabs        |
+| ---------------- | ------------------------------------- | ------------------------------------------------------------------------------------- | ----------- | ------------------ |
+| Chrome, Chromium | yes                                   | yes                                                                                   | yes         | this window's pins |
+| Helium           | yes                                   | yes                                                                                   | yes         | persistent pins    |
+| Edge             | yes                                   | unchecked (Edge asks once to keep the new tab page)                                   | yes         | this window's pins |
+| Brave            | yes                                   | unchecked                                                                             | yes         | this window's pins |
+| Vivaldi          | yes                                   | only with Settings → Tabs → New Tab Page set to "Controlled by extension" (unchecked) | yes         | this window's pins |
+| Opera            | unchecked                             | unchecked (may not allow a new tab override)                                          | unchecked   | unchecked          |
+| Arc, Dia         | unchecked                             | unchecked (Cmd+T opens the browser's own command bar)                                 | unchecked   | unchecked          |
+| Firefox          | works in CI builds; not published yet | works in CI builds; not published yet                                                 | letter tile | this window's pins |
 
 ## Decided gaps
 
-- **Firefox favicons:** Firefox has no local favicon cache an extension can read. A tab's `favIconUrl` is often a remote address, and loading it would be a network request, so Aloft uses it only when it's a `data:` URL and shows a letter tile otherwise. History and bookmark results always get the tile.
+- **Firefox favicons:** Firefox has no local favicon cache an extension can read. A tab's `favIconUrl` is nearly always the site's own address, and loading it would be a network request, so every result gets its letter tile. Tabs whose `favIconUrl` is a `data:` URL could show it without a request, but they're rare enough that it isn't done yet.
 
 ## Firefox findings
 
