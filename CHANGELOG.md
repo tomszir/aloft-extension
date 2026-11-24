@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.1](https://github.com/tomszir/aloft-extension/compare/v0.4.0...v0.4.1) (2026-11-24)
+
+
+### Bug Fixes
+
+* make change shortcut work in firefox ([#47](https://github.com/tomszir/aloft-extension/issues/47)) ([8282cdf](https://github.com/tomszir/aloft-extension/commit/8282cdfd51b589dea61943fd50cf60b67a40c74e))
+* **newtab:** open ctrl+t without a flash and type straight into aloft ([#52](https://github.com/tomszir/aloft-extension/issues/52)) ([dbcffd1](https://github.com/tomszir/aloft-extension/commit/dbcffd1507412cbd5dd184c1af77fea8010e3dcb))
+
 ## [0.4.0](https://github.com/tomszir/aloft-extension/compare/v0.3.0...v0.4.0) (2026-11-24)
 
 
