@@ -2,7 +2,7 @@
     <img src="assets/brand/logo.svg" title="Aloft" alt="Aloft logo" width="120" />
     <h1>Aloft</h1>
     <p>
-        A floating command bar for Helium and other Chromium browsers.
+        A floating command bar for your tabs, history and bookmarks.
     </p>
     <p>
         <a href="https://github.com/tomszir/aloft-extension/actions/workflows/ci.yml"><img src="https://github.com/tomszir/aloft-extension/actions/workflows/ci.yml/badge.svg" alt="CI status" /></a>

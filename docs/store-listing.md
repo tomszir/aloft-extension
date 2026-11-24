@@ -8,7 +8,7 @@ The text and answers for the Web Store developer dashboard, kept here so they ch
 
 **Summary** (from `extDescription`, at most 132 characters):
 
-> A floating command bar for Helium and other Chromium browsers.
+> A floating command bar for your tabs, history and bookmarks.
 
 **Description:**
 
