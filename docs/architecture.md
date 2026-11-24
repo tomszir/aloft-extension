@@ -83,7 +83,7 @@ Biome enforces the boundaries (see `overrides` in `biome.json`):
 ## Quality bar
 
 - **TypeScript and lint:** `strict` and `noUncheckedIndexedAccess`; no `any` and no non-null assertions (Biome).
-- **Unit tests:** Vitest. `core/` is covered thoroughly. `platform/` is tested with WXT's `fakeBrowser`, and UI with `@solidjs/testing-library`.
+- **Unit tests:** Vitest, run once per build target (the `chromium` and `firefox` projects), so code behind `import.meta.env.FIREFOX` is tested in both builds. `core/` is covered thoroughly. `platform/` is tested with WXT's `fakeBrowser`, and UI with `@solidjs/testing-library`.
 - **End-to-end tests:** Playwright loads the built extension.
 - **Accessibility:** WAI-ARIA combobox and listbox pattern, and Esc gives focus back to the page.
 - **Budgets:** palette JS under 40 KB gzipped, overlay content script under 5 KB, first results in under 50 ms.
