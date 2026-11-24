@@ -45,7 +45,7 @@ Which browsers are supported, and what each one can't do: [browsers.md](browsers
 - **Check that an API exists** before relying on one that some browsers lack.
 - **Firefox differences are decided at build time:** WXT builds a separate Firefox package and sets `import.meta.env.FIREFOX`. Branches on it live in `platform/` only, so each build drops the other's code.
 - **Copy is browser-neutral.** UI text never claims something only one browser does (for example "Helium keeps pins in every window"). The store description is the one place Helium is named on purpose.
-- **Tested in** Helium and plain Chromium (`ALOFT_BROWSER`) with Playwright. Playwright can't load extensions into Firefox, so Firefox gets its own end-to-end tests with Puppeteer, which installs the extension over WebDriver BiDi. Until those exist, Firefox is checked by hand with `web-ext`.
+- **Tested in** Helium and plain Chromium (`ALOFT_BROWSER`) with Playwright (`tests/e2e`), and in Firefox with Puppeteer (`tests/e2e-firefox`), which installs the extension over WebDriver BiDi because Playwright can't load extensions into Firefox. Both run under Playwright's test runner as separate projects, and `pnpm test:e2e` runs both.
 
 ## Layers
 

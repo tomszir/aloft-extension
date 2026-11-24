@@ -7,7 +7,7 @@ Every feature has to work in every Tier 1 browser, or leave out a part on purpos
 | Tier                 | Browsers                                                     | Package                                                 | Tested                                                            |
 | -------------------- | ------------------------------------------------------------ | ------------------------------------------------------- | ----------------------------------------------------------------- |
 | **1: Chromium**      | Chrome, Helium, Brave, Edge, Vivaldi, Opera, Arc, Dia        | the Chrome zip (Chrome Web Store; Edge Add-ons planned) | e2e in Chromium and Helium; the others by hand before a release   |
-| **1: Firefox**       | Firefox 140 (the current ESR) and newer                      | the Firefox zip (addons.mozilla.org, planned)           | e2e with Puppeteer (planned); by hand with `web-ext` until then   |
+| **1: Firefox**       | Firefox 140 (the current ESR) and newer                      | the Firefox zip (addons.mozilla.org, planned)           | e2e with Puppeteer (`tests/e2e-firefox`)                          |
 | **2: Firefox forks** | Zen, LibreWolf, Floorp, Waterfox                             | the Firefox zip                                         | best-effort: bugs are fixed when they don't hurt a Tier 1 browser |
 | **Not supported**    | Safari, Orion, mobile browsers, Tor Browser, Mullvad Browser | none                                                    | none                                                              |
 
