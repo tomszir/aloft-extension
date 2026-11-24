@@ -64,6 +64,7 @@ const ACTION_ICON: Record<ActionId, IconName> = {
   'move-to-new-window': 'square-arrow-out-up-right',
   'close-other-tabs': 'copy-x',
   'reopen-closed-tab': 'undo-2',
+  'open-settings': 'settings',
 }
 
 type Segment = { text: string; matched: boolean }

@@ -1,0 +1,65 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--al-space-3);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.legend {
+  padding: 0;
+  margin-bottom: var(--al-space-3);
+}
+
+.options {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-self: flex-start;
+  gap: var(--al-space-1);
+  padding: var(--al-space-1);
+  border: 1px solid var(--al-border);
+  border-radius: var(--al-button-radius);
+  background: var(--al-keycap);
+}
+
+.option {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: calc(var(--al-button-height) - 2 * var(--al-space-1));
+  padding: 0 var(--al-space-4);
+  border-radius: calc(var(--al-button-radius) - var(--al-space-1));
+  font-size: var(--al-font-size-sm);
+  font-weight: var(--al-font-weight-medium);
+  color: var(--al-muted);
+  cursor: pointer;
+}
+
+.option:has(:checked) {
+  background: var(--al-panel);
+  color: var(--al-text);
+  box-shadow: 0 0 0 1px var(--al-border);
+}
+
+.option:has(:focus-visible) {
+  outline: 2px solid var(--al-accent);
+  outline-offset: 1px;
+}
+
+/* Hidden but still focusable, so the group keeps native radio keys. */
+.radio {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.note {
+  margin: 0;
+  font-size: var(--al-font-size-sm);
+  line-height: 1.5;
+  color: var(--al-muted);
+}

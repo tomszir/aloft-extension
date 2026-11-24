@@ -50,3 +50,30 @@ actionNewWindow: New window
 actionMoveToNewWindow: Move tab to new window
 actionCloseOtherTabs: Close other tabs
 actionReopenClosedTab: Reopen closed tab
+actionOpenSettings: Open settings
+settingsTitle: Settings
+settingsPreview: Preview
+settingsPreviewNote: Your real tabs, history and bookmarks, as Aloft will show them. Nothing opens from here.
+settingsOpening: Opening Aloft
+settingsCtrlT: Open over the current page with Ctrl+T
+settingsCtrlTNote: When off, or on pages Aloft can't draw on, Ctrl+T shows Aloft as the new tab page.
+settingsCtrlTNeedsAccess: This needs access to all sites, which Aloft uses only to draw the command bar on top of the page.
+settingsResults: Results
+settingsEnterOpensIn: Enter opens a result in
+settingsEnterNewTab: A new tab
+settingsEnterCurrentTab: The current tab
+settingsEnterNote: Shift+Enter opens it in the other one.
+settingsSwitchToOpenTabs: Switch to a page that's already open instead of opening it again
+settingsSources: Show results from
+settingsShowPinned: Show pinned tabs above the results
+settingsAppearance: Appearance
+settingsColorScheme: Color scheme
+settingsSchemeSystem: Match system
+settingsSchemeLight: Light
+settingsSchemeDark: Dark
+settingsLightTheme: Light theme
+settingsDarkTheme: Dark theme
+settingsPosition: Position
+settingsPositionUpperThird: Upper third
+settingsPositionCenter: Center
+settingsBlur: Blur the page behind Aloft

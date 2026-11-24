@@ -18,6 +18,7 @@ describe('availableActions', () => {
       'close-other-tabs',
       'new-window',
       'reopen-closed-tab',
+      'open-settings',
     ])
   })
 
@@ -43,6 +44,7 @@ describe('availableActions', () => {
     expect(availableActions({ ...over, overPage: false })).toEqual([
       'new-window',
       'reopen-closed-tab',
+      'open-settings',
     ])
   })
 

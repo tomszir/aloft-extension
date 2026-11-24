@@ -8,6 +8,12 @@
   gap: var(--al-space-5);
 }
 
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--al-space-4);
+}
+
 .title {
   margin: 0;
   font-size: var(--al-font-size-xl);
@@ -28,6 +34,13 @@
   background: var(--al-panel);
   border: 1px solid var(--al-border);
   border-radius: var(--al-radius);
+}
+
+.shortcut {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .text {

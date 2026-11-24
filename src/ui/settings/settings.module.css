@@ -1,0 +1,95 @@
+.page {
+  box-sizing: border-box;
+  width: min(var(--al-settings-width), 100%);
+  margin: 0 auto;
+  padding: var(--al-space-6) var(--al-space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--al-space-5);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--al-space-4);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--al-font-size-xl);
+  font-weight: var(--al-font-weight-semibold);
+}
+
+.heading {
+  margin: 0;
+  font-size: var(--al-font-size-md);
+  font-weight: var(--al-font-weight-semibold);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--al-space-6);
+  padding: var(--al-space-6);
+  background: var(--al-panel);
+  border: 1px solid var(--al-border);
+  border-radius: var(--al-radius);
+}
+
+.preview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--al-space-3);
+}
+
+.frame {
+  display: block;
+  width: 100%;
+  height: var(--al-preview-height);
+  margin-top: var(--al-space-3);
+  border: 1px solid var(--al-border);
+  border-radius: var(--al-radius);
+  background: var(--al-page);
+}
+
+.text {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.note {
+  margin: 0;
+  font-size: var(--al-font-size-sm);
+  line-height: 1.5;
+  color: var(--al-muted);
+}
+
+.shortcut {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--al-space-4);
+}
+
+.access {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--al-space-3);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--al-space-4);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.legend {
+  padding: 0;
+  margin-bottom: var(--al-space-4);
+}

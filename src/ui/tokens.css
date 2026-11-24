@@ -39,6 +39,14 @@
   --al-search-icon-size: 18px;
   --al-icon-tile: 22px;
   --al-icon-radius: 6px;
+  --al-switch-width: 34px;
+  --al-switch-height: 20px;
+  --al-switch-knob: 14px;
+  --al-switch-inset: 2px;
+  --al-theme-card-width: 120px;
+  --al-logo-size: 36px;
+  --al-settings-width: 720px;
+  --al-preview-height: 460px;
 
   --al-duration-fast: 120ms;
   --al-ease-out: cubic-bezier(0.2, 0, 0, 1);

@@ -1,3 +1,4 @@
 import { mountPalette } from './mount'
 
-mountPalette(new URLSearchParams(location.search).get('host') === 'tab' ? 'tab' : 'overlay')
+const host = new URLSearchParams(location.search).get('host')
+mountPalette(host === 'tab' || host === 'preview' ? host : 'overlay')

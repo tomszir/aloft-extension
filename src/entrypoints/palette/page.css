@@ -27,6 +27,7 @@ body {
 }
 
 :root[data-host="tab"] body,
-:root[data-host="newtab"] body {
+:root[data-host="newtab"] body,
+:root[data-host="preview"] body {
   background: var(--al-page);
 }
