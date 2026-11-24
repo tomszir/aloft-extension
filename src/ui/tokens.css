@@ -28,8 +28,9 @@
   --al-kbd-radius: 5px;
   --al-menu-width: 200px;
   --al-menu-item-height: 32px;
-  --al-tile-height: 52px;
-  --al-dot-size: 4px;
+  --al-tile-height: 44px;
+  --al-asleep-glyph: 12px;
+  --al-asleep-opacity: 0.45;
   --al-badge-size: 16px;
   --al-button-height: 34px;
   --al-button-radius: 8px;

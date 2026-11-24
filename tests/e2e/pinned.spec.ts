@@ -60,18 +60,16 @@ test('unpins from the tile menu and the row updates', async ({ context, backgrou
   expect(await isPinned(background, `${TEST_ORIGIN}/Mail`)).toBe(false)
 })
 
-test('marks only loaded pins, not sleeping ones', async ({ context, background }) => {
+test('marks only sleeping pins', async ({ context, background }) => {
   test.skip(
     !/helium/.test(process.env.ALOFT_BROWSER ?? ''),
     'tabs.discard takes down headless Chromium; checked against Helium only',
   )
   const page = await withPins(context, background, ['Mail', 'Calendar'])
   const row = palette(page).getByRole('region', { name: 'Pinned' })
-  await expect(row.getByRole('button', { name: 'Mail' })).toHaveAttribute('data-loaded', 'true')
+  await expect(row.getByRole('button', { name: 'Calendar' })).not.toHaveAttribute('data-asleep')
 
   await tabAction(background, `${TEST_ORIGIN}/Calendar`, 'discard')
-  await expect(row.getByRole('button', { name: 'Calendar' })).not.toHaveAttribute(
-    'data-loaded',
-    'true',
-  )
+  await expect(row.getByRole('button', { name: 'Calendar' })).toHaveAttribute('data-asleep', 'true')
+  await expect(row.getByRole('button', { name: 'Mail' })).not.toHaveAttribute('data-asleep')
 })
