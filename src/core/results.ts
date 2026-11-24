@@ -1,6 +1,12 @@
 import type { ActionEntry, ActionId } from './actions'
 import { type Keyword, keywordHost, keywordUrl } from './keywords'
+import { type LearnedPage, promotedPage } from './learned'
+import { type Highlight, highlightRanges, matchScore } from './match'
 import type { ParsedQuery } from './query'
+import { bareUrl, pageKey } from './url'
+
+export type { Highlight } from './match'
+export { pageKey } from './url'
 
 export interface TabEntry {
   tabId: number
@@ -41,9 +47,6 @@ export interface SourceData {
   /** The actions available right now, in display order. */
   actions: readonly ActionEntry[]
 }
-
-/** A `[start, end)` span of a title that matched what was typed. */
-export type Highlight = readonly [start: number, end: number]
 
 interface Highlighted {
   highlights?: readonly Highlight[]
@@ -89,6 +92,8 @@ export interface BuildOptions {
   offeredKeyword?: Keyword
   /** Keywords listed above everything else while "@" is typed; this replaces the offer. */
   listedKeywords?: readonly Keyword[]
+  /** Pages picked before for what's typed, strongest first (`learnedPages`). */
+  learned?: readonly LearnedPage[]
   now: number
 }
 
@@ -97,78 +102,13 @@ const LIMITS = { tabs: 4, history: 5, bookmarks: 3, emptyTabs: 5, closed: 3 } as
 
 const DAY = 24 * 60 * 60 * 1000
 
-export function pageKey(url: string): string {
-  return url.replace(/#.*$/, '').replace(/\/$/, '')
-}
-
-const bareUrl = (url: string) => url.replace(/^[a-z]+:\/\//i, '').replace(/^www\./i, '')
+// A page picked before for the same text rises within its section by up to
+// this much, about one word-start match.
+const MAX_LIFT = 3
 
 /** The address as rows show it: no scheme, no www, no slash after a bare host. */
 export function displayUrl(url: string): string {
   return bareUrl(url).replace(/^([^/?#]+)\/$/, '$1')
-}
-
-const isWordStart = (text: string, index: number) =>
-  index === 0 || !/[\p{L}\p{N}]/u.test(text.charAt(index - 1))
-
-function termScore(term: string, title: string, url: string): number {
-  let best = 0
-  let index = title.indexOf(term)
-  while (index !== -1 && best < 3) {
-    best = Math.max(best, isWordStart(title, index) ? (index === 0 ? 4 : 3) : 1)
-    index = title.indexOf(term, index + 1)
-  }
-  const shortUrl = bareUrl(url)
-  if (shortUrl.startsWith(term)) best = Math.max(best, 4)
-  else if (shortUrl.includes(term)) best = Math.max(best, 1)
-  return best
-}
-
-export function matchScore(terms: readonly string[], title: string, url: string): number | null {
-  const lowerTitle = title.toLowerCase()
-  const lowerUrl = url.toLowerCase()
-  let total = 0
-  for (const term of terms) {
-    const score = termScore(term, lowerTitle, lowerUrl)
-    if (score === 0) return null
-    total += score
-  }
-  return total
-}
-
-/**
- * Where each term matched the title, preferring the occurrence `matchScore`
- * counted: the start of the title, then the start of a word, then anywhere.
- */
-export function highlightRanges(terms: readonly string[], title: string): Highlight[] {
-  const lower = title.toLowerCase()
-  // A few characters change length when lowercased ("İ"), which would shift
-  // every index after them; leaving the title plain is better than marking the
-  // wrong letters.
-  if (lower.length !== title.length) return []
-  const ranges: [number, number][] = []
-  for (const term of terms) {
-    if (term === '') continue
-    let found = -1
-    let index = lower.indexOf(term)
-    while (index !== -1) {
-      if (found === -1) found = index
-      if (isWordStart(lower, index)) {
-        found = index
-        break
-      }
-      index = lower.indexOf(term, index + 1)
-    }
-    if (found !== -1) ranges.push([found, found + term.length])
-  }
-  ranges.sort((a, b) => a[0] - b[0])
-  const merged: [number, number][] = []
-  for (const range of ranges) {
-    const last = merged.at(-1)
-    if (last && range[0] <= last[1]) last[1] = Math.max(last[1], range[1])
-    else merged.push(range)
-  }
-  return merged
 }
 
 /**
@@ -290,33 +230,64 @@ export function buildSections(
   }
 
   const { terms, text, url } = query
+  const hostUrl = data.tabs.find((t) => t.tabId === hostTabId)?.url
+  // The page Aloft is open over is never worth learning towards: opening it
+  // again would only duplicate it.
+  const learned = (options.learned ?? []).filter(
+    (p) => hostUrl === undefined || pageKey(p.url) !== pageKey(hostUrl),
+  )
+  const lifts = new Map(learned.map((p) => [pageKey(p.url), Math.min(p.score, MAX_LIFT)]))
+  const lift = (pageUrl: string) => lifts.get(pageKey(pageUrl)) ?? 0
+  const pick = learnedTopHit(promotedPage(learned), tabs, data.bookmarks, sources, terms)
+
   const top: Result[] = []
   const listed = options.listedKeywords ?? []
   const offered = listed.length > 0 ? undefined : options.offeredKeyword
   if (offered) {
     top.push({ kind: 'keyword', id: 'keyword', keyword: offered, url: keywordUrl(offered, '') })
   }
+  // Above the address and the search: picking this page for this text before
+  // is a clearer signal than what the text looks like.
+  if (pick) top.push(pick)
   if (url) top.push({ kind: 'url', id: 'url', url })
   top.push({ kind: 'search', id: 'search', query: text })
 
-  const matchedTabs = ranked(tabs, (t) => matchScore(terms, t.title, t.url), LIMITS.tabs)
+  const pickKey = pick && 'url' in pick ? pageKey(pick.url) : undefined
+  const matchedTabs = ranked(
+    tabs.filter((t) => pick?.kind !== 'tab' || t.tabId !== pick.tabId),
+    (t) => {
+      const score = matchScore(terms, t.title, t.url)
+      return score === null ? null : score + lift(t.url)
+    },
+    LIMITS.tabs,
+  )
   const shown = new Set(matchedTabs.map((t) => pageKey(t.url)))
+  if (pickKey) shown.add(pickKey)
 
   const bookmarks = sources.bookmarks
     ? ranked(
-        data.bookmarks.filter((b) => !shown.has(pageKey(b.url))),
-        (b) => matchScore(terms, b.title, b.url),
+        uniquePages(data.bookmarks).filter((b) => !shown.has(pageKey(b.url))),
+        (b) => {
+          const score = matchScore(terms, b.title, b.url)
+          return score === null ? null : score + lift(b.url)
+        },
         LIMITS.bookmarks,
       )
     : []
   for (const b of bookmarks) shown.add(pageKey(b.url))
 
+  // Learned pages join history, so a page found once by initials or a typo
+  // the browser's own history search can't match keeps turning up.
+  const candidates: HistoryEntry[] = [
+    ...data.history,
+    ...learned.map((p) => ({ title: p.title, url: p.url, visitCount: 0, lastVisitTime: 0 })),
+  ]
   const history = sources.history
     ? ranked(
-        dedupe(data.history.filter((h) => !shown.has(pageKey(h.url)))),
+        dedupe(candidates.filter((h) => !shown.has(pageKey(h.url)))),
         (h) => {
           const score = matchScore(terms, h.title, h.url)
-          return score === null ? null : score * 2 + frecency(h, now)
+          return score === null ? null : score * 2 + frecency(h, now) + lift(h.url) * 2
         },
         LIMITS.history,
       )
@@ -355,6 +326,37 @@ export function buildSections(
   ])
 }
 
+/**
+ * The row for a learned page at the top: its open tab when there is one, so
+ * Enter switches to it, else its bookmark, else the page from history.
+ */
+function learnedTopHit(
+  page: LearnedPage | undefined,
+  tabs: readonly TabEntry[],
+  bookmarks: readonly BookmarkEntry[],
+  sources: BuildOptions['sources'],
+  terms: readonly string[],
+): Result | undefined {
+  if (!page) return undefined
+  const key = pageKey(page.url)
+  const tab = tabs
+    .filter((t) => pageKey(t.url) === key)
+    .sort((a, b) => b.lastAccessed - a.lastAccessed)[0]
+  if (tab) return { ...tabResult(tab), highlights: highlightRanges(terms, tab.title) }
+  const bookmark = sources.bookmarks ? bookmarks.find((b) => pageKey(b.url) === key) : undefined
+  if (bookmark) {
+    return {
+      kind: 'bookmark',
+      id: `bookmark:${bookmark.id}`,
+      title: bookmark.title,
+      url: bookmark.url,
+      highlights: highlightRanges(terms, bookmark.title),
+    }
+  }
+  if (!sources.history) return undefined
+  return historyResult({ title: page.title, url: page.url, visitCount: 0, lastVisitTime: 0 }, terms)
+}
+
 const historyResult = (h: HistoryEntry, terms: readonly string[]): Result => ({
   kind: 'history',
   id: `history:${h.url}`,
@@ -362,6 +364,18 @@ const historyResult = (h: HistoryEntry, terms: readonly string[]): Result => ({
   url: h.url,
   highlights: highlightRanges(terms, h.title),
 })
+
+// The browser's search and the full list both bring bookmarks, and one page
+// can be bookmarked twice; it's listed once.
+function uniquePages<T extends { url: string }>(entries: readonly T[]): T[] {
+  const seen = new Set<string>()
+  return entries.filter((entry) => {
+    const key = pageKey(entry.url)
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
 
 // History can hold the same page under several URLs (fragments, trailing
 // slashes); keep the most visited one.

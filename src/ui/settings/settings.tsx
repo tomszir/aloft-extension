@@ -1,4 +1,4 @@
-import { Show } from 'solid-js'
+import { createSignal, Show } from 'solid-js'
 import { i18n } from '#i18n'
 import type { Keyword } from '../../core/keywords'
 import type { Settings as SettingsValue } from '../../core/settings'
@@ -27,6 +27,8 @@ export interface SettingsProps {
   keywords: readonly Keyword[]
   onKeywordsChange: (keywords: Keyword[]) => Promise<boolean>
   favicon: FaviconLoader
+  /** Clears every learned pick on this device. */
+  onForgetPicks: () => Promise<void>
 }
 
 type Sources = SettingsValue['sources']
@@ -52,6 +54,11 @@ export function Settings(props: SettingsProps) {
       appearance: { ...current.appearance, [key]: value },
     }))
   const scheme = () => props.settings.appearance.colorScheme
+  const [forgotten, setForgotten] = createSignal(false)
+  const forgetPicks = async () => {
+    await props.onForgetPicks()
+    setForgotten(true)
+  }
 
   return (
     <main class={styles.page}>
@@ -87,7 +94,7 @@ export function Settings(props: SettingsProps) {
               when={props.settings.replaceNewTab && props.access !== 'granted'}
               fallback={i18n.t('settingsCtrlTNote')}
             >
-              <div class={styles.access} aria-live="polite">
+              <div class={styles.noteBody} aria-live="polite">
                 <span>
                   {props.access === 'denied'
                     ? i18n.t('onboardingDenied')
@@ -124,6 +131,22 @@ export function Settings(props: SettingsProps) {
           label={i18n.t('settingsSwitchToOpenTabs')}
           checked={props.settings.switchToOpenTabs}
           onChange={(on) => set('switchToOpenTabs', on)}
+        />
+        <Toggle
+          label={i18n.t('settingsLearnFromPicks')}
+          checked={props.settings.learnFromPicks}
+          onChange={(on) => set('learnFromPicks', on)}
+          note={
+            <div class={styles.noteBody}>
+              <span>{i18n.t('settingsLearnFromPicksNote')}</span>
+              <div class={styles.forget}>
+                <Button onClick={() => void forgetPicks()}>{i18n.t('settingsForgetPicks')}</Button>
+                <span aria-live="polite">
+                  {forgotten() ? i18n.t('settingsPicksForgotten') : ''}
+                </span>
+              </div>
+            </div>
+          }
         />
         <Toggle
           label={i18n.t('settingsShowPinned')}

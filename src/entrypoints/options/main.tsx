@@ -6,6 +6,7 @@ import { useSiteAccess } from '../../app/use-site-access'
 import { useTheme } from '../../app/use-theme'
 import { openShortcutSettings } from '../../platform/commands'
 import { pageFavicon } from '../../platform/favicon'
+import { forgetLearned } from '../../platform/learned'
 import { Settings } from '../../ui/settings/settings'
 import './page.css'
 
@@ -28,6 +29,7 @@ function SettingsPage() {
       keywords={keywords()}
       onKeywordsChange={save}
       favicon={pageFavicon}
+      onForgetPicks={forgetLearned}
     />
   )
 }

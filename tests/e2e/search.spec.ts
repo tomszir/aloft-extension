@@ -72,3 +72,29 @@ test('a page the browser has no icon for gets a letter tile', async ({ context, 
   await expect(row.locator('img')).toHaveCount(0)
   await expect(row.locator('mark')).toHaveText('Gamma')
 })
+
+test('a tab picked twice for the same initials becomes what Enter opens', async ({
+  context,
+  background,
+}) => {
+  const rules = await context.newPage()
+  await rules.goto(`${TEST_ORIGIN}/Window%20Rules`)
+  const page = await context.newPage()
+  await page.goto(`${TEST_ORIGIN}/Start`)
+
+  for (let i = 0; i < 2; i++) {
+    await pressOpenAloft(background, page)
+    await palette(page).getByRole('combobox').fill('wr')
+    const tabs = palette(page).getByRole('group', { name: 'Open tabs' })
+    await expect(tabs.getByRole('option', { name: /Window Rules/ })).toBeVisible()
+    await page.keyboard.press('ArrowDown')
+    await sendPaletteKey(page, { key: 'Enter' })
+    await expect.poll(() => activeTabUrl(background)).toBe(`${TEST_ORIGIN}/Window%20Rules`)
+  }
+
+  await pressOpenAloft(background, page)
+  await palette(page).getByRole('combobox').fill('wr')
+  await expect(palette(page).getByRole('option').first()).toContainText('Window Rules')
+  await sendPaletteKey(page, { key: 'Enter' })
+  await expect.poll(() => activeTabUrl(background)).toBe(`${TEST_ORIGIN}/Window%20Rules`)
+})

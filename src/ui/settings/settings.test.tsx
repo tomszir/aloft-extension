@@ -13,6 +13,7 @@ function renderSettings(initial: Partial<SettingsValue> = {}, access: AccessStat
     setSettings(change(settings())),
   )
   const onAllow = vi.fn()
+  const onForgetPicks = vi.fn(async () => {})
   render(() => (
     <Settings
       settings={settings()}
@@ -25,9 +26,10 @@ function renderSettings(initial: Partial<SettingsValue> = {}, access: AccessStat
       keywords={BUILT_IN_KEYWORDS}
       onKeywordsChange={async () => true}
       favicon={async () => null}
+      onForgetPicks={onForgetPicks}
     />
   ))
-  return { settings, onChange, onAllow }
+  return { settings, onChange, onAllow, onForgetPicks }
 }
 
 describe('Settings', () => {
@@ -72,5 +74,14 @@ describe('Settings', () => {
     expect(screen.getByTitle('settingsPreview').getAttribute('src')).toBe(
       'palette.html?host=preview',
     )
+  })
+
+  it('turns learning off, and forgets what was learned on request', async () => {
+    const { settings, onForgetPicks } = renderSettings()
+    fireEvent.click(screen.getByRole('switch', { name: 'settingsLearnFromPicks' }))
+    expect(settings().learnFromPicks).toBe(false)
+    fireEvent.click(screen.getByRole('button', { name: 'settingsForgetPicks' }))
+    expect(onForgetPicks).toHaveBeenCalledOnce()
+    expect(await screen.findByText('settingsPicksForgotten')).toBeTruthy()
   })
 })

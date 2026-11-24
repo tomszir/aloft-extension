@@ -6,8 +6,6 @@ import {
   buildSections,
   displayUrl,
   flatten,
-  highlightRanges,
-  matchScore,
   pageKey,
   type SourceData,
   tileLetter,
@@ -89,23 +87,6 @@ const parseInput = (input: string) => {
 const ids = (query: string, opts = options) =>
   flatten(buildSections(parseInput(query), data, opts)).map((r) => r.id)
 
-describe('matchScore', () => {
-  it('requires every term', () => {
-    expect(matchScore(['window', 'rules'], 'Window rules', 'https://x.test')).not.toBeNull()
-    expect(matchScore(['window', 'nope'], 'Window rules', 'https://x.test')).toBeNull()
-  })
-
-  it('prefers word starts over mid-word matches', () => {
-    const start = matchScore(['rul'], 'Window rules', 'https://x.test') ?? 0
-    const middle = matchScore(['ule'], 'Window rules', 'https://x.test') ?? 0
-    expect(start).toBeGreaterThan(middle)
-  })
-
-  it('matches the start of the URL without scheme or www', () => {
-    expect(matchScore(['git'], 'Something else', 'https://www.github.com/')).toBe(4)
-  })
-})
-
 describe('buildSections', () => {
   it('shows recent tabs and recently closed when empty, never the host tab', () => {
     expect(ids('')).toEqual(['tab:3', 'tab:2', 'closed:s1'])
@@ -141,6 +122,12 @@ describe('buildSections', () => {
     expect(results).not.toContain('history:https://github.com/tomszir/aloft/issues')
   })
 
+  it('lists a bookmark once when it comes from both the search and the full list', () => {
+    const twice = { ...data, bookmarks: [...data.bookmarks, ...data.bookmarks] }
+    const results = flatten(buildSections(parseInput('dash'), twice, options)).map((r) => r.id)
+    expect(results.filter((id) => id === 'bookmark:b1')).toHaveLength(1)
+  })
+
   it('leaves out sources that are turned off', () => {
     const off = { ...options, sources: { ...options.sources, history: false, bookmarks: false } }
     expect(ids('aloft', off)).toEqual(['search', 'tab:2'])
@@ -164,6 +151,56 @@ describe('buildSections', () => {
   it('carries the browser shortcut along as a hint', () => {
     const [section] = buildSections(parseQuery('new', 'actions'), data, options)
     expect(section?.results[0]).toMatchObject({ kind: 'action', hint: 'Ctrl+N' })
+  })
+})
+
+describe('learned picks', () => {
+  const learned = (url: string, score: number, title = 'Learned') => ({
+    ...options,
+    learned: [{ url, title, score }],
+  })
+
+  it('finds tabs by initials and typos', () => {
+    expect(ids('wr')).toContain('tab:3')
+    expect(ids('widnow')).toContain('tab:3')
+  })
+
+  it('puts a clearly learned page above search, as its open tab', () => {
+    const results = ids('wr', learned('https://wiki.hypr.land/Configuring/Window-Rules', 2))
+    expect(results.slice(0, 2)).toEqual(['tab:3', 'search'])
+    expect(results.filter((id) => id === 'tab:3')).toHaveLength(1)
+  })
+
+  it('goes above an address too, but not above a keyword the input names', () => {
+    const github = builtInKeyword('github')
+    const opts = { ...learned('https://github.com/tomszir/aloft', 2), offeredKeyword: github }
+    expect(ids('github.com', opts).slice(0, 3)).toEqual(['keyword', 'tab:2', 'url'])
+  })
+
+  it('uses the bookmark, then history, when the page is not open', () => {
+    expect(ids('dash', learned('https://dash.test/aloft', 2))[0]).toBe('bookmark:b1')
+    const closedPage = learned('https://gone.test/page', 2, 'Gone page')
+    expect(ids('gone', closedPage)[0]).toBe('history:https://gone.test/page')
+  })
+
+  it('only lifts a page within its section while it is picked just once', () => {
+    const opts = learned('https://notes.test/aloft', 1)
+    const results = ids('aloft', opts)
+    expect(results[0]).toBe('search')
+    const history = results.filter((id) => id.startsWith('history:'))
+    expect(history[0]).toBe('history:https://notes.test/aloft')
+  })
+
+  it('never offers the page Aloft is open over', () => {
+    expect(ids('host', learned('https://host.test/', 5))[0]).toBe('search')
+  })
+
+  it('respects sources that are turned off', () => {
+    const off = {
+      ...learned('https://gone.test/page', 2, 'Gone page'),
+      sources: { ...options.sources, history: false },
+    }
+    expect(ids('gone', off)).toEqual(['search'])
   })
 })
 
@@ -225,28 +262,7 @@ describe('keywords', () => {
   })
 })
 
-describe('highlightRanges', () => {
-  it('marks each term where it matched, merging overlaps', () => {
-    expect(highlightRanges(['win', 'rul'], 'Window rules')).toEqual([
-      [0, 3],
-      [7, 10],
-    ])
-    expect(highlightRanges(['wind', 'ndow'], 'Window rules')).toEqual([[0, 6]])
-  })
-
-  it('prefers a word start over an earlier mid-word match', () => {
-    expect(highlightRanges(['al'], 'Totally Aloft')).toEqual([[8, 10]])
-  })
-
-  it('falls back to a mid-word match, and skips terms only the URL matched', () => {
-    expect(highlightRanges(['ule'], 'Window rules')).toEqual([[8, 11]])
-    expect(highlightRanges(['github'], 'tomszir/aloft')).toEqual([])
-  })
-
-  it('leaves titles plain when lowercasing would shift the indexes', () => {
-    expect(highlightRanges(['ist'], 'İstanbul')).toEqual([])
-  })
-
+describe('highlights', () => {
   it('is attached to matched results, and not to the empty list', () => {
     const query = parseInput('aloft')
     const tab = flatten(buildSections(query, data, options)).find((r) => r.id === 'tab:2')
