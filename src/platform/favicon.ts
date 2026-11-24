@@ -35,6 +35,10 @@ const known = new Map<string, string | null>()
  * plain value once it's known, so rows don't wait a tick for it.
  */
 export function pageFavicon(pageUrl: string): string | null | Promise<string | null> {
+  // Firefox has no favicon cache an extension can read, and a tab's
+  // favIconUrl is usually the site's own address, which loading would fetch.
+  // So every page gets its letter tile, straight away.
+  if (import.meta.env.FIREFOX) return null
   const answer = known.get(pageUrl)
   if (answer !== undefined) return answer
   let icon = icons.get(pageUrl)
