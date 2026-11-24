@@ -78,14 +78,22 @@ test('marks only sleeping pins', async ({ context, background }) => {
 const tileNames = (row: Locator) =>
   row.getByRole('button').evaluateAll((tiles) => tiles.map((t) => t.getAttribute('aria-label')))
 
+// Measured once Aloft's open animation has finished and the row has every
+// pin: on slow runners a press could land while the panel was still scaling
+// in, or before the last pin's tab event, and the drag never started.
 async function dragTile(page: Page, from: string, to: string) {
   const row = palette(page).getByRole('region', { name: 'Pinned' })
+  await row.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)))
+  await expect(row.getByRole('button', { name: to })).toBeVisible()
   const source = await row.getByRole('button', { name: from }).boundingBox()
   const target = await row.getByRole('button', { name: to }).boundingBox()
   if (!source || !target) throw new Error('tile not on screen')
-  await page.mouse.move(source.x + source.width / 2, source.y + 20)
+  const y = source.y + 20
+  await page.mouse.move(source.x + source.width / 2, y)
   await page.mouse.down()
-  await page.mouse.move(target.x + target.width / 2, target.y + 20, { steps: 12 })
+  await page.mouse.move(source.x + source.width / 2 + 10, y, { steps: 2 })
+  await expect(row.getByRole('button', { name: from })).toHaveAttribute('data-lifted', 'true')
+  await page.mouse.move(target.x + target.width / 2, y, { steps: 12 })
   return row
 }
 
