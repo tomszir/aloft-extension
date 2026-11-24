@@ -78,9 +78,11 @@ export default defineContentScript({
           border: '0',
           display: 'block',
           background: 'transparent',
-          // A matching color-scheme keeps the frame transparent; a mismatch
-          // makes Chrome paint an opaque backdrop behind it.
-          colorScheme: 'normal',
+          // Must equal palette.html's own color-scheme, or Chrome paints an
+          // opaque backdrop behind the frame. It's also where the frame's
+          // prefers-color-scheme comes from, so it can't be "normal", which
+          // follows the site's declaration instead of the system's preference.
+          colorScheme: 'light dark',
           // Blur has to be set out here: a filter inside the frame can't
           // reach the page behind it.
           backdropFilter: blur ? 'blur(4px)' : 'none',

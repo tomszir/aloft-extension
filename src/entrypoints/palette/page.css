@@ -1,9 +1,13 @@
 @import "../../ui/tokens.css";
 
 /* Must match the iframe element's color-scheme, or Chrome paints an opaque
-   backdrop behind the frame. */
+   backdrop behind the frame. "light dark" on both sides, never "normal": on
+   the iframe, "normal" follows the site's own declaration, and a frame's
+   prefers-color-scheme comes from its iframe's scheme, so a light-only site
+   would also make Aloft pick its light theme. The palette draws all of its
+   own colors, so this only decides that match and the system preference. */
 :root {
-  color-scheme: normal;
+  color-scheme: light dark;
 }
 
 html,

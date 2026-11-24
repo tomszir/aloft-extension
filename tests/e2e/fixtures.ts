@@ -17,16 +17,29 @@ const executablePath = process.env.ALOFT_BROWSER || undefined
 
 export const TEST_ORIGIN = 'https://aloft.test'
 
-export const test = base.extend<{ context: BrowserContext; background: Worker }>({
-  // biome-ignore lint/correctness/noEmptyPattern: Playwright requires a destructuring pattern here.
-  context: async ({}, use, testInfo) => {
+export const test = base.extend<{
+  context: BrowserContext
+  background: Worker
+  /** Set with test.use({ darkSystem: true }) for a browser whose system preference is dark. */
+  darkSystem: boolean
+}>({
+  darkSystem: [false, { option: true }],
+  context: async ({ darkSystem }, use, testInfo) => {
     const profile = await mkdtemp(join(tmpdir(), 'aloft-e2e-'))
     const context = await chromium.launchPersistentContext(profile, {
       // Playwright's default headless build can't load extensions; its full
       // Chromium ("chromium" channel) can.
       ...(executablePath ? { executablePath } : { channel: 'chromium' }),
       headless: true,
-      args: [`--disable-extensions-except=${EXTENSION_DIR}`, `--load-extension=${EXTENSION_DIR}`],
+      // Emulating the scheme would override prefers-color-scheme in every
+      // frame and hide how a real preference reaches the palette's frame, so
+      // dark comes from the browser itself instead.
+      ...(darkSystem ? { colorScheme: null } : {}),
+      args: [
+        ...(darkSystem ? ['--force-dark-mode'] : []),
+        `--disable-extensions-except=${EXTENSION_DIR}`,
+        `--load-extension=${EXTENSION_DIR}`,
+      ],
     })
     // Real sites would make the tests flaky and leak nothing useful; serve a
     // fixed page on a fake https origin instead.
