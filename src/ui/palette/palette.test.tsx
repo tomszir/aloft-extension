@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@solidjs/testing-library'
 import { createSignal } from 'solid-js'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { builtInKeyword } from '../../core/keywords'
 import type { Section, TabEntry } from '../../core/results'
 import { Palette, type PaletteProps } from './palette'
@@ -81,6 +81,37 @@ describe('Palette', () => {
     setActiveId('tab:2')
     expect(input.getAttribute('aria-activedescendant')).toBe(options[1]?.id)
     expect(options[0]?.getAttribute('aria-selected')).toBe('false')
+  })
+
+  describe('the selection', () => {
+    const animate = vi.fn()
+    beforeEach(() => {
+      animate.mockClear()
+      HTMLElement.prototype.animate = animate
+      document.documentElement.style.setProperty('--al-duration-select', '90ms')
+    })
+    afterEach(() => {
+      // @ts-expect-error happy-dom has no Web Animations to put back.
+      delete HTMLElement.prototype.animate
+      document.documentElement.style.removeProperty('--al-duration-select')
+    })
+
+    it('slides from the row it was on when moving through the same results', () => {
+      const [activeId, setActiveId] = createSignal('search')
+      const base = baseProps()
+      render(() => <Palette {...base} activeId={activeId()} />)
+      setActiveId('tab:2')
+      expect(animate).toHaveBeenCalledOnce()
+      expect(animate.mock.calls[0]?.[1]).toMatchObject({ pseudoElement: '::before' })
+    })
+
+    it('just appears on the new row when the results change', () => {
+      const [state, setState] = createSignal({ query: 'aloft', activeId: 'search' })
+      const base = baseProps()
+      render(() => <Palette {...base} query={state().query} activeId={state().activeId} />)
+      setState({ query: 'aloft r', activeId: 'tab:2' })
+      expect(animate).not.toHaveBeenCalled()
+    })
   })
 
   it('groups options under labelled sections', () => {

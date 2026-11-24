@@ -52,6 +52,8 @@
   --al-preview-height: 460px;
 
   --al-duration-fast: 120ms;
+  /* Short enough to keep up with a held arrow key. */
+  --al-duration-select: 90ms;
   --al-duration-move: 200ms;
   --al-duration-drop: 280ms;
   --al-ease-out: cubic-bezier(0.2, 0, 0, 1);
