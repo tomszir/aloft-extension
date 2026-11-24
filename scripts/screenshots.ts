@@ -4,15 +4,19 @@
 //
 // The demo sites are invented and served on a fake domain: no real brands,
 // and nothing leaves the machine.
-import { mkdir, mkdtemp, rm } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { type BrowserContext, chromium, type Page, type Worker } from '@playwright/test'
 
 const EXTENSION = resolve('.output/chrome-mv3-e2e')
 const OUT = resolve('docs/screenshots')
-// The size the Chrome Web Store asks for (it shows them at half size).
+// The size the Chrome Web Store asks for. The palette is captured at twice
+// that density, so it stays sharp once it's cropped and scaled up.
 const VIEWPORT = { width: 1280, height: 800 }
+// How much of the dimmed page shows around the palette, so it still reads as
+// floating over a page.
+const CROP_MARGIN = 40
 const executablePath = process.env.ALOFT_BROWSER || undefined
 
 interface Site {
@@ -36,7 +40,9 @@ const PINS = [
   SITE('music', 'Focus mix — Tones', '#F59E0B'),
 ]
 const TABS = [
-  SITE('notes', 'Keyboard-first browsing — Field Notes', '#EF4444'),
+  // The page behind the palette; its accent shows around every crop, so it
+  // stays in the brand's blues instead of clashing with them.
+  SITE('notes', 'Keyboard-first browsing — Field Notes', '#6366F1'),
   SITE('docs', 'Release checklist — Handbook', '#0EA5E9'),
   SITE('maps', 'Weekend trip — Waypoint', '#22C55E'),
 ]
@@ -190,20 +196,117 @@ async function settle(page: Page) {
   await page.waitForTimeout(600)
 }
 
-async function shoot(page: Page, name: string) {
-  await page.screenshot({ path: join(OUT, `${name}.png`), animations: 'disabled', caret: 'hide' })
+interface Caption {
+  title: string
+  text: string
+}
+
+interface Crop {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+async function shoot(page: Page, name: string, caption: Caption) {
+  const size = await page.evaluate(() => [innerWidth, innerHeight, devicePixelRatio])
+  if (size.join() !== `${VIEWPORT.width},${VIEWPORT.height},2`) {
+    throw new Error(`expected a ${VIEWPORT.width}x${VIEWPORT.height} page at 2x, got ${size}`)
+  }
+  const panel = await page
+    .locator('iframe[title="Aloft"]')
+    .contentFrame()
+    .getByRole('dialog')
+    .boundingBox()
+  if (!panel) throw new Error('palette not visible')
+  const x = Math.max(0, panel.x - CROP_MARGIN)
+  const y = Math.max(0, panel.y - CROP_MARGIN)
+  const crop = {
+    x,
+    y,
+    width: Math.min(VIEWPORT.width, panel.x + panel.width + CROP_MARGIN) - x,
+    height: Math.min(VIEWPORT.height, panel.y + panel.height + CROP_MARGIN) - y,
+  }
+  // The whole page, cropped later: a clipped screenshot at 2x cuts the
+  // overlay's frame off partway down.
+  const shot = await page.screenshot({ animations: 'disabled', caret: 'hide' })
+  await frame(shot, crop, caption, join(OUT, `${name}.png`))
   console.log(`docs/screenshots/${name}.png`)
+}
+
+const escapeHtml = (text: string) =>
+  text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+// Store screenshots compete with every other listing at thumbnail size, so
+// the palette is scaled up past the frame's bottom edge, with a headline and
+// the brand color around it.
+const SCALE = 1.3
+const SHOT_TOP = 238
+
+// Inlined from the package rather than fetched, so the images come out the
+// same on every machine and in CI.
+const SORA = await readFile(
+  resolve('node_modules/@fontsource-variable/sora/files/sora-latin-wght-normal.woff2'),
+)
+
+async function frame(shot: Buffer, crop: Crop, caption: Caption, path: string) {
+  const logo = await readFile(resolve('assets/brand/logo.svg'), 'utf8')
+  const page = await framer.newPage({ viewport: VIEWPORT, deviceScaleFactor: 1 })
+  const px = (n: number) => `${Math.round(n * SCALE)}px`
+  // Tall palettes run off the bottom edge; short ones sit in the middle of
+  // the space under the headline instead of leaving it empty below.
+  const room = VIEWPORT.height - SHOT_TOP
+  const top = SHOT_TOP + Math.max(0, (room - crop.height * SCALE) / 2)
+  await page.setContent(`<!doctype html><html><head><meta charset="utf-8"><style>
+@font-face{font-family:Sora;src:url(data:font/woff2;base64,${SORA.toString('base64')}) format('woff2');font-weight:100 900}
+html,body{margin:0;width:${VIEWPORT.width}px;height:${VIEWPORT.height}px;overflow:hidden}
+body{position:relative;color:#fff;font-family:Sora,sans-serif;-webkit-font-smoothing:antialiased;
+  background:
+    radial-gradient(60% 55% at 50% 62%,rgba(47,111,235,.55) 0%,rgba(47,111,235,0) 70%),
+    radial-gradient(45% 50% at 12% 8%,rgba(124,92,255,.35) 0%,rgba(124,92,255,0) 70%),
+    radial-gradient(45% 50% at 90% 4%,rgba(56,189,248,.28) 0%,rgba(56,189,248,0) 70%),
+    linear-gradient(180deg,#0B1230 0%,#0A1A45 100%)}
+header{position:absolute;top:32px;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+header svg{width:64px;height:64px;margin-bottom:6px;filter:drop-shadow(0 10px 24px rgba(47,111,235,.45))}
+h1{margin:0;font-weight:650;font-size:42px;line-height:1.1;letter-spacing:-.03em}
+p{margin:0;font-weight:400;font-size:19px;line-height:1.4;color:#C9D6F5}
+.shot{position:absolute;top:${Math.round(top)}px;left:50%;transform:translateX(-50%);
+  width:${px(crop.width)};height:${px(crop.height)};border-radius:20px;
+  background:url(data:image/png;base64,${shot.toString('base64')}) no-repeat;
+  background-size:${px(VIEWPORT.width)} ${px(VIEWPORT.height)};
+  background-position:-${px(crop.x)} -${px(crop.y)};
+  box-shadow:0 40px 100px rgba(2,6,23,.7),0 0 0 1px rgba(255,255,255,.12)}
+</style></head><body>
+<header>${logo}<h1>${escapeHtml(caption.title)}</h1><p>${escapeHtml(caption.text)}</p></header>
+<div class="shot"></div>
+</body></html>`)
+  await page.screenshot({ path })
+  await page.close()
 }
 
 const profile = await mkdtemp(join(tmpdir(), 'aloft-screens-'))
 const context = await chromium.launchPersistentContext(profile, {
   ...(executablePath ? { executablePath } : { channel: 'chromium' }),
   headless: true,
-  viewport: VIEWPORT,
-  deviceScaleFactor: 1,
+  // No emulated viewport: Playwright's emulation forces the scale back to 1x.
+  viewport: null,
   colorScheme: 'dark',
-  args: [`--disable-extensions-except=${EXTENSION}`, `--load-extension=${EXTENSION}`],
+  args: [
+    `--disable-extensions-except=${EXTENSION}`,
+    `--load-extension=${EXTENSION}`,
+    // Real 2x rather than Playwright's emulated deviceScaleFactor, which the
+    // palette's out-of-process frame doesn't get: it paints only part of it.
+    '--force-device-scale-factor=2',
+    // The window's own frame takes the difference; shoot() checks the result.
+    `--window-size=${VIEWPORT.width},${VIEWPORT.height + 87}`,
+  ],
 })
+
+// A plain browser for laying out the framed images; the extension's profile
+// isn't needed for that.
+const framer = await chromium.launch(
+  executablePath ? { executablePath, headless: true } : { channel: 'chromium', headless: true },
+)
 
 try {
   await mkdir(OUT, { recursive: true })
@@ -224,15 +327,24 @@ try {
 
   let frame = await openAloft(worker, host)
   await settle(host)
-  await shoot(host, '1-pinned-and-tabs')
+  await shoot(host, '1-pinned-and-tabs', {
+    title: 'Your tabs, one keystroke away',
+    text: 'Alt+Q or Ctrl+T opens Aloft over the page you’re on. Pins are Alt+1–9.',
+  })
 
   await frame.getByRole('combobox').fill('keyboard')
   await settle(host)
-  await shoot(host, '2-search')
+  await shoot(host, '2-search', {
+    title: 'Tabs, history and bookmarks in one search',
+    text: 'The best match is first, and what matched is marked.',
+  })
 
   await frame.getByRole('combobox').fill('>')
   await settle(host)
-  await shoot(host, '3-actions')
+  await shoot(host, '3-actions', {
+    title: 'Type > to act on the tab',
+    text: 'Pin, duplicate, move or close tabs without reaching for the mouse.',
+  })
 
   // The first Esc only leaves the actions chip.
   await frame.getByRole('combobox').dispatchEvent('keydown', { key: 'Escape', bubbles: true })
@@ -242,7 +354,10 @@ try {
   frame = await openAloft(worker, host)
   await frame.getByRole('combobox').fill('trip')
   await settle(host)
-  await shoot(host, '4-light')
+  await shoot(host, '4-light', {
+    title: 'Light, dark or your system’s',
+    text: 'Aloft follows your color scheme, or keeps the one you pick.',
+  })
 
   await closeAloft(host)
   await setSettings(worker, { appearance: { colorScheme: 'dark', darkTheme: 'moss' } })
@@ -250,8 +365,12 @@ try {
   frame = await openAloft(worker, host)
   await frame.getByRole('combobox').fill('handbook')
   await settle(host)
-  await shoot(host, '5-themes')
+  await shoot(host, '5-themes', {
+    title: 'Themes that suit your browser',
+    text: 'Six built in, previewed live on the settings page.',
+  })
 } finally {
+  await framer.close()
   await context.close()
   await rm(profile, { recursive: true, force: true })
 }

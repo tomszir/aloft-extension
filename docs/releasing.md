@@ -11,7 +11,7 @@
 
 Publishing is skipped until this is done. It only has to be done once.
 
-1. **Submit the first version by hand.** The store API can only update an item that already exists. Create the item in the [developer dashboard](https://chrome.google.com/webstore/devconsole), upload a release zip, fill in the listing and privacy practices, and submit it.
+1. **Submit the first version by hand.** The store API can only update an item that already exists. Create the item in the [developer dashboard](https://chrome.google.com/webstore/devconsole), upload a release zip, fill in the listing and privacy practices from [store-listing.md](store-listing.md), and submit it.
 2. **Create a service account.** In a Google Cloud project, enable the Chrome Web Store API, create a service account, and add a JSON key for it.
 3. **Give it access to the publisher.** In the developer dashboard, under Account, add the service account's email.
 4. **Add a GitHub environment** named `chrome-web-store` (Settings → Environments). Add yourself as a required reviewer if every publish should wait for approval. Then give the environment:
