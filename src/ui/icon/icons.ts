@@ -13,6 +13,7 @@ export const ICON_NAMES = [
   'pin',
   'pin-off',
   'search',
+  'settings',
   'square-arrow-out-up-right',
   'terminal',
   'undo-2',

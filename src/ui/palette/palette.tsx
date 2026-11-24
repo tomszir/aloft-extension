@@ -29,6 +29,8 @@ export interface PaletteProps {
   onHover: (resultId: string) => void
   onActivate: (result: Result, shift: boolean) => void
   onClose: () => void
+  /** Off in the settings preview, so loading the page doesn't move focus into it. */
+  autofocus?: boolean
   /** Off where Enter always opens in place, so the hints would be wrong. */
   showOpenHints?: boolean
   /** Shown as a row; empty hides it. */
@@ -60,7 +62,9 @@ const MOVES: Record<string, Move> = {
 
 export function Palette(props: PaletteProps) {
   let input: HTMLInputElement | undefined
-  onMount(() => input?.focus())
+  onMount(() => {
+    if (props.autofocus ?? true) input?.focus()
+  })
 
   // aria-activedescendant needs stable, valid ids; result ids contain URLs.
   const optionIds = createMemo(() => {

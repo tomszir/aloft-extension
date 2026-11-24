@@ -1,0 +1,81 @@
+.field {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.legend {
+  padding: 0;
+  margin-bottom: var(--al-space-4);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--al-theme-card-width), 1fr));
+  gap: var(--al-space-4);
+}
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--al-space-3);
+  padding: var(--al-space-3);
+  border: 1px solid var(--al-border);
+  border-radius: var(--al-radius);
+  background: var(--al-panel);
+  color: var(--al-text);
+  cursor: pointer;
+}
+
+.card:has(:checked) {
+  outline: 2px solid var(--al-accent);
+  outline-offset: 2px;
+}
+
+.card:has(:focus-visible) {
+  outline: 2px solid var(--al-accent);
+  outline-offset: 4px;
+}
+
+.radio {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.sample {
+  display: flex;
+  flex-direction: column;
+  gap: var(--al-space-1);
+}
+
+.bar,
+.row,
+.accent {
+  display: block;
+  height: var(--al-space-3);
+  border-radius: var(--al-row-radius);
+}
+
+.bar {
+  width: 70%;
+  background: var(--al-keycap);
+}
+
+.row {
+  background: var(--al-selected);
+}
+
+.accent {
+  width: 30%;
+  background: var(--al-accent);
+}
+
+.name {
+  font-size: var(--al-font-size-sm);
+  font-weight: var(--al-font-weight-medium);
+}

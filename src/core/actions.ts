@@ -6,6 +6,7 @@ export type ActionId =
   | 'move-to-new-window'
   | 'close-other-tabs'
   | 'reopen-closed-tab'
+  | 'open-settings'
 
 /** Already translated by the caller, since core can't reach the i18n API. */
 export interface ActionEntry {
@@ -35,6 +36,7 @@ const ORDER: readonly ActionId[] = [
   'close-other-tabs',
   'new-window',
   'reopen-closed-tab',
+  'open-settings',
 ]
 
 export function availableActions(context: ActionContext): ActionId[] {
@@ -48,6 +50,7 @@ export function availableActions(context: ActionContext): ActionId[] {
     'close-other-tabs': overPage && otherUnpinnedTabs > 0,
     'new-window': true,
     'reopen-closed-tab': hasRecentlyClosed,
+    'open-settings': true,
   }
   return ORDER.filter((id) => available[id])
 }

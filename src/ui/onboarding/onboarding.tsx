@@ -1,7 +1,8 @@
-import { Match, Show, Switch } from 'solid-js'
+import { Match, Switch } from 'solid-js'
 import { i18n } from '#i18n'
 import { Button } from '../button/button'
-import { Kbd } from '../kbd/kbd'
+import { Logo } from '../logo/logo'
+import { ShortcutSentence } from '../shortcut-sentence/shortcut-sentence'
 import styles from './onboarding.module.css'
 
 export type AccessState = 'unknown' | 'granted' | 'denied' | 'not-asked'
@@ -17,26 +18,13 @@ export interface OnboardingProps {
 export function Onboarding(props: OnboardingProps) {
   return (
     <main class={styles.page}>
-      <h1 class={styles.title}>{i18n.t('onboardingTitle')}</h1>
+      <header class={styles.header}>
+        <Logo />
+        <h1 class={styles.title}>{i18n.t('onboardingTitle')}</h1>
+      </header>
 
       <section class={styles.card}>
-        <Show
-          when={props.shortcut}
-          fallback={<p class={styles.text}>{i18n.t('onboardingNoShortcut')}</p>}
-        >
-          {(shortcut) => {
-            // Split around a placeholder so the shortcut renders as a key cap
-            // while translators still control the sentence's word order.
-            const [before, after] = i18n.t('onboardingShortcut', ['\u0000']).split('\u0000')
-            return (
-              <p class={styles.text}>
-                {before}
-                <Kbd>{shortcut()}</Kbd>
-                {after}
-              </p>
-            )
-          }}
-        </Show>
+        <ShortcutSentence shortcut={props.shortcut} class={styles.text} />
         <div>
           <Button onClick={() => props.onChangeShortcut()}>
             {i18n.t('onboardingChangeShortcut')}

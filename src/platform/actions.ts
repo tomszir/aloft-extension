@@ -35,5 +35,8 @@ export async function runAction(action: ActionId, target: ActionTarget): Promise
     case 'reopen-closed-tab':
       if (lastClosed) await browser.sessions.restore(lastClosed.sessionId)
       return
+    case 'open-settings':
+      await browser.runtime.openOptionsPage()
+      return
   }
 }

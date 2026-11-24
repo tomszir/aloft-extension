@@ -33,9 +33,10 @@ import { type Move, Palette } from '../../ui/palette/palette'
 
 /**
  * overlay: over a page, in a frame. tab: a tab Aloft opened because it
- * couldn't draw on the page. newtab: the browser's new tab page.
+ * couldn't draw on the page. newtab: the browser's new tab page. preview: a
+ * frame on the settings page, which shows real results but never acts on them.
  */
-export type Host = 'overlay' | 'tab' | 'newtab'
+export type Host = 'overlay' | 'tab' | 'newtab' | 'preview'
 
 export interface AppProps {
   host: Host
@@ -164,11 +165,12 @@ export function App(props: AppProps) {
   // Esc on the new tab page only clears: closing it could close the window,
   // as it's often a window's only tab.
   async function dismiss(): Promise<void> {
-    if (props.host === 'newtab') setQuery(EMPTY_QUERY)
+    if (props.host === 'newtab' || props.host === 'preview') setQuery(EMPTY_QUERY)
     else await close()
   }
 
   async function activate(result: Result, shift: boolean): Promise<void> {
+    if (props.host === 'preview') return
     const host = hostTab() ?? (await props.hostTab)
     if (host === undefined) return
     if (result.kind === 'action') {
@@ -208,15 +210,19 @@ export function App(props: AppProps) {
       onHover={setActiveId}
       onActivate={(result, shift) => void activate(result, shift)}
       onClose={() => void dismiss()}
-      showOpenHints={props.host === 'overlay'}
+      showOpenHints={props.host === 'overlay' || props.host === 'preview'}
+      autofocus={props.host !== 'preview'}
       pins={pins()}
       pinShortcuts={pinShortcuts()}
       onOpenPin={(pin) => void activate(tabResult(pin), false)}
       onMovePin={(pin, direction) => {
+        if (props.host === 'preview') return
         const index = moveIndex(pinShortcuts(), pin.tabId, direction)
         if (index !== undefined) void movePinned(pin.tabId, index)
       }}
-      onUnpin={(pin) => void unpin(pin.tabId)}
+      onUnpin={(pin) => {
+        if (props.host !== 'preview') void unpin(pin.tabId)
+      }}
     />
   )
 }

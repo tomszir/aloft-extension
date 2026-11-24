@@ -11,6 +11,7 @@ const KEYWORDS: Record<ActionId, string> = {
   'move-to-new-window': 'window detach split',
   'close-other-tabs': 'close tabs others clean',
   'reopen-closed-tab': 'restore undo closed',
+  'open-settings': 'settings preferences options theme',
 }
 
 const LABEL: Record<ActionId, () => string> = {
@@ -21,6 +22,7 @@ const LABEL: Record<ActionId, () => string> = {
   'move-to-new-window': () => i18n.t('actionMoveToNewWindow'),
   'close-other-tabs': () => i18n.t('actionCloseOtherTabs'),
   'reopen-closed-tab': () => i18n.t('actionReopenClosedTab'),
+  'open-settings': () => i18n.t('actionOpenSettings'),
 }
 
 // The OS, not the browser, decides how shortcuts are written.
