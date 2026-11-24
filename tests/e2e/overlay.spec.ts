@@ -1,4 +1,11 @@
-import { expect, pressOpenAloft, sendPaletteKey, TEST_ORIGIN, test } from './fixtures'
+import {
+  expect,
+  palettePainted,
+  pressOpenAloft,
+  sendPaletteKey,
+  TEST_ORIGIN,
+  test,
+} from './fixtures'
 
 test('opens over the page, takes focus, and Esc gives it back', async ({ context, background }) => {
   const page = await context.newPage()
@@ -81,3 +88,42 @@ test("cancels the site's own zoom so Aloft looks the same everywhere", async ({
     .poll(() => frame.locator('html').evaluate((el) => (el as HTMLElement).style.zoom))
     .toBe('2')
 })
+
+// A page's modal dialog or popover sits in the top layer, above any z-index,
+// and a modal dialog also makes the rest of the page inert.
+for (const [name, open] of [
+  [
+    'modal dialog',
+    'const d = document.createElement("dialog"); document.body.append(d); d.showModal()',
+  ],
+  [
+    'popover',
+    'const p = document.createElement("div"); p.popover = "manual"; document.body.append(p); p.showPopover()',
+  ],
+] as const) {
+  test(`opens above a page's open ${name} and takes typing`, async ({ context, background }) => {
+    const page = await context.newPage()
+    await page.goto(`${TEST_ORIGIN}/`)
+    await page.evaluate(open)
+
+    await pressOpenAloft(background, page)
+    const frame = page.locator('iframe[title="Aloft"]')
+    await expect(frame).toBeVisible()
+    await palettePainted(page)
+
+    const topmost = await page.evaluate(() => {
+      const [x, y] = [innerWidth / 2, innerHeight / 2]
+      const hit = document.elementFromPoint(x, y)
+      return (hit?.shadowRoot?.elementFromPoint(x, y) ?? hit)?.tagName
+    })
+    expect(topmost).toBe('IFRAME')
+    const input = frame.contentFrame().getByRole('combobox')
+    await expect(input).toBeFocused()
+    await page.keyboard.type('abc')
+    await expect(input).toHaveValue('abc')
+
+    await sendPaletteKey(page, { key: 'Escape' })
+    await expect(frame).toHaveCount(0)
+    await expect(page.locator('dialog[open], :popover-open')).toHaveCount(1)
+  })
+}
