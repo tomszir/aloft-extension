@@ -1,4 +1,4 @@
-import { findKeyword, type Keyword } from './keywords'
+import { findKeyword, KEYWORD_PREFIX, type Keyword, listKeywords } from './keywords'
 
 export type ParsedQuery =
   | { kind: 'empty' }
@@ -50,6 +50,17 @@ export function offeredKeyword(
   keywords: readonly Keyword[],
 ): Keyword | undefined {
   return state.chip === null ? findKeyword(keywords, state.text.trim()) : undefined
+}
+
+/**
+ * The keywords to list while the input is "@" and part of one word, so they
+ * can be found without opening settings. Empty otherwise.
+ */
+export function listedKeywords(state: QueryState, keywords: readonly Keyword[]): Keyword[] {
+  if (state.chip !== null) return []
+  const text = state.text.trim()
+  if (!text.startsWith(KEYWORD_PREFIX) || /\s/.test(text)) return []
+  return listKeywords(keywords, text.slice(KEYWORD_PREFIX.length))
 }
 
 /**

@@ -88,6 +88,29 @@ describe('Palette', () => {
     expect(screen.getByRole('group', { name: 'sectionOpenTabs' })).toBeTruthy()
   })
 
+  it('labels the keyword list', () => {
+    const github = builtInKeyword('github')
+    renderPalette({
+      query: '@',
+      sections: [
+        {
+          id: 'keywords',
+          results: [
+            {
+              kind: 'keyword',
+              id: 'keyword:github',
+              keyword: github,
+              url: 'https://github.com',
+              listed: true,
+            },
+          ],
+        },
+      ],
+      activeId: 'keyword:github',
+    })
+    expect(screen.getByRole('group', { name: 'sectionKeywords' })).toBeTruthy()
+  })
+
   it('moves with the arrow keys and Page Up/Down', () => {
     const props = renderPalette()
     const input = screen.getByRole('combobox')
@@ -187,13 +210,20 @@ describe('Palette', () => {
       render(() => <Palette {...base} chip={chip()} />)
       expect(footer()).toContain('hintNewTab')
       expect(footer()).toContain('hintActions')
+      expect(footer()).toContain('hintKeywords')
       expect(footer()).toContain('hintClose')
       expect(footer()).not.toContain('hintRun')
 
       setChip('actions')
       expect(footer()).toContain('hintRun')
       expect(footer()).toContain('hintBack')
-      for (const gone of ['hintNewTab', 'hintCurrentTab', 'hintActions', 'hintClose']) {
+      for (const gone of [
+        'hintNewTab',
+        'hintCurrentTab',
+        'hintActions',
+        'hintKeywords',
+        'hintClose',
+      ]) {
         expect(footer()).not.toContain(gone)
       }
     })

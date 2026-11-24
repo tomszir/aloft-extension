@@ -1,5 +1,6 @@
 .row {
   box-sizing: border-box;
+  flex: none;
   display: flex;
   align-items: center;
   gap: var(--al-space-4);

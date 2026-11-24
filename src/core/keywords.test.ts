@@ -9,6 +9,7 @@ import {
   isValidTemplate,
   keywordHost,
   keywordUrl,
+  listKeywords,
   MAX_CUSTOM_KEYWORDS,
   resetBuiltIns,
   resolveKeywords,
@@ -74,6 +75,28 @@ describe('findKeyword', () => {
     expect(findKeyword(keywords, 'rd')).toBeUndefined()
     expect(findKeyword(keywords, 'nope')).toBeUndefined()
     expect(findKeyword(keywords, '@')).toBeUndefined()
+  })
+})
+
+describe('listKeywords', () => {
+  const keywords = resolveKeywords(undefined)
+  const listed = (text: string) => listKeywords(keywords, text).map((k) => k.keyword)
+
+  it('lists every enabled keyword, in settings order, when nothing is typed', () => {
+    expect(listed('')).toEqual(BUILT_IN_KEYWORDS.filter((k) => k.enabled).map((k) => k.keyword))
+    expect(listed('')).not.toContain('tr')
+  })
+
+  it('puts an exact keyword first, then keywords it starts, then names', () => {
+    expect(listed('gh')).toEqual(['gh'])
+    expect(listed('st')).toEqual(['stack'])
+    expect(listed('you')).toEqual(['yt'])
+    expect(listed('maps')).toEqual(['maps'])
+    expect(listed('OVER')).toEqual(['stack'])
+  })
+
+  it('is empty when nothing matches', () => {
+    expect(listed('zzz')).toEqual([])
   })
 })
 

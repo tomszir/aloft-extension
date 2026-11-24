@@ -52,8 +52,11 @@ interface Highlighted {
 export type Result =
   | { kind: 'search'; id: string; query: string }
   | { kind: 'url'; id: string; url: string }
-  /** Offers a keyword's chip; `url` is the site, for its icon. */
-  | { kind: 'keyword'; id: string; keyword: Keyword; url: string }
+  /**
+   * Offers a keyword's chip; `url` is the site, for its icon. `listed` when it
+   * comes from the "@" list rather than being typed out.
+   */
+  | { kind: 'keyword'; id: string; keyword: Keyword; url: string; listed?: boolean }
   /** Sends `query` to a keyword's site, or opens the site when it's empty. */
   | { kind: 'site'; id: string; keyword: Keyword; query: string; url: string }
   | ({
@@ -69,7 +72,7 @@ export type Result =
   | { kind: 'closed'; id: string; sessionId: string; title: string; url: string }
   | ({ kind: 'action'; id: string; action: ActionId; title: string; hint: string } & Highlighted)
 
-export type SectionId = 'top' | 'tabs' | 'history' | 'bookmarks' | 'closed' | 'actions'
+export type SectionId = 'keywords' | 'top' | 'tabs' | 'history' | 'bookmarks' | 'closed' | 'actions'
 
 export interface Section {
   id: SectionId
@@ -84,6 +87,8 @@ export interface BuildOptions {
   pinnedRowShown: boolean
   /** The keyword the input names exactly, offered above the other results. */
   offeredKeyword?: Keyword
+  /** Keywords listed above everything else while "@" is typed; this replaces the offer. */
+  listedKeywords?: readonly Keyword[]
   now: number
 }
 
@@ -286,7 +291,8 @@ export function buildSections(
 
   const { terms, text, url } = query
   const top: Result[] = []
-  const offered = options.offeredKeyword
+  const listed = options.listedKeywords ?? []
+  const offered = listed.length > 0 ? undefined : options.offeredKeyword
   if (offered) {
     top.push({ kind: 'keyword', id: 'keyword', keyword: offered, url: keywordUrl(offered, '') })
   }
@@ -317,6 +323,16 @@ export function buildSections(
     : []
 
   return compact([
+    {
+      id: 'keywords',
+      results: listed.map((k) => ({
+        kind: 'keyword',
+        id: `keyword:${k.id}`,
+        keyword: k,
+        url: keywordUrl(k, ''),
+        listed: true,
+      })),
+    },
     { id: 'top', results: top },
     {
       id: 'tabs',

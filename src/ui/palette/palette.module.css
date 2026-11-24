@@ -111,12 +111,26 @@
   flex-direction: column;
 }
 
+.section[data-section="keywords"] {
+  /* The one section that isn't capped: listing every keyword is its point. */
+  max-height: var(--al-scroll-section-height);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
 .section-label {
   padding: var(--al-space-4) var(--al-space-4) var(--al-space-1);
   font-size: var(--al-font-size-xs);
   font-weight: var(--al-font-weight-semibold);
   letter-spacing: 0.02em;
   color: var(--al-muted);
+}
+
+.section[data-section="keywords"] > .section-label {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--al-panel);
 }
 
 .footer {

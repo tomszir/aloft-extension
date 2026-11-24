@@ -5,6 +5,7 @@ import {
   EMPTY_QUERY,
   enterKeyword,
   leaveChip,
+  listedKeywords,
   offeredKeyword,
   parseQuery,
   toUrl,
@@ -65,6 +66,15 @@ describe('keyword chips', () => {
     expect(offeredKeyword({ chip: null, text: ' yt ' }, keywords)).toEqual(youtube)
     expect(offeredKeyword({ chip: null, text: 'yt cats' }, keywords)).toBeUndefined()
     expect(offeredKeyword(enterKeyword(youtube), keywords)).toBeUndefined()
+  })
+
+  it('lists keywords while the input is @ and at most one word', () => {
+    const listed = (text: string) => listedKeywords({ chip: null, text }, keywords)
+    expect(listed('@').length).toBe(keywords.filter((k) => k.enabled).length)
+    expect(listed(' @you').map((k) => k.id)).toEqual(['youtube'])
+    expect(listed('@yt cats')).toEqual([])
+    expect(listed('you')).toEqual([])
+    expect(listedKeywords({ chip: youtube, text: '@' }, keywords)).toEqual([])
   })
 
   it('parses text inside a keyword chip', () => {

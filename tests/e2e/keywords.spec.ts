@@ -51,6 +51,25 @@ test('Tab enters an offered keyword, and Backspace gives it back', async ({
   await expect(input).toHaveValue('ts')
 })
 
+test('@ lists the keywords, and picking one makes its chip', async ({ context, background }) => {
+  const page = await context.newPage()
+  await openAloft(background, page)
+  const input = palette(page).getByRole('combobox')
+  const list = palette(page).getByRole('group', { name: 'Keywords' })
+
+  await input.pressSequentially('@')
+  await expect(list.getByRole('option', { name: /Search Test Search/ })).toBeVisible()
+  await expect(list.getByRole('option', { name: /Search YouTube/ })).toBeVisible()
+
+  await input.pressSequentially('test')
+  await expect(list.getByRole('option')).toHaveCount(1)
+  await expect(list.getByRole('option')).toContainText('ts, then Space')
+
+  await sendPaletteKey(page, { key: 'Enter' })
+  await expect(input).toHaveValue('')
+  await expect(input).toHaveAttribute('placeholder', 'Search Test Search')
+})
+
 test('a switched-off keyword is plain text', async ({ context, background }) => {
   const page = await context.newPage()
   await setKeywords(background, { builtIn: {}, custom: [{ ...testKeyword, enabled: false }] })

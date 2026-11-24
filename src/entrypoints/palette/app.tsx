@@ -13,6 +13,7 @@ import {
   EMPTY_QUERY,
   enterKeyword,
   leaveChip,
+  listedKeywords,
   offeredKeyword,
   parseQuery,
   type QueryState,
@@ -74,6 +75,7 @@ export function App(props: AppProps) {
   const [query, setQuery] = createSignal<QueryState>(EMPTY_QUERY)
   const parsed = createMemo(() => parseQuery(query().text, query().chip))
   const offered = createMemo(() => offeredKeyword(query(), keywords()))
+  const listed = createMemo(() => listedKeywords(query(), keywords()))
 
   // Each keystroke starts a lookup; only the latest one may land, or a slow
   // early query could overwrite the results for what was typed after it.
@@ -139,6 +141,7 @@ export function App(props: AppProps) {
         hostTabId: hostTab()?.id,
         pinnedRowShown: pins().length > 0,
         offeredKeyword: offered(),
+        listedKeywords: listed(),
         now: Date.now(),
       },
     ),
@@ -227,7 +230,8 @@ export function App(props: AppProps) {
       favicon={pageFavicon}
       onQuery={(text) => setQuery(applyInput(query(), text, keywords()))}
       onTab={() => {
-        const keyword = offered()
+        const active = results().find((r) => r.id === effectiveActiveId())
+        const keyword = active?.kind === 'keyword' ? active.keyword : offered()
         if (keyword) setQuery(enterKeyword(keyword))
         return keyword !== undefined
       }}

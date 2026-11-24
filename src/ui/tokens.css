@@ -24,6 +24,7 @@
   --al-input-height: 56px;
   --al-row-height: 44px;
   --al-footer-height: 38px;
+  --al-scroll-section-height: calc(var(--al-row-height) * 7.5);
   --al-kbd-size: 18px;
   --al-kbd-radius: 5px;
   --al-menu-width: 200px;

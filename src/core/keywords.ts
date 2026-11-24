@@ -172,6 +172,33 @@ export function findKeyword(keywords: readonly Keyword[], text: string): Keyword
   return keywords.find((k) => k.enabled && k.keyword === word)
 }
 
+/**
+ * The enabled keywords that `text` (typed after "@") could mean: an exact
+ * keyword first, then keywords it starts, then names with a word it starts, so
+ * "@you" finds YouTube without knowing it's "yt". Nothing typed lists them all.
+ */
+export function listKeywords(keywords: readonly Keyword[], text: string): Keyword[] {
+  const word = text.toLowerCase()
+  const enabled = keywords.filter((k) => k.enabled)
+  if (word === '') return enabled
+  const rank = (k: Keyword) => {
+    if (k.keyword === word) return 0
+    if (k.keyword.startsWith(word)) return 1
+    return k.name
+      .toLowerCase()
+      .split(/[^\p{L}\p{N}]+/u)
+      .some((w) => w.startsWith(word))
+      ? 2
+      : 3
+  }
+  // Stable sort: equally good matches keep the settings order.
+  return enabled
+    .map((k) => ({ k, rank: rank(k) }))
+    .filter(({ rank }) => rank < 3)
+    .sort((a, b) => a.rank - b.rank)
+    .map(({ k }) => k)
+}
+
 /** Where a keyword sends `text`; with nothing typed, the site itself. */
 export function keywordUrl(keyword: Keyword, text: string): string {
   const query = text.trim()

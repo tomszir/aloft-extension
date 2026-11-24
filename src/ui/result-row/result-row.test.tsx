@@ -66,6 +66,18 @@ describe('ResultRow', () => {
       expect((await screen.findByTestId('favicon-letter')).textContent).toBe('C')
     })
 
+    it('teaches the keyword on a listed row', () => {
+      renderRow({
+        kind: 'keyword',
+        id: 'keyword:claude',
+        keyword: claude,
+        url: 'https://claude.ai/new',
+        listed: true,
+      })
+      expect(screen.getByRole('option').textContent).toContain('keywordListHint')
+      expect(screen.getByRole('option').textContent).not.toContain('keywordOfferHint')
+    })
+
     it('opens the site when nothing is typed', () => {
       renderRow(
         { kind: 'site', id: 'site', keyword: claude, query: '', url: 'https://claude.ai/new' },

@@ -1,4 +1,4 @@
-import { For, Show } from 'solid-js'
+import { createEffect, For, Show } from 'solid-js'
 import { i18n } from '#i18n'
 import type { ActionId } from '../../core/actions'
 import type { Keyword } from '../../core/keywords'
@@ -45,7 +45,10 @@ function subtitle(result: Result): string {
     case 'url':
       return i18n.t('goToAddress')
     case 'keyword':
-      return i18n.t('keywordOfferHint')
+      // Listed rows teach the keyword, so next time it can be typed straight away.
+      return result.listed
+        ? i18n.t('keywordListHint', [result.keyword.keyword])
+        : i18n.t('keywordOfferHint')
     case 'site':
       return result.query === '' ? displayUrl(result.url) : verb(result.keyword)
     case 'action':
@@ -119,13 +122,34 @@ function glyph(result: Result): IconName | undefined {
   }
 }
 
+// By hand rather than scrollIntoView, which would also scroll the page
+// around the overlay's frame.
+function keepInView(row: HTMLElement) {
+  const box = row.parentElement
+  if (!box || box.scrollHeight <= box.clientHeight) return
+  const rowRect = row.getBoundingClientRect()
+  const boxRect = box.getBoundingClientRect()
+  // The section's label sticks to the top, so a row just under it is hidden.
+  const label = box.firstElementChild
+  const covered =
+    label && label.getAttribute('role') !== 'option' ? label.getBoundingClientRect().height : 0
+  const top = boxRect.top + covered
+  if (rowRect.top < top) box.scrollTop -= top - rowRect.top
+  else if (rowRect.bottom > boxRect.bottom) box.scrollTop += rowRect.bottom - boxRect.bottom
+}
+
 export function ResultRow(props: ResultRowProps) {
   const pageUrl = () => ('url' in props.result ? props.result.url : '')
+  let row: HTMLDivElement | undefined
+  createEffect(() => {
+    if (props.active && row) keepInView(row)
+  })
   return (
     // Focus stays in the input (aria-activedescendant points here), so the
     // row is reachable by keyboard without being a tab stop itself.
     // biome-ignore lint/a11y/useKeyWithClickEvents: the combobox input handles the keys for every option.
     <div
+      ref={row}
       id={props.optionId}
       class={styles.row}
       role="option"
