@@ -39,7 +39,7 @@ const baseProps = (): PaletteProps => ({
   chip: null,
   sections,
   activeId: 'search',
-  favicon: () => '',
+  favicon: () => Promise.resolve(null),
   onQuery: vi.fn(),
   onLeaveChip: vi.fn(),
   onMove: vi.fn(),

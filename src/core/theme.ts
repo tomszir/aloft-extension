@@ -202,6 +202,8 @@ export interface ThemeTokens {
   onAccent: string
   keycap: string
   keycapText: string
+  /** A keycap on the selected row, which `keycap` all but disappears into. */
+  keycapSelected: string
   radius: number
   rowRadius: number
   tileRadius: number
@@ -226,6 +228,7 @@ export function deriveTokens(theme: Theme): ThemeTokens {
     onAccent,
     keycap: mix(c.panel, c.selected, 0.7),
     keycapText: mix(c.muted, c.text, 0.5),
+    keycapSelected: mix(c.selected, c.text, 0.14),
     radius: theme.radius,
     rowRadius: Math.round(theme.radius * 0.65),
     tileRadius: Math.round(theme.radius * 0.8),
@@ -247,6 +250,7 @@ export function tokensToCssVars(tokens: ThemeTokens): Record<`--al-${string}`, s
     '--al-on-accent': tokens.onAccent,
     '--al-keycap': tokens.keycap,
     '--al-keycap-text': tokens.keycapText,
+    '--al-keycap-selected': tokens.keycapSelected,
     '--al-radius': `${tokens.radius}px`,
     '--al-row-radius': `${tokens.rowRadius}px`,
     '--al-tile-radius': `${tokens.tileRadius}px`,

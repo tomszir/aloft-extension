@@ -18,7 +18,7 @@ import {
   tabResult,
 } from '../../core/results'
 import { runAction } from '../../platform/actions'
-import { faviconUrl } from '../../platform/favicon'
+import { pageFavicon } from '../../platform/favicon'
 import { CLOSE_OVERLAY, type CloseOverlayMessage } from '../../platform/messages'
 import { type Disposition, type HostTab, openResult } from '../../platform/open-result'
 import { movePinned, unpin } from '../../platform/pinned'
@@ -201,7 +201,7 @@ export function App(props: AppProps) {
       chip={query().chip}
       sections={sections()}
       activeId={effectiveActiveId()}
-      favicon={faviconUrl}
+      favicon={pageFavicon}
       onQuery={(text) => setQuery(applyInput(query(), text))}
       onLeaveChip={() => setQuery(leaveChip(query()))}
       onMove={move}

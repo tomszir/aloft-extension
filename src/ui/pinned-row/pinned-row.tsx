@@ -1,7 +1,7 @@
 import { Show } from 'solid-js'
 import { i18n } from '#i18n'
 import { MAX_SHORTCUTS } from '../../core/pinned'
-import type { TabEntry } from '../../core/results'
+import { type TabEntry, tileLetter } from '../../core/results'
 import { Favicon } from '../favicon/favicon'
 import { Kbd } from '../kbd/kbd'
 import { Keyed } from '../keyed/keyed'
@@ -10,7 +10,7 @@ import styles from './pinned-row.module.css'
 export interface PinnedRowProps {
   pins: readonly TabEntry[]
   altHeld: boolean
-  favicon: (pageUrl: string) => string
+  favicon: (pageUrl: string) => Promise<string | null>
   onOpen: (pin: TabEntry) => void
   onMenu: (pin: TabEntry, anchor: DOMRect) => void
 }
@@ -53,7 +53,11 @@ export function PinnedRow(props: PinnedRowProps) {
                   }
                 }}
               >
-                <Favicon src={props.favicon(pin().url)} fallback={pin().title.charAt(0)} />
+                <Favicon
+                  pageUrl={pin().url}
+                  load={props.favicon}
+                  letter={tileLetter(pin().title, pin().url)}
+                />
                 <Show when={pin().loaded}>
                   <span class={styles.loaded} aria-hidden="true" />
                 </Show>

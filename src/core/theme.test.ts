@@ -30,6 +30,15 @@ describe('presets', () => {
     },
   )
 
+  it.each(PRESET_THEMES.map((t) => [t.name, t] as const))(
+    '%s keeps the selected row keycap visible and readable',
+    (_name, theme) => {
+      const tokens = deriveTokens(theme)
+      expect(contrastRatio(tokens.keycapSelected, tokens.selected)).toBeGreaterThan(1.25)
+      expect(contrastRatio(tokens.text, tokens.keycapSelected)).toBeGreaterThanOrEqual(4.5)
+    },
+  )
+
   it('has unique ids and both defaults', () => {
     const ids = PRESET_THEMES.map((t) => t.id)
     expect(new Set(ids).size).toBe(ids.length)

@@ -63,3 +63,9 @@
   font-size: var(--al-font-size-sm);
   color: var(--al-muted);
 }
+
+.match {
+  background: none;
+  color: inherit;
+  font-weight: var(--al-font-weight-semibold);
+}

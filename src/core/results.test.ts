@@ -3,10 +3,13 @@ import { applyInput, EMPTY_QUERY, parseQuery } from './query'
 import {
   type BuildOptions,
   buildSections,
+  displayUrl,
   flatten,
+  highlightRanges,
   matchScore,
   pageKey,
   type SourceData,
+  tileLetter,
 } from './results'
 
 const NOW = Date.UTC(2026, 10, 23)
@@ -160,6 +163,57 @@ describe('buildSections', () => {
   it('carries the browser shortcut along as a hint', () => {
     const [section] = buildSections(parseQuery('new', 'actions'), data, options)
     expect(section?.results[0]).toMatchObject({ kind: 'action', hint: 'Ctrl+N' })
+  })
+})
+
+describe('highlightRanges', () => {
+  it('marks each term where it matched, merging overlaps', () => {
+    expect(highlightRanges(['win', 'rul'], 'Window rules')).toEqual([
+      [0, 3],
+      [7, 10],
+    ])
+    expect(highlightRanges(['wind', 'ndow'], 'Window rules')).toEqual([[0, 6]])
+  })
+
+  it('prefers a word start over an earlier mid-word match', () => {
+    expect(highlightRanges(['al'], 'Totally Aloft')).toEqual([[8, 10]])
+  })
+
+  it('falls back to a mid-word match, and skips terms only the URL matched', () => {
+    expect(highlightRanges(['ule'], 'Window rules')).toEqual([[8, 11]])
+    expect(highlightRanges(['github'], 'tomszir/aloft')).toEqual([])
+  })
+
+  it('leaves titles plain when lowercasing would shift the indexes', () => {
+    expect(highlightRanges(['ist'], 'İstanbul')).toEqual([])
+  })
+
+  it('is attached to matched results, and not to the empty list', () => {
+    const query = parseInput('aloft')
+    const tab = flatten(buildSections(query, data, options)).find((r) => r.id === 'tab:2')
+    expect(tab && 'highlights' in tab && tab.highlights).toEqual([[8, 13]])
+    const empty = flatten(buildSections(parseInput(''), data, options))
+    expect(empty.some((r) => 'highlights' in r)).toBe(false)
+  })
+})
+
+describe('tileLetter', () => {
+  it('uses the first letter or digit of the title', () => {
+    expect(tileLetter('(3) Inbox', 'https://mail.test/')).toBe('3')
+    expect(tileLetter('— notes', 'https://mail.test/')).toBe('N')
+  })
+
+  it('falls back to the host without www', () => {
+    expect(tileLetter('', 'https://www.example.test/a')).toBe('E')
+    expect(tileLetter('', 'not a url')).toBe('')
+  })
+})
+
+describe('displayUrl', () => {
+  it('drops the scheme, www and the slash after a bare host', () => {
+    expect(displayUrl('https://www.github.com/')).toBe('github.com')
+    expect(displayUrl('https://github.com/tomszir/')).toBe('github.com/tomszir/')
+    expect(displayUrl('https://github.com/?tab=1')).toBe('github.com/?tab=1')
   })
 })
 

@@ -20,7 +20,8 @@ export interface PaletteProps {
   chip: Chip | null
   sections: readonly Section[]
   activeId: string | undefined
-  favicon: (pageUrl: string) => string
+  /** Resolves to null when the browser has no icon for the page. */
+  favicon: (pageUrl: string) => Promise<string | null>
   onQuery: (text: string) => void
   /** Backspace on an empty input or Esc while a chip is shown. */
   onLeaveChip: () => void
