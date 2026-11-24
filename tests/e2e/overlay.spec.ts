@@ -1,3 +1,4 @@
+import type { Page } from '@playwright/test'
 import {
   expect,
   palettePainted,
@@ -128,36 +129,47 @@ for (const [name, open] of [
   })
 }
 
-// A site that declares dark support makes the frame's "normal" color-scheme
-// resolve to dark, unlike the palette inside it, and Chrome then paints an
-// opaque backdrop over the whole page.
-test('the page stays visible behind the palette on sites that declare dark mode', async ({
-  context,
-  background,
-}) => {
-  await context.route(`${TEST_ORIGIN}/dark-aware`, (route) =>
-    route.fulfill({
-      contentType: 'text/html',
-      body: '<!doctype html><meta name="color-scheme" content="light dark"><title>Dark aware</title><body style="margin:0;background:#cc3333">',
-    }),
-  )
-  const page = await context.newPage()
-  await page.emulateMedia({ colorScheme: 'dark' })
-  await page.goto(`${TEST_ORIGIN}/dark-aware`)
-  await pressOpenAloft(background, page)
-  await palettePainted(page)
-
-  // A corner far from the panel: the page's red, dimmed, not an opaque gray.
+async function cornerColor(page: Page): Promise<number[]> {
   const shot = await page.screenshot({ clip: { x: 8, y: 680, width: 1, height: 1 } })
-  const [red = 0, green = 0, blue = 0] = await page.evaluate(async (png) => {
+  return page.evaluate(async (png) => {
     const image = new Image()
     image.src = `data:image/png;base64,${png}`
     await image.decode()
-    const canvas = new OffscreenCanvas(1, 1)
-    const context2d = canvas.getContext('2d')
-    context2d?.drawImage(image, 0, 0)
-    return [...(context2d?.getImageData(0, 0, 1, 1).data ?? [])]
+    const canvas = new OffscreenCanvas(1, 1).getContext('2d')
+    canvas?.drawImage(image, 0, 0)
+    return [...(canvas?.getImageData(0, 0, 1, 1).data.slice(0, 3) ?? [])]
   }, shot.toString('base64'))
-  expect(red).toBeGreaterThan(green * 2)
-  expect(blue).toBeLessThan(red / 2)
+}
+
+// Sites' own color-scheme declarations reach the palette's frame through its
+// iframe: a mismatch paints an opaque backdrop over the page, and the frame's
+// prefers-color-scheme follows the iframe's scheme.
+test.describe('on a dark system', () => {
+  test.use({ darkSystem: true })
+
+  for (const declared of ['', 'light', 'light dark', 'dark']) {
+    test(`uses the dark theme over the page when a site declares "${declared}"`, async ({
+      context,
+      background,
+    }) => {
+      const meta = declared ? `<meta name="color-scheme" content="${declared}">` : ''
+      await context.route(`${TEST_ORIGIN}/declared`, (route) =>
+        route.fulfill({
+          contentType: 'text/html',
+          body: `<!doctype html>${meta}<title>Declared</title><body style="margin:0;background:#cc3333">`,
+        }),
+      )
+      const page = await context.newPage()
+      await page.goto(`${TEST_ORIGIN}/declared`)
+      await pressOpenAloft(background, page)
+      await palettePainted(page)
+
+      const root = page.locator('iframe[title="Aloft"]').contentFrame().locator('html')
+      await expect(root).toHaveAttribute('data-scheme', 'dark')
+      // A corner far from the panel: the page's red, dimmed, not an opaque gray.
+      const [red = 0, green = 0, blue = 0] = await cornerColor(page)
+      expect(red).toBeGreaterThan(green * 2)
+      expect(blue).toBeLessThan(red / 2)
+    })
+  }
 })
