@@ -1,5 +1,4 @@
 import { createEffect, createMemo, createSignal, on, onCleanup } from 'solid-js'
-import { browser } from 'wxt/browser'
 import { actionEntries } from '../../app/action-entries'
 import { useKeywords } from '../../app/use-keywords'
 import { useSettings } from '../../app/use-settings'
@@ -29,21 +28,24 @@ import {
   type TabEntry,
   tabResult,
 } from '../../core/results'
-import { runAction } from '../../platform/actions'
 import { pageFavicon } from '../../platform/favicon'
 import { loadLearned, savePick } from '../../platform/learned'
-import { CLOSE_OVERLAY, type CloseOverlayMessage } from '../../platform/messages'
-import { type Disposition, type HostTab, openResult } from '../../platform/open-result'
-import { movePinned, unpin } from '../../platform/pinned'
+import type { Disposition, HostTab } from '../../platform/open-result'
 import {
+  closeOverlay,
+  closeTab,
   loadBookmarks,
   loadRecentHistory,
   loadRecentlyClosed,
   loadTabs,
+  movePinned,
+  openResult,
+  runAction,
   searchBookmarks,
   searchHistory,
+  unpin,
   watchTabs,
-} from '../../platform/sources'
+} from '../../platform/palette-api'
 import { type Move, Palette } from '../../ui/palette/palette'
 
 /**
@@ -200,13 +202,7 @@ export function App(props: AppProps) {
   async function close(): Promise<void> {
     const tab = hostTab() ?? (await props.hostTab)
     if (tab === undefined) return
-    if (props.host === 'overlay') {
-      const message: CloseOverlayMessage = { type: CLOSE_OVERLAY }
-      await browser.tabs.sendMessage(tab.id, message, { frameId: 0 })
-      return
-    }
-    // window.close() is ignored for tabs the user opened, like Ctrl+T's.
-    await browser.tabs.remove(tab.id)
+    await (props.host === 'overlay' ? closeOverlay(tab.id) : closeTab(tab.id))
   }
 
   // Esc on the new tab page only clears: closing it could close the window,

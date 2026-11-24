@@ -1,6 +1,7 @@
 import { browser } from 'wxt/browser'
 import { watchNewTabs } from '../platform/newtab-intercept'
 import { openAloft } from '../platform/overlay'
+import { serveRelay } from '../platform/relay-host'
 
 export default defineBackground(() => {
   browser.commands.onCommand.addListener((command, tab) => {
@@ -8,6 +9,7 @@ export default defineBackground(() => {
   })
 
   watchNewTabs()
+  if (import.meta.env.FIREFOX) serveRelay()
 
   // Ctrl+T needs site access, and that can only be asked for from a click, so
   // a first-run page explains it rather than Ctrl+T silently not working.
