@@ -1,4 +1,5 @@
 import { type Browser, browser } from 'wxt/browser'
+import type { Settings } from '../core/settings'
 import { OVERLAY_OPTIONS_KEY, type OverlayOptions } from './messages'
 import { loadSettings } from './settings'
 
@@ -19,11 +20,11 @@ function setOverlayOptions(key: string, options: OverlayOptions): void {
 }
 
 /**
- * False when the page refuses content scripts (browser pages, the Web Store,
+ * Hands the overlay its options, which also tells whether the page takes
+ * scripts at all: false when it refuses them (browser pages, the Web Store,
  * the PDF viewer) or Aloft has no access to it.
  */
-export async function injectOverlay(tabId: number): Promise<boolean> {
-  const settings = await loadSettings()
+export async function prepareOverlay(tabId: number, settings: Settings): Promise<boolean> {
   const options: OverlayOptions = { blur: settings.appearance.blur }
   try {
     await browser.scripting.executeScript({
@@ -31,11 +32,24 @@ export async function injectOverlay(tabId: number): Promise<boolean> {
       func: setOverlayOptions,
       args: [OVERLAY_OPTIONS_KEY, options],
     })
+    return true
+  } catch {
+    return false
+  }
+}
+
+/** Draws the overlay on a page that {@link prepareOverlay} succeeded on. */
+export async function drawOverlay(tabId: number): Promise<boolean> {
+  try {
     await browser.scripting.executeScript({ target: { tabId }, files: [OVERLAY_SCRIPT] })
     return true
   } catch {
     return false
   }
+}
+
+export async function injectOverlay(tabId: number): Promise<boolean> {
+  return (await prepareOverlay(tabId, await loadSettings())) && drawOverlay(tabId)
 }
 
 export async function openAloft(tab: Browser.tabs.Tab | undefined): Promise<void> {

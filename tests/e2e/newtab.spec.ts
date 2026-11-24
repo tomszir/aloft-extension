@@ -1,7 +1,7 @@
 import type { BrowserContext, Page } from '@playwright/test'
 import { activeTabUrl, expect, pressNewTab, setSettings, TEST_ORIGIN, test } from './fixtures'
 
-const NEW_TAB_PAGE = /^chrome-extension:\/\/[^/]+\/newtab\.html$/
+const NEW_TAB_PAGE = /^chrome-extension:\/\/[^/]+\/newtab\.html(\?focus)?$/
 
 const onboardingPage = async (context: BrowserContext) => {
   const isOnboarding = (p: Page) => p.url().endsWith('/onboarding.html')
