@@ -6,3 +6,5 @@ web-ext.config.ts
 .env
 test-results
 playwright-report
+video/public/frames
+video/out
