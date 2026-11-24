@@ -26,6 +26,8 @@ The palette shows tab titles, history and bookmarks. Anything drawn into a web p
 
 MV3 service workers keep no memory between wake-ups, so the previously active tab for each window is kept in `storage.session`.
 
+On a new tab page the browser keeps keyboard focus in the address bar, whatever the page focuses, so keys typed before Aloft is back on the previous tab are lost. The intercept switches back as soon as the page has taken its first script, and the new tab page draws nothing until the background says the tab stays, so a closing tab doesn't flash the palette. A tab that stays replaces itself once (`newtab.html?focus`), because a page that navigates itself gets focus; the address bar then shows its address.
+
 ## Pinned tabs
 
 Helium 0.22.2+ has persistent pins ([imputnet/helium#2931](https://github.com/imputnet/helium/pull/2931)): they're shared by every window, kept across restarts, and remember their address. Aloft keeps no list of its own. It shows the pinned tabs as a row at the top of the palette (Alt+1–9), with open, move and unpin.

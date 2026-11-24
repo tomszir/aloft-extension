@@ -29,3 +29,20 @@ export function isCloseOverlayMessage(message: unknown): message is CloseOverlay
     message.type === CLOSE_OVERLAY
   )
 }
+
+// The new tab page asks this before drawing the palette, so a tab Ctrl+T is
+// about to close doesn't flash it first.
+export const NEW_TAB_STAYS = 'aloft:new-tab-stays'
+
+export interface NewTabStaysMessage {
+  type: typeof NEW_TAB_STAYS
+}
+
+export function isNewTabStaysMessage(message: unknown): message is NewTabStaysMessage {
+  return (
+    typeof message === 'object' &&
+    message !== null &&
+    'type' in message &&
+    message.type === NEW_TAB_STAYS
+  )
+}
