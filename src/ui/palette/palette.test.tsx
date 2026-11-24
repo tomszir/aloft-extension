@@ -204,26 +204,18 @@ describe('Palette', () => {
       expect(props.onClose).not.toHaveBeenCalled()
     })
 
-    it('shows only the keys that work in each mode', () => {
+    it('shows only the ways in and out of each mode', () => {
       const [chip, setChip] = createSignal<'actions' | null>(null)
       const base = baseProps()
       render(() => <Palette {...base} chip={chip()} />)
-      expect(footer()).toContain('hintNewTab')
-      expect(footer()).toContain('hintActions')
       expect(footer()).toContain('hintKeywords')
+      expect(footer()).toContain('hintActions')
       expect(footer()).toContain('hintClose')
-      expect(footer()).not.toContain('hintRun')
+      expect(footer()).not.toContain('hintBack')
 
       setChip('actions')
-      expect(footer()).toContain('hintRun')
       expect(footer()).toContain('hintBack')
-      for (const gone of [
-        'hintNewTab',
-        'hintCurrentTab',
-        'hintActions',
-        'hintKeywords',
-        'hintClose',
-      ]) {
+      for (const gone of ['hintKeywords', 'hintActions', 'hintClose']) {
         expect(footer()).not.toContain(gone)
       }
     })

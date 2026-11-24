@@ -3,6 +3,7 @@ import { i18n } from '#i18n'
 import { shortcutSlot } from '../../core/pinned'
 import type { Chip } from '../../core/query'
 import type { Result, Section, SectionId, TabEntry } from '../../core/results'
+import type { Settings } from '../../core/settings'
 import type { FaviconLoader } from '../favicon/favicon'
 import { Icon } from '../icon/icon'
 import { Kbd } from '../kbd/kbd'
@@ -35,8 +36,8 @@ export interface PaletteProps {
   onClose: () => void
   /** Off in the settings preview, so loading the page doesn't move focus into it. */
   autofocus?: boolean
-  /** Off where Enter always opens in place, so the hints would be wrong. */
-  showOpenHints?: boolean
+  /** Where Enter opens a page; unset where it always opens in place, so rows offer no choice. */
+  enterOpensIn?: Settings['enterOpensIn']
   /** Shown as a row; empty hides it. */
   pins: readonly TabEntry[]
   /** Alt+1–9 targets, which also work while a query hides the row. */
@@ -262,6 +263,7 @@ export function Palette(props: PaletteProps) {
                       optionId={optionIds().get(result().id) ?? ''}
                       active={result().id === props.activeId}
                       favicon={props.favicon}
+                      enterOpensIn={props.enterOpensIn}
                       onHover={() => props.onHover(result().id)}
                       onActivate={(shift) => props.onActivate(result(), shift)}
                     />
@@ -271,49 +273,24 @@ export function Palette(props: PaletteProps) {
             )}
           </Keyed>
         </div>
+        {/* Only the ways in and out; what Enter does is on the selected row. */}
         <footer class={styles.footer}>
-          <span class={styles.hint}>
-            <Kbd>↑</Kbd>
-            <Kbd>↓</Kbd> {i18n.t('hintNavigate')}
-          </span>
           <Show
-            when={props.chip === 'actions'}
+            when={props.chip}
             fallback={
               <>
-                <Show when={props.showOpenHints ?? true}>
-                  <span class={styles.hint}>
-                    <Kbd>↵</Kbd> {i18n.t('hintNewTab')}
-                  </span>
-                  <span class={styles.hint}>
-                    <Kbd>⇧ ↵</Kbd> {i18n.t('hintCurrentTab')}
-                  </span>
-                </Show>
-                <Show
-                  when={keyword()}
-                  fallback={
-                    <>
-                      <span class={`${styles.hint} ${styles.hintEnd}`}>
-                        <Kbd>@</Kbd> {i18n.t('hintKeywords')}
-                      </span>
-                      <span class={styles.hint}>
-                        <Kbd>&gt;</Kbd> {i18n.t('hintActions')}
-                      </span>
-                      <span class={styles.hint}>
-                        <Kbd>Esc</Kbd> {i18n.t('hintClose')}
-                      </span>
-                    </>
-                  }
-                >
-                  <span class={`${styles.hint} ${styles.hintEnd}`}>
-                    <Kbd>Esc</Kbd> {i18n.t('hintBack')}
-                  </span>
-                </Show>
+                <span class={`${styles.hint} ${styles.hintEnd}`}>
+                  <Kbd>@</Kbd> {i18n.t('hintKeywords')}
+                </span>
+                <span class={styles.hint}>
+                  <Kbd>&gt;</Kbd> {i18n.t('hintActions')}
+                </span>
+                <span class={styles.hint}>
+                  <Kbd>Esc</Kbd> {i18n.t('hintClose')}
+                </span>
               </>
             }
           >
-            <span class={styles.hint}>
-              <Kbd>↵</Kbd> {i18n.t('hintRun')}
-            </span>
             <span class={`${styles.hint} ${styles.hintEnd}`}>
               <Kbd>Esc</Kbd> {i18n.t('hintBack')}
             </span>

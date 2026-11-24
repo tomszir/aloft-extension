@@ -70,12 +70,12 @@ test('> becomes a chip that Backspace and Esc turn back into text', async ({
   await page.keyboard.type('>')
   await expect(input).toHaveValue('')
   await expect(input).toHaveAttribute('placeholder', 'Search actions')
-  await expect(footer).toContainText('Run')
-  await expect(footer).not.toContainText('New tab')
+  await expect(footer).toContainText('Back')
+  await expect(footer).not.toContainText('Actions')
 
   await page.keyboard.press('Backspace')
   await expect(input).toHaveValue('>')
-  await expect(footer).toContainText('New tab')
+  await expect(footer).toContainText('Actions')
   await expect(palette(page).getByRole('group', { name: 'Actions' })).toHaveCount(0)
 
   await page.keyboard.type('pin')

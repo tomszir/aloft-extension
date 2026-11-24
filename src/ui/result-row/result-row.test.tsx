@@ -4,12 +4,13 @@ import { builtInKeyword } from '../../core/keywords'
 import type { Result } from '../../core/results'
 import { ResultRow } from './result-row'
 
-const renderRow = (result: Result, active = false) =>
+const renderRow = (result: Result, active = false, enterOpensIn?: 'new-tab' | 'current-tab') =>
   render(() => (
     <ResultRow
       result={result}
       optionId="al-option-0"
       active={active}
+      enterOpensIn={enterOpensIn}
       favicon={() => Promise.resolve(null)}
       onHover={vi.fn()}
       onActivate={vi.fn()}
@@ -47,6 +48,34 @@ describe('ResultRow', () => {
     expect(container.querySelector('kbd')?.hasAttribute('data-selected')).toBe(true)
   })
 
+  describe('where Enter opens', () => {
+    const page: Result = {
+      kind: 'history',
+      id: 'history:x',
+      title: 'Docs',
+      url: 'https://docs.test/',
+    }
+
+    it('offers both places on a selected page, the preferred one on Enter', () => {
+      renderRow(page, true, 'current-tab')
+      const text = screen.getByRole('option').textContent ?? ''
+      expect(text.indexOf('openHere')).toBeLessThan(text.indexOf('openNewTab'))
+      expect(text).toContain('⇧ ↵')
+    })
+
+    it('names only the verb where Enter always opens in place', () => {
+      renderRow(page, true)
+      expect(screen.getByRole('option').textContent).toContain('actionOpen')
+      expect(screen.getByRole('option').textContent).not.toContain('⇧')
+    })
+
+    it('keeps an open tab to one key, since it only switches', () => {
+      renderRow(tab, true, 'new-tab')
+      expect(screen.getByRole('option').textContent).toContain('actionSwitch')
+      expect(screen.getByRole('option').textContent).not.toContain('⇧')
+    })
+  })
+
   describe('keyword rows', () => {
     const claude = builtInKeyword('claude')
 
@@ -66,16 +95,20 @@ describe('ResultRow', () => {
       expect((await screen.findByTestId('favicon-letter')).textContent).toBe('C')
     })
 
-    it('teaches the keyword on a listed row', () => {
-      renderRow({
+    it('ends a listed row with its keyword, and shows the site instead', () => {
+      const listed: Result = {
         kind: 'keyword',
         id: 'keyword:claude',
         keyword: claude,
         url: 'https://claude.ai/new',
         listed: true,
-      })
-      expect(screen.getByRole('option').textContent).toContain('keywordListHint')
-      expect(screen.getByRole('option').textContent).not.toContain('keywordOfferHint')
+      }
+      renderRow(listed)
+      const row = screen.getByRole('option')
+      expect(row.textContent).toContain('claude.ai/new')
+      expect(row.textContent).toContain('cl')
+      expect(row.textContent).not.toContain('keywordOfferHint')
+      expect(row.querySelector('[data-shown]')).toBeNull()
     })
 
     it('asks for the site’s icon, not the search address that changes as you type', () => {

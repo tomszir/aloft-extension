@@ -240,7 +240,9 @@ export function App(props: AppProps) {
       onHover={setActiveId}
       onActivate={(result, shift) => void activate(result, shift)}
       onClose={() => void dismiss()}
-      showOpenHints={props.host === 'overlay' || props.host === 'preview'}
+      enterOpensIn={
+        props.host === 'overlay' || props.host === 'preview' ? settings().enterOpensIn : undefined
+      }
       autofocus={props.host !== 'preview'}
       pins={pins()}
       pinShortcuts={pinShortcuts()}
