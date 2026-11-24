@@ -14,6 +14,7 @@ The repository is public: nothing private goes in it (personal notes, plans, lin
 | Build and size budgets          | `pnpm build && pnpm size`                                                                   |
 | End-to-end tests                | `pnpm test:e2e` (Playwright's Chromium; `ALOFT_BROWSER=/usr/bin/helium-browser` for Helium) |
 | Store screenshots               | `pnpm screenshots`                                                                          |
+| Promo video (Remotion)          | `pnpm video` (writes `video/out/aloft-promo.mp4`; `pnpm --dir video studio` to edit)        |
 | Re-vendor icons from their lock | `mise run icons:vendor`                                                                     |
 
 Run all of the first four before opening a PR. The `pre-push` hook runs the end-to-end tests; CI runs them too but doesn't require them.

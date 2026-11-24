@@ -1,0 +1,5 @@
+# A project of its own, so Remotion and React stay out of the extension's
+# install. esbuild's install script only re-checks the binary that its
+# platform package already provides.
+allowBuilds:
+  esbuild: false
