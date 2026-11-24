@@ -1,6 +1,7 @@
 import { For, Show } from 'solid-js'
 import { i18n } from '#i18n'
 import type { ActionId } from '../../core/actions'
+import type { Keyword } from '../../core/keywords'
 import { displayUrl, type Highlight, type Result, tileLetter } from '../../core/results'
 import { Favicon } from '../favicon/favicon'
 import { Icon } from '../icon/icon'
@@ -17,12 +18,21 @@ export interface ResultRowProps {
   onActivate: (shift: boolean) => void
 }
 
+const verb = (keyword: Keyword) =>
+  keyword.kind === 'ask'
+    ? i18n.t('keywordAsk', [keyword.name])
+    : i18n.t('keywordSearch', [keyword.name])
+
 function title(result: Result): string {
   switch (result.kind) {
     case 'search':
       return result.query
     case 'url':
       return displayUrl(result.url)
+    case 'keyword':
+      return verb(result.keyword)
+    case 'site':
+      return result.query === '' ? i18n.t('keywordOpen', [result.keyword.name]) : result.query
     default:
       return result.title
   }
@@ -34,6 +44,10 @@ function subtitle(result: Result): string {
       return i18n.t('searchTheWeb')
     case 'url':
       return i18n.t('goToAddress')
+    case 'keyword':
+      return i18n.t('keywordOfferHint')
+    case 'site':
+      return result.query === '' ? displayUrl(result.url) : verb(result.keyword)
     case 'action':
       return result.hint
     default:
@@ -45,6 +59,11 @@ function action(result: Result): string {
   switch (result.kind) {
     case 'search':
       return i18n.t('actionSearch')
+    case 'keyword':
+      return i18n.t('actionChoose')
+    case 'site':
+      if (result.query === '') return i18n.t('actionOpen')
+      return result.keyword.kind === 'ask' ? i18n.t('actionAsk') : i18n.t('actionSearch')
     case 'tab':
       return i18n.t('actionSwitch')
     case 'closed':
@@ -80,6 +99,11 @@ function segments(text: string, highlights: readonly Highlight[] = []): Segment[
   if (at < text.length) parts.push({ text: text.slice(at), matched: false })
   return parts
 }
+
+// A keyword's rows show its site, so their tile takes the site's letter, not
+// the "Search…" or typed text in the title.
+const letterSource = (result: Result) =>
+  result.kind === 'keyword' || result.kind === 'site' ? result.keyword.name : title(result)
 
 /** Undefined for page results, which show the site's favicon instead. */
 function glyph(result: Result): IconName | undefined {
@@ -123,7 +147,7 @@ export function ResultRow(props: ResultRowProps) {
           <Favicon
             pageUrl={pageUrl()}
             load={props.favicon}
-            letter={tileLetter(title(props.result), pageUrl())}
+            letter={tileLetter(letterSource(props.result), pageUrl())}
           />
         }
       >

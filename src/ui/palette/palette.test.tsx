@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@solidjs/testing-library'
 import { createSignal } from 'solid-js'
 import { describe, expect, it, vi } from 'vitest'
+import { builtInKeyword } from '../../core/keywords'
 import type { Section, TabEntry } from '../../core/results'
 import { Palette, type PaletteProps } from './palette'
 
@@ -195,6 +196,39 @@ describe('Palette', () => {
       for (const gone of ['hintNewTab', 'hintCurrentTab', 'hintActions', 'hintClose']) {
         expect(footer()).not.toContain(gone)
       }
+    })
+  })
+
+  describe('keyword chip', () => {
+    const youtube = builtInKeyword('youtube')
+
+    it('shows the site in the chip and the input says what it does', () => {
+      renderPalette({ chip: youtube, query: '' })
+      expect(screen.getByText('YouTube')).toBeTruthy()
+      expect(screen.getByRole('combobox').getAttribute('placeholder')).toBe('keywordSearch')
+    })
+
+    it('Tab enters an offered keyword instead of leaving the input', () => {
+      const onTab = vi.fn(() => true)
+      renderPalette({ onTab })
+      const input = screen.getByRole('combobox')
+      const event = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true })
+      input.dispatchEvent(event)
+      expect(onTab).toHaveBeenCalled()
+      expect(event.defaultPrevented).toBe(true)
+    })
+
+    it('Tab moves focus as usual when there is nothing to enter', () => {
+      renderPalette({ onTab: () => false })
+      const event = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true })
+      screen.getByRole('combobox').dispatchEvent(event)
+      expect(event.defaultPrevented).toBe(false)
+    })
+
+    it('Backspace on an empty input leaves the chip', () => {
+      const props = renderPalette({ chip: youtube, query: '' })
+      fireEvent.keyDown(screen.getByRole('combobox'), { key: 'Backspace' })
+      expect(props.onLeaveChip).toHaveBeenCalled()
     })
   })
 

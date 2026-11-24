@@ -56,4 +56,6 @@
   /* Overshoots a little, so a dropped tile lands with a bit of weight. */
   --al-ease-spring: cubic-bezier(0.3, 1.35, 0.5, 1);
   --al-lift-scale: 1.04;
+  --al-chip-tint: 24%;
+  --al-chip-ink: 50%;
 }

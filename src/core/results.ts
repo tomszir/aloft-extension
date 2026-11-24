@@ -1,4 +1,5 @@
 import type { ActionEntry, ActionId } from './actions'
+import { type Keyword, keywordHost, keywordUrl } from './keywords'
 import type { ParsedQuery } from './query'
 
 export interface TabEntry {
@@ -51,6 +52,10 @@ interface Highlighted {
 export type Result =
   | { kind: 'search'; id: string; query: string }
   | { kind: 'url'; id: string; url: string }
+  /** Offers a keyword's chip; `url` is the site, for its icon. */
+  | { kind: 'keyword'; id: string; keyword: Keyword; url: string }
+  /** Sends `query` to a keyword's site, or opens the site when it's empty. */
+  | { kind: 'site'; id: string; keyword: Keyword; query: string; url: string }
   | ({
       kind: 'tab'
       id: string
@@ -77,6 +82,8 @@ export interface BuildOptions {
   hostTabId: number | undefined
   /** Pins already have their own row then, so the empty list leaves them out. */
   pinnedRowShown: boolean
+  /** The keyword the input names exactly, offered above the other results. */
+  offeredKeyword?: Keyword
   now: number
 }
 
@@ -244,8 +251,45 @@ export function buildSections(
     ])
   }
 
+  if (query.kind === 'keyword') {
+    const { keyword, text, terms } = query
+    const host = keywordHost(keyword)
+    const onSite = (pageUrl: string) => {
+      try {
+        const page = new URL(pageUrl).hostname.replace(/^www\./, '')
+        return page === host || page.endsWith(`.${host}`)
+      } catch {
+        return false
+      }
+    }
+    const history =
+      sources.history && terms.length > 0
+        ? ranked(
+            dedupe(data.history.filter((h) => onSite(h.url))),
+            (h) => {
+              const score = matchScore(terms, h.title, h.url)
+              return score === null ? null : score * 2 + frecency(h, now)
+            },
+            LIMITS.history,
+          )
+        : []
+    return compact([
+      {
+        id: 'top',
+        results: [
+          { kind: 'site', id: 'site', keyword, query: text, url: keywordUrl(keyword, text) },
+        ],
+      },
+      { id: 'history', results: history.map((h) => historyResult(h, terms)) },
+    ])
+  }
+
   const { terms, text, url } = query
   const top: Result[] = []
+  const offered = options.offeredKeyword
+  if (offered) {
+    top.push({ kind: 'keyword', id: 'keyword', keyword: offered, url: keywordUrl(offered, '') })
+  }
   if (url) top.push({ kind: 'url', id: 'url', url })
   top.push({ kind: 'search', id: 'search', query: text })
 
@@ -281,16 +325,7 @@ export function buildSections(
         highlights: highlightRanges(terms, t.title),
       })),
     },
-    {
-      id: 'history',
-      results: history.map((h) => ({
-        kind: 'history',
-        id: `history:${h.url}`,
-        title: h.title,
-        url: h.url,
-        highlights: highlightRanges(terms, h.title),
-      })),
-    },
+    { id: 'history', results: history.map((h) => historyResult(h, terms)) },
     {
       id: 'bookmarks',
       results: bookmarks.map((b) => ({
@@ -303,6 +338,14 @@ export function buildSections(
     },
   ])
 }
+
+const historyResult = (h: HistoryEntry, terms: readonly string[]): Result => ({
+  kind: 'history',
+  id: `history:${h.url}`,
+  title: h.title,
+  url: h.url,
+  highlights: highlightRanges(terms, h.title),
+})
 
 // History can hold the same page under several URLs (fragments, trailing
 // slashes); keep the most visited one.

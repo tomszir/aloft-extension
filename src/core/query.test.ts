@@ -1,5 +1,17 @@
 import { describe, expect, it } from 'vitest'
-import { applyInput, EMPTY_QUERY, leaveChip, parseQuery, toUrl } from './query'
+import { builtInKeyword, resolveKeywords } from './keywords'
+import {
+  applyInput,
+  EMPTY_QUERY,
+  enterKeyword,
+  leaveChip,
+  offeredKeyword,
+  parseQuery,
+  toUrl,
+} from './query'
+
+const keywords = resolveKeywords(undefined)
+const youtube = builtInKeyword('youtube')
 
 describe('parseQuery', () => {
   it('treats whitespace as empty', () => {
@@ -34,6 +46,41 @@ describe('applyInput', () => {
   it('leaves other text and text inside a chip as typed', () => {
     expect(applyInput(EMPTY_QUERY, 'a > b')).toEqual({ chip: null, text: 'a > b' })
     expect(applyInput({ chip: 'actions', text: '' }, '>')).toEqual({ chip: 'actions', text: '>' })
+  })
+})
+
+describe('keyword chips', () => {
+  it('Space right after a keyword makes its chip, with or without @', () => {
+    expect(applyInput(EMPTY_QUERY, 'yt ', keywords)).toEqual({ chip: youtube, text: '' })
+    expect(applyInput(EMPTY_QUERY, ' @yt ', keywords)).toEqual({ chip: youtube, text: '' })
+  })
+
+  it('leaves other text alone, including a keyword followed by more words', () => {
+    expect(applyInput(EMPTY_QUERY, 'yt', keywords)).toEqual({ chip: null, text: 'yt' })
+    expect(applyInput(EMPTY_QUERY, 'yt cats', keywords)).toEqual({ chip: null, text: 'yt cats' })
+    expect(applyInput(EMPTY_QUERY, 'nope ', keywords)).toEqual({ chip: null, text: 'nope ' })
+  })
+
+  it('offers the keyword the input names exactly', () => {
+    expect(offeredKeyword({ chip: null, text: ' yt ' }, keywords)).toEqual(youtube)
+    expect(offeredKeyword({ chip: null, text: 'yt cats' }, keywords)).toBeUndefined()
+    expect(offeredKeyword(enterKeyword(youtube), keywords)).toBeUndefined()
+  })
+
+  it('parses text inside a keyword chip', () => {
+    expect(parseQuery(' lofi  beats ', youtube)).toEqual({
+      kind: 'keyword',
+      keyword: youtube,
+      text: 'lofi  beats',
+      terms: ['lofi', 'beats'],
+    })
+  })
+
+  it('gives back the keyword and text on leaving, without making the chip again', () => {
+    const left = leaveChip({ chip: youtube, text: 'cats' })
+    expect(left).toEqual({ chip: null, text: 'yt cats' })
+    expect(leaveChip(enterKeyword(youtube))).toEqual({ chip: null, text: 'yt' })
+    expect(applyInput(left, 'yt catsx', keywords).chip).toBeNull()
   })
 })
 

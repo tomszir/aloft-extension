@@ -169,6 +169,16 @@ export async function setSettings(background: Worker, patch: object): Promise<vo
   }, patch)
 }
 
+/** Replaces the stored keywords, as the settings page would save them. */
+export async function setKeywords(background: Worker, keywords: object): Promise<void> {
+  await background.evaluate(async (value) => {
+    const api = Reflect.get(globalThis, 'chrome') as {
+      storage: { sync: { set: (items: object) => Promise<void> } }
+    }
+    await api.storage.sync.set({ keywords: value })
+  }, keywords)
+}
+
 /** Runs the same code path as the Alt+Q shortcut, for the active tab. */
 // Targets the page's own tab rather than "the active tab": the onboarding tab
 // opens on install and can win that race.

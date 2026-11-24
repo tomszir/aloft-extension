@@ -24,6 +24,7 @@
 Press <kbd>Ctrl</kbd>+<kbd>T</kbd> and, instead of a blank tab, a search bar floats over the page you're on. Type to find what you need, press <kbd>Enter</kbd>, and you're there.
 
 - **One search for everything:** open tabs in every window, history, bookmarks and recently closed tabs, ranked together. Type an address to go straight to it, or anything else to search the web with your default engine.
+- **Keywords:** type `yt`, `gh`, `cl` or `gpt` and Space to search YouTube or GitHub, or ask Claude or ChatGPT, right from the bar.
 - **Pinned tabs, one key away:** your pinned tabs sit at the top. <kbd>Alt</kbd>+<kbd>1</kbd> to <kbd>9</kbd> opens them.
 - **Tab actions:** type <kbd>&gt;</kbd> to pin, duplicate, move to a new window, close other tabs or reopen a closed one.
 - **Stays out of the way:** the page dims behind the bar instead of being replaced, and <kbd>Esc</kbd> puts you back exactly where you were.

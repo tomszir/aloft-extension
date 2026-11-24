@@ -1,0 +1,19 @@
+.chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--al-space-2);
+  padding: 3px var(--al-space-3) 3px var(--al-space-1);
+  border-radius: var(--al-icon-radius);
+  background: var(--al-accent-soft);
+  color: var(--al-accent-soft-text);
+  font-size: var(--al-font-size-sm);
+  font-weight: var(--al-font-weight-semibold);
+}
+
+/* Mixed with the theme rather than used as is, so text stays readable on
+   a light or dark panel whatever the site's colour. */
+.chip[data-colored] {
+  background: color-mix(in srgb, var(--al-chip-color) var(--al-chip-tint), var(--al-panel));
+  color: color-mix(in srgb, var(--al-chip-color) var(--al-chip-ink), var(--al-text));
+}

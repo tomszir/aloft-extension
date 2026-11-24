@@ -1,10 +1,13 @@
+import { findKeyword, type Keyword } from './keywords'
+
 export type ParsedQuery =
   | { kind: 'empty' }
   | { kind: 'actions'; text: string }
+  | { kind: 'keyword'; keyword: Keyword; text: string; terms: string[] }
   | { kind: 'text'; text: string; terms: string[]; url: string | null }
 
 /** What the input is scoped to, shown as a chip in front of it. */
-export type Chip = 'actions'
+export type Chip = 'actions' | Keyword
 
 export interface QueryState {
   chip: Chip | null
@@ -13,17 +16,40 @@ export interface QueryState {
 
 export const EMPTY_QUERY: QueryState = { chip: null, text: '' }
 
-const CHIP_PREFIX: Record<Chip, string> = { actions: '>' }
+const ACTIONS_PREFIX = '>'
 
-/** The state after the input's text changes to `input`. */
-export function applyInput(state: QueryState, input: string): QueryState {
+const chipText = (chip: Chip) => (chip === 'actions' ? ACTIONS_PREFIX : chip.keyword)
+
+/**
+ * The state after the input's text changes to `input`. A keyword makes a chip
+ * only when Space is typed right after it, so text given back by leaveChip,
+ * or pasted, stays plain text however it continues.
+ */
+export function applyInput(
+  state: QueryState,
+  input: string,
+  keywords: readonly Keyword[] = [],
+): QueryState {
   if (state.chip === null) {
     const typed = input.trimStart()
-    if (typed.startsWith(CHIP_PREFIX.actions)) {
-      return { chip: 'actions', text: typed.slice(CHIP_PREFIX.actions.length).trimStart() }
+    if (typed.startsWith(ACTIONS_PREFIX)) {
+      return { chip: 'actions', text: typed.slice(ACTIONS_PREFIX.length).trimStart() }
     }
+    const word = /^(\S+) $/.exec(typed)?.[1]
+    const keyword = word === undefined ? undefined : findKeyword(keywords, word)
+    if (keyword) return enterKeyword(keyword)
   }
   return { chip: state.chip, text: input }
+}
+
+export const enterKeyword = (keyword: Keyword): QueryState => ({ chip: keyword, text: '' })
+
+/** The keyword the input names exactly, offered as a chip before Space or Tab makes it one. */
+export function offeredKeyword(
+  state: QueryState,
+  keywords: readonly Keyword[],
+): Keyword | undefined {
+  return state.chip === null ? findKeyword(keywords, state.text.trim()) : undefined
 }
 
 /**
@@ -33,7 +59,7 @@ export function applyInput(state: QueryState, input: string): QueryState {
 export function leaveChip(state: QueryState): QueryState {
   if (state.chip === null) return state
   const text = state.text.trim()
-  return { chip: null, text: CHIP_PREFIX[state.chip] + (text === '' ? '' : ` ${text}`) }
+  return { chip: null, text: chipText(state.chip) + (text === '' ? '' : ` ${text}`) }
 }
 
 // Only the chip enters actions mode: a ">" left in the input after leaving it
@@ -41,9 +67,12 @@ export function leaveChip(state: QueryState): QueryState {
 export function parseQuery(input: string, chip: Chip | null = null): ParsedQuery {
   const text = input.trim()
   if (chip === 'actions') return { kind: 'actions', text }
+  if (chip !== null) return { kind: 'keyword', keyword: chip, text, terms: termsOf(text) }
   if (text === '') return { kind: 'empty' }
-  return { kind: 'text', text, terms: text.toLowerCase().split(/\s+/), url: toUrl(text) }
+  return { kind: 'text', text, terms: termsOf(text), url: toUrl(text) }
 }
+
+const termsOf = (text: string) => text.toLowerCase().split(/\s+/).filter(Boolean)
 
 // Anything else with a scheme, notably javascript: and data:, is searched for
 // instead of opened, so typed text can never run script.

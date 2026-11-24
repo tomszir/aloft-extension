@@ -6,6 +6,7 @@ import type { Result, Section, SectionId, TabEntry } from '../../core/results'
 import { Icon } from '../icon/icon'
 import { Kbd } from '../kbd/kbd'
 import { Keyed } from '../keyed/keyed'
+import { KeywordChip } from '../keyword-chip/keyword-chip'
 import { PinnedRow } from '../pinned-row/pinned-row'
 import { ResultRow } from '../result-row/result-row'
 import { TileMenu } from '../tile-menu/tile-menu'
@@ -23,6 +24,8 @@ export interface PaletteProps {
   /** Resolves to null when the browser has no icon for the page. */
   favicon: (pageUrl: string) => Promise<string | null>
   onQuery: (text: string) => void
+  /** Tab in the input; true when it was used, to enter an offered keyword. */
+  onTab?: () => boolean
   /** Backspace on an empty input or Esc while a chip is shown. */
   onLeaveChip: () => void
   onMove: (move: Move) => void
@@ -76,8 +79,13 @@ export function Palette(props: PaletteProps) {
     }
     return ids
   })
-  const placeholder = () =>
-    props.chip === 'actions' ? i18n.t('placeholderActions') : i18n.t('palettePlaceholder')
+  const keyword = () => (typeof props.chip === 'object' ? props.chip : null)
+  const placeholder = () => {
+    const k = keyword()
+    if (k)
+      return k.kind === 'ask' ? i18n.t('keywordAsk', [k.name]) : i18n.t('keywordSearch', [k.name])
+    return props.chip === 'actions' ? i18n.t('placeholderActions') : i18n.t('palettePlaceholder')
+  }
   const activeResult = createMemo(() =>
     props.sections.flatMap((s) => s.results).find((r) => r.id === props.activeId),
   )
@@ -138,6 +146,17 @@ export function Palette(props: PaletteProps) {
     // Result keys belong to the search box; on a focused tile, Enter is the
     // tile's own click.
     if (event.target !== input) return
+    if (
+      event.key === 'Tab' &&
+      !event.shiftKey &&
+      !event.altKey &&
+      !event.ctrlKey &&
+      !event.metaKey &&
+      props.onTab?.()
+    ) {
+      event.preventDefault()
+      return
+    }
     if (event.key === 'Backspace' && props.chip && input.value === '') {
       event.preventDefault()
       props.onLeaveChip()
@@ -173,11 +192,17 @@ export function Palette(props: PaletteProps) {
       >
         <div class={styles.inputRow}>
           {/* The icon shows the mode; the chip only names it. */}
-          <span class={styles.searchIcon} data-mode={props.chip ?? 'search'}>
+          <span
+            class={styles.searchIcon}
+            data-mode={props.chip === 'actions' ? 'actions' : keyword() ? 'keyword' : 'search'}
+          >
             <Icon name={props.chip === 'actions' ? 'terminal' : 'search'} />
           </span>
           <Show when={props.chip === 'actions'}>
             <span class={styles.modeChip}>{i18n.t('sectionActions')}</span>
+          </Show>
+          <Show when={keyword()}>
+            {(k) => <KeywordChip keyword={k()} favicon={props.favicon} />}
           </Show>
           <input
             ref={input}
@@ -256,12 +281,23 @@ export function Palette(props: PaletteProps) {
                     <Kbd>⇧ ↵</Kbd> {i18n.t('hintCurrentTab')}
                   </span>
                 </Show>
-                <span class={`${styles.hint} ${styles.hintEnd}`}>
-                  <Kbd>&gt;</Kbd> {i18n.t('hintActions')}
-                </span>
-                <span class={styles.hint}>
-                  <Kbd>Esc</Kbd> {i18n.t('hintClose')}
-                </span>
+                <Show
+                  when={keyword()}
+                  fallback={
+                    <>
+                      <span class={`${styles.hint} ${styles.hintEnd}`}>
+                        <Kbd>&gt;</Kbd> {i18n.t('hintActions')}
+                      </span>
+                      <span class={styles.hint}>
+                        <Kbd>Esc</Kbd> {i18n.t('hintClose')}
+                      </span>
+                    </>
+                  }
+                >
+                  <span class={`${styles.hint} ${styles.hintEnd}`}>
+                    <Kbd>Esc</Kbd> {i18n.t('hintBack')}
+                  </span>
+                </Show>
               </>
             }
           >
