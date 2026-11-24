@@ -183,3 +183,88 @@ export function keywordUrl(keyword: Keyword, text: string): string {
 export function keywordHost(keyword: Keyword): string {
   return new URL(keyword.url.replaceAll(PLACEHOLDER, '')).hostname.replace(/^www\./, '')
 }
+
+/** The stored form of `keywords`: built-ins only where they differ from their defaults. */
+export function toStored(keywords: readonly Keyword[]): StoredKeywords {
+  const stored: StoredKeywords = { builtIn: {}, custom: [] }
+  for (const keyword of keywords) {
+    if (!keyword.builtIn) {
+      const { id, name, url, enabled } = keyword
+      stored.custom.push({ id, name, keyword: keyword.keyword, url, enabled })
+      continue
+    }
+    const base = BUILT_IN_KEYWORDS.find((k) => k.id === keyword.id)
+    if (!base) continue
+    const change: StoredKeywords['builtIn'][string] = {}
+    if (keyword.name !== base.name) change.name = keyword.name
+    if (keyword.keyword !== base.keyword) change.keyword = keyword.keyword
+    if (keyword.url !== base.url) change.url = keyword.url
+    if (keyword.enabled !== base.enabled) change.enabled = keyword.enabled
+    if (Object.keys(change).length > 0) stored.builtIn[keyword.id] = change
+  }
+  return stored
+}
+
+export interface KeywordDraft {
+  name: string
+  keyword: string
+  url: string
+}
+
+export type DraftError = 'name' | 'keyword' | 'keyword-taken' | 'url'
+
+/** What's wrong with a draft, or undefined when it can be saved. `id` is the keyword being edited. */
+export function draftError(
+  keywords: readonly Keyword[],
+  draft: KeywordDraft,
+  id?: string,
+): DraftError | undefined {
+  if (!v.safeParse(Name, draft.name).success) return 'name'
+  const word = draft.keyword.trim().toLowerCase()
+  if (!isValidKeyword(word)) return 'keyword'
+  if (keywords.some((k) => k.id !== id && k.keyword === word)) return 'keyword-taken'
+  if (!isValidTemplate(draft.url.trim())) return 'url'
+  return undefined
+}
+
+/** `keywords` with `draft` saved over keyword `id`, or added as the user's own. */
+export function saveDraft(
+  keywords: readonly Keyword[],
+  draft: KeywordDraft,
+  id: string | undefined,
+  newId: () => string,
+): Keyword[] {
+  const fields = {
+    name: draft.name.trim(),
+    keyword: draft.keyword.trim().toLowerCase(),
+    url: draft.url.trim(),
+  }
+  if (id !== undefined) return keywords.map((k) => (k.id === id ? { ...k, ...fields } : k))
+  return [...keywords, { id: newId(), ...fields, kind: 'search', enabled: true, builtIn: false }]
+}
+
+/**
+ * The built-ins back as they ship, keeping the user's own. One of theirs that
+ * now clashes with a built-in's keyword is switched off rather than lost.
+ */
+export function resetBuiltIns(keywords: readonly Keyword[]): Keyword[] {
+  const taken = new Set(BUILT_IN_KEYWORDS.map((k) => k.keyword))
+  const own = keywords
+    .filter((k) => !k.builtIn)
+    .map((k) =>
+      taken.has(k.keyword) ? { ...k, keyword: `${k.keyword.slice(0, 22)}-2`, enabled: false } : k,
+    )
+  return [...BUILT_IN_KEYWORDS, ...own]
+}
+
+/** Whether a built-in differs from how it ships, so resetting would change it. */
+export const isChanged = (keyword: Keyword): boolean =>
+  keyword.builtIn && toStored([keyword]).builtIn[keyword.id] !== undefined
+
+// chrome.storage.sync allows 8192 bytes per item, counting the key.
+const SYNC_ITEM_BYTES = 8192
+
+export function fitsSync(stored: StoredKeywords): boolean {
+  const bytes = new TextEncoder().encode(`keywords${JSON.stringify(stored)}`).length
+  return bytes <= SYNC_ITEM_BYTES
+}

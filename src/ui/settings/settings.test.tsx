@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@solidjs/testing-library'
 import { createSignal } from 'solid-js'
 import { describe, expect, it, vi } from 'vitest'
+import { BUILT_IN_KEYWORDS } from '../../core/keywords'
 import { DEFAULT_SETTINGS, type Settings as SettingsValue } from '../../core/settings'
 import type { AccessState } from '../onboarding/onboarding'
 import { Settings } from './settings'
@@ -21,6 +22,9 @@ function renderSettings(initial: Partial<SettingsValue> = {}, access: AccessStat
       access={access}
       onAllow={onAllow}
       previewSrc="palette.html?host=preview"
+      keywords={BUILT_IN_KEYWORDS}
+      onKeywordsChange={async () => true}
+      favicon={async () => null}
     />
   ))
   return { settings, onChange, onAllow }

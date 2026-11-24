@@ -7,6 +7,8 @@ export interface ToggleProps {
   onChange: (checked: boolean) => void
   /** Shown under the label, and read out as the switch's description. */
   note?: JSX.Element
+  /** For a switch whose row already shows what it's for: the label is only read out. */
+  labelHidden?: boolean
 }
 
 let nextId = 0
@@ -16,7 +18,7 @@ export function Toggle(props: ToggleProps) {
   return (
     <div class={styles.field}>
       <label class={styles.row}>
-        <span class={styles.label}>{props.label}</span>
+        <span class={props.labelHidden ? styles.hidden : styles.label}>{props.label}</span>
         <input
           class={styles.switch}
           type="checkbox"

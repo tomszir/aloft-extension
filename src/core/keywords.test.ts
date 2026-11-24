@@ -1,12 +1,19 @@
 import { describe, expect, it } from 'vitest'
 import {
   BUILT_IN_KEYWORDS,
+  builtInKeyword,
+  draftError,
   findKeyword,
+  fitsSync,
+  isChanged,
   isValidTemplate,
   keywordHost,
   keywordUrl,
   MAX_CUSTOM_KEYWORDS,
+  resetBuiltIns,
   resolveKeywords,
+  saveDraft,
+  toStored,
 } from './keywords'
 
 const custom = (n: number, keyword = `k${n}`) => ({
@@ -103,5 +110,73 @@ describe('isValidTemplate', () => {
 
   it('accepts every built-in', () => {
     for (const k of BUILT_IN_KEYWORDS) expect(isValidTemplate(k.url)).toBe(true)
+  })
+})
+
+describe('editing', () => {
+  const keywords = resolveKeywords(undefined)
+  const draft = { name: 'My wiki', keyword: 'MW', url: 'https://wiki.test/?q=%s' }
+  const newId = () => 'custom-1'
+
+  it('stores only what differs from the built-ins', () => {
+    expect(toStored(keywords)).toEqual({ builtIn: {}, custom: [] })
+    const off = keywords.map((k) => (k.id === 'reddit' ? { ...k, enabled: false } : k))
+    expect(toStored(off)).toEqual({ builtIn: { reddit: { enabled: false } }, custom: [] })
+  })
+
+  it('adds a keyword of the user’s own and round-trips it through storage', () => {
+    const added = saveDraft(keywords, draft, undefined, newId)
+    const mine = added.at(-1)
+    expect(mine).toMatchObject({ id: 'custom-1', keyword: 'mw', builtIn: false, enabled: true })
+    expect(resolveKeywords(toStored(added))).toEqual(added)
+  })
+
+  it('edits a built-in in place, storing the change', () => {
+    const edited = saveDraft(
+      keywords,
+      { ...draft, name: 'YouTube', url: builtInKeyword('youtube').url },
+      'youtube',
+      newId,
+    )
+    expect(toStored(edited).builtIn).toEqual({ youtube: { keyword: 'mw' } })
+  })
+
+  it('explains what stops a draft being saved', () => {
+    expect(draftError(keywords, draft)).toBeUndefined()
+    expect(draftError(keywords, { ...draft, name: ' ' })).toBe('name')
+    expect(draftError(keywords, { ...draft, keyword: 'two words' })).toBe('keyword')
+    expect(draftError(keywords, { ...draft, keyword: 'yt' })).toBe('keyword-taken')
+    expect(draftError(keywords, { ...draft, keyword: 'yt' }, 'youtube')).toBeUndefined()
+    expect(draftError(keywords, { ...draft, url: 'https://wiki.test/' })).toBe('url')
+  })
+
+  it('resets the built-ins, keeping the user’s own and switching off a clash', () => {
+    const changed = saveDraft(
+      saveDraft(
+        keywords,
+        { name: 'YouTube', keyword: 'tube', url: builtInKeyword('youtube').url },
+        'youtube',
+        newId,
+      ),
+      { ...draft, keyword: 'yt' },
+      undefined,
+      newId,
+    )
+    expect(changed.some(isChanged)).toBe(true)
+    const reset = resetBuiltIns(changed)
+    expect(reset.filter((k) => k.builtIn)).toEqual(BUILT_IN_KEYWORDS)
+    expect(reset.at(-1)).toMatchObject({ id: 'custom-1', keyword: 'yt-2', enabled: false })
+    expect(reset.some(isChanged)).toBe(false)
+  })
+
+  it('knows when the keywords outgrow one sync item', () => {
+    expect(fitsSync(toStored(keywords))).toBe(true)
+    const long = { name: 'x'.repeat(40), keyword: 'k', url: `https://e.test/${'p'.repeat(480)}%s` }
+    const many = Array.from({ length: 20 }, (_, i) => ({ ...long, keyword: `k${i}` }))
+    const stored = many.reduce(
+      (all, d, i) => saveDraft(all, d, undefined, () => `custom-${i}`),
+      keywords,
+    )
+    expect(fitsSync(toStored(stored))).toBe(false)
   })
 })
