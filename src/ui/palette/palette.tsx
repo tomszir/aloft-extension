@@ -165,8 +165,9 @@ export function Palette(props: PaletteProps) {
         onKeyDown={onKeyDown}
       >
         <div class={styles.inputRow}>
-          <span class={styles.searchIcon}>
-            <Icon name="search" />
+          {/* The icon shows the mode; the chip only names it. */}
+          <span class={styles.searchIcon} data-mode={props.chip ?? 'search'}>
+            <Icon name={props.chip === 'actions' ? 'terminal' : 'search'} />
           </span>
           <Show when={props.chip === 'actions'}>
             <span class={styles.modeChip}>{i18n.t('sectionActions')}</span>

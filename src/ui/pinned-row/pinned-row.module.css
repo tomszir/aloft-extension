@@ -80,4 +80,5 @@
   color: var(--al-on-accent);
   font-size: var(--al-font-size-xs);
   font-weight: var(--al-font-weight-semibold);
+  font-variant-numeric: tabular-nums;
 }

@@ -153,11 +153,13 @@ describe('Palette', () => {
       const input = screen.getByRole('combobox')
       expect(chip.compareDocumentPosition(input) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
       expect(input.getAttribute('placeholder')).toBe('placeholderActions')
+      expect(document.querySelector('[data-mode]')?.getAttribute('data-mode')).toBe('actions')
     })
 
     it('is not shown for a > typed outside it', () => {
       renderPalette({ query: '>' })
       expect(screen.queryByText('sectionActions')).toBeNull()
+      expect(document.querySelector('[data-mode]')?.getAttribute('data-mode')).toBe('search')
     })
 
     it('Backspace on an empty input leaves it; with text, it only edits', () => {

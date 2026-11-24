@@ -14,6 +14,7 @@ export const ICON_NAMES = [
   'pin-off',
   'search',
   'square-arrow-out-up-right',
+  'terminal',
   'undo-2',
 ] as const
 

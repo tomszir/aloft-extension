@@ -66,6 +66,10 @@
   --al-glyph-size: var(--al-search-icon-size);
 }
 
+.search-icon[data-mode="actions"] {
+  color: var(--al-accent);
+}
+
 .input {
   flex: 1;
   min-width: 0;
@@ -85,11 +89,11 @@
 .mode-chip {
   flex: none;
   padding: 3px var(--al-space-3);
-  border-radius: var(--al-kbd-radius);
-  background: var(--al-keycap);
-  color: var(--al-accent);
+  border-radius: var(--al-icon-radius);
+  background: var(--al-accent-soft);
+  color: var(--al-accent-soft-text);
   font-size: var(--al-font-size-sm);
-  font-weight: var(--al-font-weight-medium);
+  font-weight: var(--al-font-weight-semibold);
 }
 
 .results {
