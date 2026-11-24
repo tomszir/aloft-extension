@@ -24,3 +24,18 @@ Publishing is skipped until this is done. It only has to be done once.
    | Secret   | `CHROME_SERVICE_ACCOUNT_PRIVATE_KEY`  | `private_key` from the JSON key           |
 
 5. **Check it:** run `publish.yml` with the latest tag and **dry run** ticked.
+
+## addons.mozilla.org
+
+Each release also carries `aloft-<version>-firefox.zip` and `aloft-<version>-sources.zip`. The sources zip is what AMO's reviewers rebuild the package from: `pnpm install --frozen-lockfile && pnpm zip:firefox` on it gives the same package.
+
+Publishing to AMO isn't automated yet, so every version is submitted by hand:
+
+1. **Once: set up the developer account.** Sign in to the [Developer Hub](https://addons.mozilla.org/developers/) with a Mozilla account, accept the distribution agreement, and set a display name for the developer profile.
+2. **Download both zips** from the GitHub release for the version.
+3. **Submit it.** For the first version, choose Submit a New Add-on; for later ones, Upload New Version on the add-on's page. Then follow [amo-listing.md](amo-listing.md): the Firefox zip, Firefox only, yes to source code with the sources zip, and the listing and notes to reviewer.
+4. **Wait for review.** Automated review signs and lists the version within minutes to hours; a human review may follow later.
+
+The add-on id, `aloft@tomszir` in `wxt.config.ts`, is permanent once the first version is on AMO.
+
+To automate it later: create API credentials under Tools → Manage API Keys, add them to a `firefox` GitHub environment as `FIREFOX_JWT_ISSUER` (variable) and `FIREFOX_JWT_SECRET` (secret), and pass `--firefox-zip` and `--firefox-sources-zip` to `wxt submit` in `publish.yml`.
