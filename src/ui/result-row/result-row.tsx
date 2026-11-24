@@ -1,7 +1,7 @@
-import { Show } from 'solid-js'
+import { For, Show } from 'solid-js'
 import { i18n } from '#i18n'
 import type { ActionId } from '../../core/actions'
-import { displayUrl, type Result } from '../../core/results'
+import { displayUrl, type Highlight, type Result, tileLetter } from '../../core/results'
 import { Favicon } from '../favicon/favicon'
 import { Icon } from '../icon/icon'
 import type { IconName } from '../icon/icons'
@@ -12,7 +12,7 @@ export interface ResultRowProps {
   result: Result
   optionId: string
   active: boolean
-  favicon: (pageUrl: string) => string
+  favicon: (pageUrl: string) => Promise<string | null>
   onHover: () => void
   onActivate: (shift: boolean) => void
 }
@@ -66,6 +66,20 @@ const ACTION_ICON: Record<ActionId, IconName> = {
   'reopen-closed-tab': 'undo-2',
 }
 
+type Segment = { text: string; matched: boolean }
+
+function segments(text: string, highlights: readonly Highlight[] = []): Segment[] {
+  const parts: Segment[] = []
+  let at = 0
+  for (const [start, end] of highlights) {
+    if (start > at) parts.push({ text: text.slice(at, start), matched: false })
+    parts.push({ text: text.slice(start, end), matched: true })
+    at = end
+  }
+  if (at < text.length) parts.push({ text: text.slice(at), matched: false })
+  return parts
+}
+
 /** Undefined for page results, which show the site's favicon instead. */
 function glyph(result: Result): IconName | undefined {
   switch (result.kind) {
@@ -105,7 +119,11 @@ export function ResultRow(props: ResultRowProps) {
       <Show
         when={glyph(props.result)}
         fallback={
-          <Favicon src={props.favicon(pageUrl())} fallback={title(props.result).charAt(0)} />
+          <Favicon
+            pageUrl={pageUrl()}
+            load={props.favicon}
+            letter={tileLetter(title(props.result), pageUrl())}
+          />
         }
       >
         {(name) => (
@@ -115,12 +133,21 @@ export function ResultRow(props: ResultRowProps) {
         )}
       </Show>
       <span class={styles.text}>
-        <span class={styles.title}>{title(props.result)}</span>
+        <span class={styles.title}>
+          <For
+            each={segments(
+              title(props.result),
+              'highlights' in props.result ? props.result.highlights : undefined,
+            )}
+          >
+            {(part) => (part.matched ? <mark class={styles.match}>{part.text}</mark> : part.text)}
+          </For>
+        </span>
         <span class={styles.subtitle}>{subtitle(props.result)}</span>
       </span>
       <Show when={props.active}>
         <span class={styles.action}>
-          {action(props.result)} <Kbd>↵</Kbd>
+          {action(props.result)} <Kbd selected>↵</Kbd>
         </span>
       </Show>
     </div>

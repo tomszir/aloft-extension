@@ -41,14 +41,28 @@ export interface SourceData {
   actions: readonly ActionEntry[]
 }
 
+/** A `[start, end)` span of a title that matched what was typed. */
+export type Highlight = readonly [start: number, end: number]
+
+interface Highlighted {
+  highlights?: readonly Highlight[]
+}
+
 export type Result =
   | { kind: 'search'; id: string; query: string }
   | { kind: 'url'; id: string; url: string }
-  | { kind: 'tab'; id: string; tabId: number; windowId: number; title: string; url: string }
-  | { kind: 'history'; id: string; title: string; url: string }
-  | { kind: 'bookmark'; id: string; title: string; url: string }
+  | ({
+      kind: 'tab'
+      id: string
+      tabId: number
+      windowId: number
+      title: string
+      url: string
+    } & Highlighted)
+  | ({ kind: 'history'; id: string; title: string; url: string } & Highlighted)
+  | ({ kind: 'bookmark'; id: string; title: string; url: string } & Highlighted)
   | { kind: 'closed'; id: string; sessionId: string; title: string; url: string }
-  | { kind: 'action'; id: string; action: ActionId; title: string; hint: string }
+  | ({ kind: 'action'; id: string; action: ActionId; title: string; hint: string } & Highlighted)
 
 export type SectionId = 'top' | 'tabs' | 'history' | 'bookmarks' | 'closed' | 'actions'
 
@@ -75,8 +89,11 @@ export function pageKey(url: string): string {
   return url.replace(/#.*$/, '').replace(/\/$/, '')
 }
 
+const bareUrl = (url: string) => url.replace(/^[a-z]+:\/\//i, '').replace(/^www\./i, '')
+
+/** The address as rows show it: no scheme, no www, no slash after a bare host. */
 export function displayUrl(url: string): string {
-  return url.replace(/^[a-z]+:\/\//i, '').replace(/^www\./i, '')
+  return bareUrl(url).replace(/^([^/?#]+)\/$/, '$1')
 }
 
 const isWordStart = (text: string, index: number) =>
@@ -89,7 +106,7 @@ function termScore(term: string, title: string, url: string): number {
     best = Math.max(best, isWordStart(title, index) ? (index === 0 ? 4 : 3) : 1)
     index = title.indexOf(term, index + 1)
   }
-  const shortUrl = displayUrl(url)
+  const shortUrl = bareUrl(url)
   if (shortUrl.startsWith(term)) best = Math.max(best, 4)
   else if (shortUrl.includes(term)) best = Math.max(best, 1)
   return best
@@ -105,6 +122,54 @@ export function matchScore(terms: readonly string[], title: string, url: string)
     total += score
   }
   return total
+}
+
+/**
+ * Where each term matched the title, preferring the occurrence `matchScore`
+ * counted: the start of the title, then the start of a word, then anywhere.
+ */
+export function highlightRanges(terms: readonly string[], title: string): Highlight[] {
+  const lower = title.toLowerCase()
+  // A few characters change length when lowercased ("İ"), which would shift
+  // every index after them; leaving the title plain is better than marking the
+  // wrong letters.
+  if (lower.length !== title.length) return []
+  const ranges: [number, number][] = []
+  for (const term of terms) {
+    if (term === '') continue
+    let found = -1
+    let index = lower.indexOf(term)
+    while (index !== -1) {
+      if (found === -1) found = index
+      if (isWordStart(lower, index)) {
+        found = index
+        break
+      }
+      index = lower.indexOf(term, index + 1)
+    }
+    if (found !== -1) ranges.push([found, found + term.length])
+  }
+  ranges.sort((a, b) => a[0] - b[0])
+  const merged: [number, number][] = []
+  for (const range of ranges) {
+    const last = merged.at(-1)
+    if (last && range[0] <= last[1]) last[1] = Math.max(last[1], range[1])
+    else merged.push(range)
+  }
+  return merged
+}
+
+/**
+ * The letter on a page's tile when the browser has no icon for it: the
+ * title's first letter or digit, skipping punctuation and emoji, else the host's.
+ */
+export function tileLetter(title: string, url: string): string {
+  const letter = /[\p{L}\p{N}]/u
+  let host = ''
+  try {
+    host = new URL(url).hostname.replace(/^www\./i, '')
+  } catch {}
+  return (title.match(letter)?.[0] ?? host.match(letter)?.[0] ?? '').toLocaleUpperCase()
 }
 
 // Frequently and recently visited pages win ties between equally good matches.
@@ -125,7 +190,7 @@ function ranked<T>(items: readonly T[], score: (item: T) => number | null, limit
     .map(({ item }) => item)
 }
 
-export const tabResult = (t: TabEntry): Result => ({
+export const tabResult = (t: TabEntry): Extract<Result, { kind: 'tab' }> => ({
   kind: 'tab',
   id: `tab:${t.tabId}`,
   tabId: t.tabId,
@@ -158,6 +223,7 @@ export function buildSections(
           action: a.id,
           title: a.label,
           hint: a.hint,
+          highlights: highlightRanges(terms, a.label),
         })),
       },
     ])
@@ -208,7 +274,13 @@ export function buildSections(
 
   return compact([
     { id: 'top', results: top },
-    { id: 'tabs', results: matchedTabs.map(tabResult) },
+    {
+      id: 'tabs',
+      results: matchedTabs.map((t) => ({
+        ...tabResult(t),
+        highlights: highlightRanges(terms, t.title),
+      })),
+    },
     {
       id: 'history',
       results: history.map((h) => ({
@@ -216,6 +288,7 @@ export function buildSections(
         id: `history:${h.url}`,
         title: h.title,
         url: h.url,
+        highlights: highlightRanges(terms, h.title),
       })),
     },
     {
@@ -225,6 +298,7 @@ export function buildSections(
         id: `bookmark:${b.id}`,
         title: b.title,
         url: b.url,
+        highlights: highlightRanges(terms, b.title),
       })),
     },
   ])

@@ -58,3 +58,17 @@ test('typed script URLs are searched for, never opened', async ({ context, backg
   await expect(options).toHaveCount(1)
   await expect(options.first()).toContainText('Search the web')
 })
+
+test('a page the browser has no icon for gets a letter tile', async ({ context, background }) => {
+  const other = await context.newPage()
+  await other.goto(`${TEST_ORIGIN}/Gamma%20notes`)
+  const page = await context.newPage()
+  await page.goto(`${TEST_ORIGIN}/Start`)
+  await pressOpenAloft(background, page)
+
+  await palette(page).getByRole('combobox').fill('gamma')
+  const row = palette(page).getByRole('option', { name: /Gamma notes/ })
+  await expect(row.getByTestId('favicon-letter')).toHaveText('G')
+  await expect(row.locator('img')).toHaveCount(0)
+  await expect(row.locator('mark')).toHaveText('Gamma')
+})
