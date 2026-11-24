@@ -1,11 +1,34 @@
 import { createResource, createSignal, Match, Switch } from 'solid-js'
+import { type IconTone, iconTone } from '../../core/icon-tone'
 import styles from './favicon.module.css'
+
+const SAMPLE_SIZE = 16
+
+/**
+ * Reads a loaded icon's pixels. Favicons come from the extension's own origin,
+ * so the canvas isn't tainted; if reading fails anyway, the icon just keeps
+ * the usual tile.
+ */
+export function readTone(image: HTMLImageElement): IconTone | undefined {
+  try {
+    const canvas = document.createElement('canvas')
+    canvas.width = SAMPLE_SIZE
+    canvas.height = SAMPLE_SIZE
+    const context = canvas.getContext('2d', { willReadFrequently: true })
+    if (!context) return undefined
+    context.drawImage(image, 0, 0, SAMPLE_SIZE, SAMPLE_SIZE)
+    return iconTone(context.getImageData(0, 0, SAMPLE_SIZE, SAMPLE_SIZE).data)
+  } catch {
+    return undefined
+  }
+}
 
 export interface FaviconProps {
   pageUrl: string
   /** Resolves to the icon's address, or null when the browser has none for the page. */
   load: (pageUrl: string) => Promise<string | null>
   letter: string
+  tone?: (image: HTMLImageElement) => IconTone | undefined
 }
 
 export function Favicon(props: FaviconProps) {
@@ -15,10 +38,13 @@ export function Favicon(props: FaviconProps) {
     ([pageUrl]) => props.load(pageUrl),
   )
   const [failed, setFailed] = createSignal(false)
+  const [tone, setTone] = createSignal<IconTone>()
   return (
     // Stays empty while the icon is checked, so a real icon never flashes a
     // letter first.
-    <span class={styles.tile} aria-hidden="true">
+    // An all-black icon like ChatGPT's would vanish on a dark tile, and an
+    // all-white one on a light tile, so those get a backing they show up on.
+    <span class={styles.tile} data-tone={tone()} aria-hidden="true">
       <Switch>
         <Match when={src.state === 'ready' && !failed() && src()}>
           {(icon) => (
@@ -29,6 +55,7 @@ export function Favicon(props: FaviconProps) {
               width="16"
               height="16"
               draggable={false}
+              onLoad={(event) => setTone((props.tone ?? readTone)(event.currentTarget))}
               onError={() => setFailed(true)}
             />
           )}

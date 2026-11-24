@@ -10,6 +10,11 @@
   color: var(--al-muted);
 }
 
+:root[data-scheme="dark"] .tile[data-tone="dark"],
+:root[data-scheme="light"] .tile[data-tone="light"] {
+  background: var(--al-text);
+}
+
 .image {
   display: block;
   width: var(--al-icon-size);

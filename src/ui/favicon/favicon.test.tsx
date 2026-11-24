@@ -1,4 +1,4 @@
-import { render, screen } from '@solidjs/testing-library'
+import { fireEvent, render, screen } from '@solidjs/testing-library'
 import { describe, expect, it } from 'vitest'
 import { Favicon } from './favicon'
 
@@ -25,5 +25,20 @@ describe('Favicon', () => {
       <Favicon pageUrl="https://a.test/" load={() => new Promise(() => {})} letter="A" />
     ))
     expect(container.firstElementChild?.childElementCount).toBe(0)
+  })
+
+  it('marks an icon that is all but black, so the tile can back it', async () => {
+    const { container } = render(() => (
+      <Favicon
+        pageUrl="https://a.test/"
+        load={async () => 'icon.png'}
+        letter="A"
+        tone={() => 'dark'}
+      />
+    ))
+    const image = await screen.findByRole('presentation', { hidden: true })
+    expect(container.firstElementChild?.hasAttribute('data-tone')).toBe(false)
+    fireEvent.load(image)
+    expect(container.firstElementChild?.getAttribute('data-tone')).toBe('dark')
   })
 })
