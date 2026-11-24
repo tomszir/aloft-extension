@@ -31,7 +31,10 @@ jobs:
       - uses: jdx/mise-action@v3
       - run: pnpm install --frozen-lockfile
       - run: pnpm zip
-      - run: gh release upload "$TAG" .output/*-chrome.zip
+      # The sources zip is what addons.mozilla.org's reviewers rebuild the
+      # Firefox package from.
+      - run: pnpm zip:firefox
+      - run: gh release upload "$TAG" .output/*-chrome.zip .output/*-firefox.zip .output/*-sources.zip
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ needs.release-please.outputs.tag }}
