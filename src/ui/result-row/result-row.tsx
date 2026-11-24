@@ -1,9 +1,9 @@
 import { createEffect, For, Show } from 'solid-js'
 import { i18n } from '#i18n'
 import type { ActionId } from '../../core/actions'
-import type { Keyword } from '../../core/keywords'
+import { type Keyword, keywordUrl } from '../../core/keywords'
 import { displayUrl, type Highlight, type Result, tileLetter } from '../../core/results'
-import { Favicon } from '../favicon/favicon'
+import { Favicon, type FaviconLoader } from '../favicon/favicon'
 import { Icon } from '../icon/icon'
 import type { IconName } from '../icon/icons'
 import { Kbd } from '../kbd/kbd'
@@ -13,7 +13,7 @@ export interface ResultRowProps {
   result: Result
   optionId: string
   active: boolean
-  favicon: (pageUrl: string) => Promise<string | null>
+  favicon: FaviconLoader
   onHover: () => void
   onActivate: (shift: boolean) => void
 }
@@ -139,7 +139,13 @@ function keepInView(row: HTMLElement) {
 }
 
 export function ResultRow(props: ResultRowProps) {
-  const pageUrl = () => ('url' in props.result ? props.result.url : '')
+  // A site row's address changes with every key typed; its icon is the site's.
+  const pageUrl = () =>
+    props.result.kind === 'site'
+      ? keywordUrl(props.result.keyword, '')
+      : 'url' in props.result
+        ? props.result.url
+        : ''
   let row: HTMLDivElement | undefined
   createEffect(() => {
     if (props.active && row) keepInView(row)

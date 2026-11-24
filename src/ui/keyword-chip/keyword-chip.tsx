@@ -2,7 +2,7 @@ import { createResource } from 'solid-js'
 import { brandColor } from '../../core/color'
 import { type Keyword, keywordUrl } from '../../core/keywords'
 import { tileLetter } from '../../core/results'
-import { Favicon } from '../favicon/favicon'
+import { Favicon, type FaviconLoader } from '../favicon/favicon'
 import styles from './keyword-chip.module.css'
 
 const SAMPLE_SIZE = 32
@@ -31,7 +31,7 @@ export async function iconColor(src: string): Promise<string | null> {
 
 export interface KeywordChipProps {
   keyword: Keyword
-  favicon: (pageUrl: string) => Promise<string | null>
+  favicon: FaviconLoader
   color?: (src: string) => Promise<string | null>
 }
 

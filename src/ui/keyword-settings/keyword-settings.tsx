@@ -12,13 +12,13 @@ import {
 } from '../../core/keywords'
 import { displayUrl, tileLetter } from '../../core/results'
 import { Button } from '../button/button'
-import { Favicon } from '../favicon/favicon'
+import { Favicon, type FaviconLoader } from '../favicon/favicon'
 import { Toggle } from '../toggle/toggle'
 import styles from './keyword-settings.module.css'
 
 export interface KeywordSettingsProps {
   keywords: readonly Keyword[]
-  favicon: (pageUrl: string) => Promise<string | null>
+  favicon: FaviconLoader
   /** Saves the whole list; false when it's too big to sync, and nothing changed. */
   onChange: (keywords: Keyword[]) => Promise<boolean>
   newId?: () => string

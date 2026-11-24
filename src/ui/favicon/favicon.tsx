@@ -23,10 +23,20 @@ export function readTone(image: HTMLImageElement): IconTone | undefined {
   }
 }
 
+/**
+ * The icon's address, or null when the browser has none for the page. An
+ * answer already known comes back as a plain value, so a row that mounts again
+ * while typing shows its icon straight away instead of an empty tile first.
+ */
+export type FaviconLoader = (pageUrl: string) => string | null | Promise<string | null>
+
+// Rows remount as results change; remembering each icon's tone keeps a dark
+// icon's backing from flicking off and on again.
+const tones = new Map<string, IconTone | undefined>()
+
 export interface FaviconProps {
   pageUrl: string
-  /** Resolves to the icon's address, or null when the browser has none for the page. */
-  load: (pageUrl: string) => Promise<string | null>
+  load: FaviconLoader
   letter: string
   tone?: (image: HTMLImageElement) => IconTone | undefined
 }
@@ -38,13 +48,17 @@ export function Favicon(props: FaviconProps) {
     ([pageUrl]) => props.load(pageUrl),
   )
   const [failed, setFailed] = createSignal(false)
-  const [tone, setTone] = createSignal<IconTone>()
+  const [tone, setTone] = createSignal<IconTone | undefined>()
   return (
     // Stays empty while the icon is checked, so a real icon never flashes a
     // letter first.
     // An all-black icon like ChatGPT's would vanish on a dark tile, and an
     // all-white one on a light tile, so those get a backing they show up on.
-    <span class={styles.tile} data-tone={tone()} aria-hidden="true">
+    <span
+      class={styles.tile}
+      data-tone={tone() ?? (src.state === 'ready' ? tones.get(src() ?? '') : undefined)}
+      aria-hidden="true"
+    >
       <Switch>
         <Match when={src.state === 'ready' && !failed() && src()}>
           {(icon) => (
@@ -55,7 +69,11 @@ export function Favicon(props: FaviconProps) {
               width="16"
               height="16"
               draggable={false}
-              onLoad={(event) => setTone((props.tone ?? readTone)(event.currentTarget))}
+              onLoad={(event) => {
+                const read = (props.tone ?? readTone)(event.currentTarget)
+                tones.set(icon(), read)
+                setTone(read)
+              }}
               onError={() => setFailed(true)}
             />
           )}

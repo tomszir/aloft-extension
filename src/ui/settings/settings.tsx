@@ -5,6 +5,7 @@ import type { Settings as SettingsValue } from '../../core/settings'
 import { PRESET_THEMES } from '../../core/theme'
 import { Button } from '../button/button'
 import { Choice } from '../choice/choice'
+import type { FaviconLoader } from '../favicon/favicon'
 import { KeywordSettings } from '../keyword-settings/keyword-settings'
 import { Logo } from '../logo/logo'
 import type { AccessState } from '../onboarding/onboarding'
@@ -25,7 +26,7 @@ export interface SettingsProps {
   previewSrc: string
   keywords: readonly Keyword[]
   onKeywordsChange: (keywords: Keyword[]) => Promise<boolean>
-  favicon: (pageUrl: string) => Promise<string | null>
+  favicon: FaviconLoader
 }
 
 type Sources = SettingsValue['sources']

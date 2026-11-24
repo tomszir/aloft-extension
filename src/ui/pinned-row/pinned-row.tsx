@@ -2,7 +2,7 @@ import { createEffect, createMemo, createSignal, onCleanup, Show } from 'solid-j
 import { i18n } from '#i18n'
 import { heldOrder, MAX_SHORTCUTS, reorder } from '../../core/pinned'
 import { type TabEntry, tileLetter } from '../../core/results'
-import { Favicon } from '../favicon/favicon'
+import { Favicon, type FaviconLoader } from '../favicon/favicon'
 import { Kbd } from '../kbd/kbd'
 import { Keyed } from '../keyed/keyed'
 import { createPinDrag } from './drag'
@@ -11,7 +11,7 @@ import styles from './pinned-row.module.css'
 export interface PinnedRowProps {
   pins: readonly TabEntry[]
   altHeld: boolean
-  favicon: (pageUrl: string) => Promise<string | null>
+  favicon: FaviconLoader
   onOpen: (pin: TabEntry) => void
   onMenu: (pin: TabEntry, anchor: DOMRect) => void
   /** Called with the pin's new position in the row. Without it, pins can't be dragged. */

@@ -3,6 +3,7 @@ import { i18n } from '#i18n'
 import { shortcutSlot } from '../../core/pinned'
 import type { Chip } from '../../core/query'
 import type { Result, Section, SectionId, TabEntry } from '../../core/results'
+import type { FaviconLoader } from '../favicon/favicon'
 import { Icon } from '../icon/icon'
 import { Kbd } from '../kbd/kbd'
 import { Keyed } from '../keyed/keyed'
@@ -22,7 +23,7 @@ export interface PaletteProps {
   sections: readonly Section[]
   activeId: string | undefined
   /** Resolves to null when the browser has no icon for the page. */
-  favicon: (pageUrl: string) => Promise<string | null>
+  favicon: FaviconLoader
   onQuery: (text: string) => void
   /** Tab in the input; true when it was used, to enter an offered keyword. */
   onTab?: () => boolean

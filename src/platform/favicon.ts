@@ -28,9 +28,15 @@ const sameBytes = (a: Uint8Array, b: Uint8Array) =>
 
 let genericIcon: Promise<Uint8Array | null> | undefined
 const icons = new Map<string, Promise<string | null>>()
+const known = new Map<string, string | null>()
 
-/** The page's icon, or null when the browser only has its generic one. */
-export function pageFavicon(pageUrl: string): Promise<string | null> {
+/**
+ * The page's icon, or null when the browser only has its generic one; as a
+ * plain value once it's known, so rows don't wait a tick for it.
+ */
+export function pageFavicon(pageUrl: string): string | null | Promise<string | null> {
+  const answer = known.get(pageUrl)
+  if (answer !== undefined) return answer
   let icon = icons.get(pageUrl)
   if (!icon) {
     const src = faviconUrl(pageUrl)
@@ -39,6 +45,7 @@ export function pageFavicon(pageUrl: string): Promise<string | null> {
       if (own === null) return null
       return generic !== null && sameBytes(own, generic) ? null : src
     })
+    void icon.then((answer) => known.set(pageUrl, answer))
     icons.set(pageUrl, icon)
   }
   return icon
