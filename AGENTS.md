@@ -11,7 +11,7 @@ The repository is public: nothing private goes in it (personal notes, plans, lin
 | Install deps and git hooks      | `mise run setup`                                                                            |
 | Lint and typecheck              | `mise run check`                                                                            |
 | Unit tests                      | `pnpm test`                                                                                 |
-| Build and size budgets          | `pnpm build && pnpm size`                                                                   |
+| Build and size budgets          | `pnpm build && pnpm build:firefox && pnpm size`                                             |
 | End-to-end tests                | `pnpm test:e2e` (Playwright's Chromium; `ALOFT_BROWSER=/usr/bin/helium-browser` for Helium) |
 | Store screenshots               | `pnpm screenshots`                                                                          |
 | Re-vendor icons from their lock | `mise run icons:vendor`                                                                     |

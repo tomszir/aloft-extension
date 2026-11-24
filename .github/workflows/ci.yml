@@ -24,13 +24,25 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+      - run: pnpm build:firefox
       - run: pnpm size
       - run: pnpm zip
+      # Also writes the sources zip addons.mozilla.org asks for, since the
+      # package is bundled.
+      - run: pnpm zip:firefox
       - uses: actions/upload-artifact@v5
         with:
           name: aloft-chrome
           path: .output/*-chrome.zip
           # .output is a dot directory, which upload-artifact skips otherwise.
+          include-hidden-files: true
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v5
+        with:
+          name: aloft-firefox
+          path: |
+            .output/*-firefox.zip
+            .output/*-sources.zip
           include-hidden-files: true
           if-no-files-found: error
 
