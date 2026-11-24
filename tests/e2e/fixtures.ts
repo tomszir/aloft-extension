@@ -140,6 +140,17 @@ export async function isPinned(background: Worker, url: string): Promise<boolean
 }
 
 /** What Ctrl+T does: an active tab on the browser's new tab page. */
+/** The pinned tabs' URLs in tab-strip order. */
+export async function pinnedUrls(background: Worker): Promise<string[]> {
+  return background.evaluate(async () => {
+    const api = Reflect.get(globalThis, 'chrome') as {
+      tabs: { query: (q: object) => Promise<{ url?: string; index: number }[]> }
+    }
+    const pins = await api.tabs.query({ pinned: true })
+    return pins.sort((a, b) => a.index - b.index).map((t) => t.url ?? '')
+  })
+}
+
 export async function pressNewTab(background: Worker): Promise<void> {
   await background.evaluate(async () => {
     const api = Reflect.get(globalThis, 'chrome') as {

@@ -6,12 +6,14 @@ const SCHEME_EXTRAS = {
     '--al-page': '#131515',
     '--al-danger': '#F2A8A0',
     '--al-shadow': '0 24px 64px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.35)',
+    '--al-lift-shadow': '0 10px 24px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.35)',
   },
   light: {
     '--al-scrim': 'rgba(20, 24, 24, 0.22)',
     '--al-page': '#F2F3F3',
     '--al-danger': '#B42318',
     '--al-shadow': '0 24px 64px rgba(20, 24, 24, 0.18), 0 2px 8px rgba(20, 24, 24, 0.08)',
+    '--al-lift-shadow': '0 10px 24px rgba(20, 24, 24, 0.18), 0 2px 6px rgba(20, 24, 24, 0.1)',
   },
 } as const
 

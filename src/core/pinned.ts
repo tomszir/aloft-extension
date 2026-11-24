@@ -30,3 +30,59 @@ export function moveIndex(
   const neighbour = row[position + (direction === 'left' ? -1 : 1)]
   return neighbour?.index
 }
+
+/** The tab-strip index that puts a pin at `position` in the row. */
+export function dropIndex(row: readonly TabEntry[], position: number): number | undefined {
+  return row[position]?.index
+}
+
+/** `items` with the one at `from` moved to `to`. */
+export function reorder<T>(items: readonly T[], from: number, to: number): T[] {
+  const next = [...items]
+  const [moved] = next.splice(from, 1)
+  if (moved === undefined) return next
+  next.splice(to, 0, moved)
+  return next
+}
+
+export interface Cell {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+/** The cell whose centre is nearest to (x, y). */
+export function nearestCell(cells: readonly Cell[], x: number, y: number): number {
+  let best = 0
+  let bestDistance = Number.POSITIVE_INFINITY
+  cells.forEach((cell, index) => {
+    const distance = Math.hypot(cell.x + cell.width / 2 - x, cell.y + cell.height / 2 - y)
+    if (distance < bestDistance) {
+      best = index
+      bestDistance = distance
+    }
+  })
+  return best
+}
+
+/**
+ * The row in a dropped order while the browser catches up. Tab events from
+ * the move arrive one by one, so showing them as they come would flick the
+ * dropped pin back first. Undefined once the browser's order matches, or
+ * when the pins themselves changed and the held order no longer fits.
+ */
+export function heldOrder(
+  pins: readonly TabEntry[],
+  order: readonly number[],
+): TabEntry[] | undefined {
+  if (pins.length !== order.length) return undefined
+  const byId = new Map(pins.map((pin) => [pin.tabId, pin]))
+  const held: TabEntry[] = []
+  for (const tabId of order) {
+    const pin = byId.get(tabId)
+    if (!pin) return undefined
+    held.push(pin)
+  }
+  return held.every((pin, i) => pin.tabId === pins[i]?.tabId) ? undefined : held
+}
