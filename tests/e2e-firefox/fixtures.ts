@@ -172,3 +172,50 @@ export async function pressNewTab(control: Page): Promise<void> {
     await api.tabs.create({})
   })
 }
+
+/** Pins or unpins the tab showing `url`. */
+export async function setPinned(control: Page, url: string, pinned: boolean): Promise<void> {
+  await control.evaluate(
+    async (target, value) => {
+      const api = Reflect.get(globalThis, 'browser') as Api
+      const tab = (await api.tabs.query({})).find((t) => t.url === target)
+      if (tab?.id === undefined) throw new Error(`no tab for ${target}`)
+      await api.tabs.update(tab.id, { pinned: value })
+    },
+    url,
+    pinned,
+  )
+}
+
+export function isPinned(control: Page, url: string): Promise<boolean> {
+  return control.evaluate(async (target) => {
+    const api = Reflect.get(globalThis, 'browser') as Api
+    const tabs = (await api.tabs.query({})) as { url?: string; pinned?: boolean }[]
+    return tabs.some((t) => t.url === target && t.pinned === true)
+  }, url)
+}
+
+/** Replaces the stored keywords, as the settings page would save them. */
+export async function setKeywords(control: Page, keywords: object): Promise<void> {
+  await control.evaluate(async (value) => {
+    const api = Reflect.get(globalThis, 'browser') as {
+      storage: { sync: { set: (items: object) => Promise<void> } }
+    }
+    await api.storage.sync.set({ keywords: value })
+  }, keywords)
+}
+
+/** The palette's visible text, or that of its selected row. */
+export const paletteText = (palette: Frame) =>
+  palette.evaluate(() => document.body.textContent ?? '')
+export const selectedRow = (palette: Frame) =>
+  palette.evaluate(() => document.querySelector('[aria-selected="true"]')?.textContent ?? '')
+
+export function recentlyClosedUrls(control: Page): Promise<string[]> {
+  return control.evaluate(async () => {
+    const api = Reflect.get(globalThis, 'browser') as {
+      sessions: { getRecentlyClosed: () => Promise<{ tab?: { url?: string } }[]> }
+    }
+    return (await api.sessions.getRecentlyClosed()).flatMap((s) => (s.tab?.url ? [s.tab.url] : []))
+  })
+}
