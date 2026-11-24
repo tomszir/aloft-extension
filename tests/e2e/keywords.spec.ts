@@ -63,7 +63,7 @@ test('@ lists the keywords, and picking one makes its chip', async ({ context, b
 
   await input.pressSequentially('test')
   await expect(list.getByRole('option')).toHaveCount(1)
-  await expect(list.getByRole('option')).toContainText('ts, then Space')
+  await expect(list.getByRole('option').getByText('ts', { exact: true })).toBeVisible()
 
   await sendPaletteKey(page, { key: 'Enter' })
   await expect(input).toHaveValue('')

@@ -5,14 +5,12 @@ paletteLabel: Aloft
 palettePlaceholder: Search or enter address
 placeholderActions: Search actions
 resultsLabel: Results
-hintNavigate: Navigate
-hintNewTab: New tab
-hintCurrentTab: Current tab
 hintActions: Actions
 hintKeywords: Keywords
 hintClose: Close
-hintRun: Run
 hintBack: Back
+openNewTab: New tab
+openHere: Here
 sectionOpenTabs: Open tabs
 sectionHistory: History
 sectionBookmarks: Bookmarks
@@ -27,7 +25,6 @@ keywordSearch: Search $1
 keywordAsk: Ask $1
 keywordOpen: Open $1
 keywordOfferHint: Space or Tab to type here
-keywordListHint: $1, then Space
 actionOpen: Open
 actionSwitch: Switch to tab
 actionRestore: Restore

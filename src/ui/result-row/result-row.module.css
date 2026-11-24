@@ -65,6 +65,25 @@
   color: var(--al-muted);
 }
 
+.enter {
+  display: inline-flex;
+  visibility: hidden;
+}
+
+.enter[data-shown] {
+  visibility: visible;
+}
+
+.choice {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--al-space-2);
+}
+
+.action:has(.choice) {
+  gap: var(--al-space-4);
+}
+
 .match {
   background: none;
   color: inherit;

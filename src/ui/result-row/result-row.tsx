@@ -1,8 +1,9 @@
-import { createEffect, For, Show } from 'solid-js'
+import { createEffect, For, Match, Show, Switch } from 'solid-js'
 import { i18n } from '#i18n'
 import type { ActionId } from '../../core/actions'
 import { type Keyword, keywordUrl } from '../../core/keywords'
 import { displayUrl, type Highlight, type Result, tileLetter } from '../../core/results'
+import type { Settings } from '../../core/settings'
 import { Favicon, type FaviconLoader } from '../favicon/favicon'
 import { Icon } from '../icon/icon'
 import type { IconName } from '../icon/icons'
@@ -14,6 +15,8 @@ export interface ResultRowProps {
   optionId: string
   active: boolean
   favicon: FaviconLoader
+  /** Where Enter opens a page; unset where it always opens in place, so there's no choice to show. */
+  enterOpensIn?: Settings['enterOpensIn']
   onHover: () => void
   onActivate: (shift: boolean) => void
 }
@@ -45,10 +48,8 @@ function subtitle(result: Result): string {
     case 'url':
       return i18n.t('goToAddress')
     case 'keyword':
-      // Listed rows teach the keyword, so next time it can be typed straight away.
-      return result.listed
-        ? i18n.t('keywordListHint', [result.keyword.keyword])
-        : i18n.t('keywordOfferHint')
+      // A listed row names its keyword at the end, so the subtitle has room for the site.
+      return result.listed ? displayUrl(result.url) : i18n.t('keywordOfferHint')
     case 'site':
       return result.query === '' ? displayUrl(result.url) : verb(result.keyword)
     case 'action':
@@ -77,6 +78,14 @@ function action(result: Result): string {
       return i18n.t('actionOpen')
   }
 }
+
+// Pages, where Shift+Enter opens the other way; tabs and closed tabs only switch or restore.
+const OPENS_PAGE = new Set<Result['kind']>(['search', 'url', 'site', 'history', 'bookmark'])
+
+const PLACE_LABEL = {
+  'new-tab': () => i18n.t('openNewTab'),
+  'current-tab': () => i18n.t('openHere'),
+} as const
 
 const ACTION_ICON: Record<ActionId, IconName> = {
   pin: 'pin',
@@ -200,11 +209,39 @@ export function ResultRow(props: ResultRowProps) {
         </span>
         <span class={styles.subtitle}>{subtitle(props.result)}</span>
       </span>
-      <Show when={props.active}>
-        <span class={styles.action}>
-          {action(props.result)} <Kbd selected>↵</Kbd>
-        </span>
-      </Show>
+      <Switch>
+        <Match
+          when={props.result.kind === 'keyword' && props.result.listed && props.result.keyword}
+        >
+          {(keyword) => (
+            <span class={styles.action}>
+              <Kbd selected={props.active}>{keyword().keyword}</Kbd>
+              {/* Always there, only shown when selected, so the keywords stay in one column. */}
+              <span class={styles.enter} data-shown={props.active || undefined}>
+                <Kbd selected>↵</Kbd>
+              </span>
+            </span>
+          )}
+        </Match>
+        <Match when={props.active && OPENS_PAGE.has(props.result.kind) && props.enterOpensIn}>
+          {(place) => (
+            <span class={styles.action}>
+              <span class={styles.choice}>
+                {PLACE_LABEL[place()]()} <Kbd selected>↵</Kbd>
+              </span>
+              <span class={styles.choice}>
+                {PLACE_LABEL[place() === 'new-tab' ? 'current-tab' : 'new-tab']()}{' '}
+                <Kbd selected>⇧ ↵</Kbd>
+              </span>
+            </span>
+          )}
+        </Match>
+        <Match when={props.active}>
+          <span class={styles.action}>
+            {action(props.result)} <Kbd selected>↵</Kbd>
+          </span>
+        </Match>
+      </Switch>
     </div>
   )
 }
