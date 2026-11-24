@@ -55,7 +55,7 @@ export interface AppProps {
 
 export function App(props: AppProps) {
   const { settings } = useSettings()
-  const keywords = useKeywords()
+  const { keywords } = useKeywords()
   useTheme(settings)
   if (props.host === 'overlay') useZoomCorrection(props.hostTab.then((tab) => tab?.id))
 

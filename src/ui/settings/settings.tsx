@@ -1,9 +1,11 @@
 import { Show } from 'solid-js'
 import { i18n } from '#i18n'
+import type { Keyword } from '../../core/keywords'
 import type { Settings as SettingsValue } from '../../core/settings'
 import { PRESET_THEMES } from '../../core/theme'
 import { Button } from '../button/button'
 import { Choice } from '../choice/choice'
+import { KeywordSettings } from '../keyword-settings/keyword-settings'
 import { Logo } from '../logo/logo'
 import type { AccessState } from '../onboarding/onboarding'
 import { ShortcutSentence } from '../shortcut-sentence/shortcut-sentence'
@@ -21,6 +23,9 @@ export interface SettingsProps {
   onAllow: () => void
   /** The palette itself, in preview mode, so it shows exactly what Aloft will. */
   previewSrc: string
+  keywords: readonly Keyword[]
+  onKeywordsChange: (keywords: Keyword[]) => Promise<boolean>
+  favicon: (pageUrl: string) => Promise<string | null>
 }
 
 type Sources = SettingsValue['sources']
@@ -134,6 +139,20 @@ export function Settings(props: SettingsProps) {
             />
           ))}
         </fieldset>
+      </section>
+
+      <section class={styles.card} aria-labelledby="al-keywords-title">
+        <div class={styles.intro}>
+          <h2 id="al-keywords-title" class={styles.heading}>
+            {i18n.t('settingsKeywords')}
+          </h2>
+          <p class={styles.note}>{i18n.t('settingsKeywordsNote')}</p>
+        </div>
+        <KeywordSettings
+          keywords={props.keywords}
+          favicon={props.favicon}
+          onChange={props.onKeywordsChange}
+        />
       </section>
 
       <section class={styles.card} aria-labelledby="al-appearance-title">

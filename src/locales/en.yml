@@ -73,6 +73,27 @@ settingsEnterNote: Shift+Enter opens it in the other one.
 settingsSwitchToOpenTabs: Switch to a page that's already open instead of opening it again
 settingsSources: Show results from
 settingsShowPinned: Show pinned tabs above the results
+settingsKeywords: Keywords
+settingsKeywordsNote: Type a keyword, then Space or Tab, to search a site or ask an AI from Aloft. Starting with @ always works. What you type becomes part of the site's address, so it's saved in your history.
+keywordUse: Use $1
+keywordEdit: Edit $1
+keywordEditShort: Edit
+keywordYours: Yours
+keywordName: Name
+keywordKeyword: Keyword
+keywordAddress: Address, with %s where the search goes
+keywordSave: Save
+keywordCancel: Cancel
+keywordDelete: Delete
+keywordAdd: Add keyword
+keywordReset: Reset built-in keywords
+keywordResetConfirm: Put the built-in keywords back as they ship? Your own stay.
+keywordResetYes: Reset
+keywordErrorName: Give it a name.
+keywordErrorKeyword: Use letters, digits, dots, dashes or underscores, with no spaces.
+keywordErrorTaken: Another keyword already uses this.
+keywordErrorUrl: Use an http or https address with %s where the search goes.
+keywordErrorFull: That's more than your browser can sync. Remove a keyword or shorten an address first.
 settingsAppearance: Appearance
 settingsColorScheme: Color scheme
 settingsSchemeSystem: Match system
