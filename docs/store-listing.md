@@ -40,13 +40,14 @@ The text and answers for the Web Store developer dashboard, kept here so they ch
 
 ### Graphics
 
-| Asset            | Size     | File                                                                |
-| ---------------- | -------- | ------------------------------------------------------------------- |
-| Store icon       | 128×128  | `public/icon/128.png`                                               |
-| Screenshots      | 1280×800 | `docs/screenshots/1-pinned-and-tabs.png` … `5-themes.png`, in order |
-| Small promo tile | 440×280  | `assets/brand/promo-440x280.png`                                    |
+| Asset              | Size     | File                                                                |
+| ------------------ | -------- | ------------------------------------------------------------------- |
+| Store icon         | 128×128  | `public/icon/128.png`                                               |
+| Screenshots        | 1280×800 | `docs/screenshots/1-pinned-and-tabs.png` … `5-themes.png`, in order |
+| Small promo tile   | 440×280  | `assets/brand/promo-440x280.png`                                    |
+| Marquee promo tile | 1400×560 | `docs/screenshots/marquee-1400x560.png`                             |
 
-All of them are generated: the screenshots by `pnpm screenshots`, the icon and tile by `pnpm brand`.
+All of them are generated: the screenshots and marquee tile by `pnpm screenshots`, the icon and small tile by `pnpm brand`. The promo video (`pnpm video`, see `video/`) goes on YouTube for the listing's video field.
 
 ### Additional fields
 
