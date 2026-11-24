@@ -177,6 +177,33 @@ describe('keywords', () => {
     ])
   })
 
+  it('lists keywords above everything else while @ is typed, instead of the offer', () => {
+    const youtube = builtInKeyword('youtube')
+    const sections = buildSections(parseQuery('@g'), data, {
+      ...options,
+      offeredKeyword: github,
+      listedKeywords: [github, youtube],
+    })
+    expect(sections[0]?.id).toBe('keywords')
+    expect(sections[0]?.results).toEqual([
+      {
+        kind: 'keyword',
+        id: 'keyword:github',
+        keyword: github,
+        url: 'https://github.com',
+        listed: true,
+      },
+      {
+        kind: 'keyword',
+        id: 'keyword:youtube',
+        keyword: youtube,
+        url: 'https://www.youtube.com',
+        listed: true,
+      },
+    ])
+    expect(flatten(sections).filter((r) => r.id === 'keyword')).toEqual([])
+  })
+
   it('inside a chip, sends the text to the site and lists only that site’s pages', () => {
     const results = flatten(buildSections(parseQuery('aloft', github), data, options))
     expect(results[0]).toMatchObject({

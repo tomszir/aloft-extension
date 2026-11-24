@@ -50,6 +50,7 @@ export interface PaletteProps {
 const RESULTS_ID = 'al-results'
 
 const SECTION_LABEL: Record<SectionId, (() => string) | undefined> = {
+  keywords: () => i18n.t('sectionKeywords'),
   top: undefined,
   tabs: () => i18n.t('sectionOpenTabs'),
   history: () => i18n.t('sectionHistory'),
@@ -240,7 +241,12 @@ export function Palette(props: PaletteProps) {
           <Keyed each={props.sections} by={(section) => section.id}>
             {(section) => (
               // biome-ignore lint/a11y/useSemanticElements: a <fieldset> isn't allowed inside a listbox; role="group" is the ARIA pattern for grouped options.
-              <div class={styles.section} role="group" aria-label={SECTION_LABEL[section().id]?.()}>
+              <div
+                class={styles.section}
+                data-section={section().id}
+                role="group"
+                aria-label={SECTION_LABEL[section().id]?.()}
+              >
                 <Show when={SECTION_LABEL[section().id]}>
                   {(label) => (
                     <div class={styles.sectionLabel} aria-hidden="true">
@@ -286,6 +292,9 @@ export function Palette(props: PaletteProps) {
                   fallback={
                     <>
                       <span class={`${styles.hint} ${styles.hintEnd}`}>
+                        <Kbd>@</Kbd> {i18n.t('hintKeywords')}
+                      </span>
+                      <span class={styles.hint}>
                         <Kbd>&gt;</Kbd> {i18n.t('hintActions')}
                       </span>
                       <span class={styles.hint}>
