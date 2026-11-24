@@ -3,12 +3,15 @@ extDescription: A floating command bar for Helium and other Chromium browsers.
 commandOpen: Open Aloft
 paletteLabel: Aloft
 palettePlaceholder: Search or enter address
+placeholderActions: Search actions
 resultsLabel: Results
 hintNavigate: Navigate
 hintNewTab: New tab
 hintCurrentTab: Current tab
 hintActions: Actions
 hintClose: Close
+hintRun: Run
+hintBack: Back
 sectionOpenTabs: Open tabs
 sectionHistory: History
 sectionBookmarks: Bookmarks

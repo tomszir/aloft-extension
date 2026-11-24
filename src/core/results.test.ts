@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseQuery } from './query'
+import { applyInput, EMPTY_QUERY, parseQuery } from './query'
 import {
   type BuildOptions,
   buildSections,
@@ -76,8 +76,14 @@ const data: SourceData = {
   ],
 }
 
+// As if typed into an empty palette, so "> undo" goes through the chip.
+const parseInput = (input: string) => {
+  const { chip, text } = applyInput(EMPTY_QUERY, input)
+  return parseQuery(text, chip)
+}
+
 const ids = (query: string, opts = options) =>
-  flatten(buildSections(parseQuery(query), data, opts)).map((r) => r.id)
+  flatten(buildSections(parseInput(query), data, opts)).map((r) => r.id)
 
 describe('matchScore', () => {
   it('requires every term', () => {
@@ -152,7 +158,7 @@ describe('buildSections', () => {
   })
 
   it('carries the browser shortcut along as a hint', () => {
-    const [section] = buildSections(parseQuery('> new'), data, options)
+    const [section] = buildSections(parseQuery('new', 'actions'), data, options)
     expect(section?.results[0]).toMatchObject({ kind: 'action', hint: 'Ctrl+N' })
   })
 })

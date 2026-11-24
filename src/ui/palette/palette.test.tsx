@@ -36,10 +36,12 @@ const sections: Section[] = [
 const baseProps = (): PaletteProps => ({
   position: 'upper-third',
   query: 'aloft',
+  chip: null,
   sections,
   activeId: 'search',
   favicon: () => '',
   onQuery: vi.fn(),
+  onLeaveChip: vi.fn(),
   onMove: vi.fn(),
   onHover: vi.fn(),
   onActivate: vi.fn(),
@@ -142,6 +144,58 @@ describe('Palette', () => {
     expect(screen.getByRole('combobox').getAttribute('aria-expanded')).toBe('false')
     expect(screen.getByRole('combobox').hasAttribute('aria-activedescendant')).toBe(false)
   })
+  describe('actions chip', () => {
+    const footer = () => screen.getByRole('contentinfo').textContent ?? ''
+
+    it('sits in front of the input and renames the search', () => {
+      renderPalette({ chip: 'actions', query: '' })
+      const chip = screen.getByText('sectionActions')
+      const input = screen.getByRole('combobox')
+      expect(chip.compareDocumentPosition(input) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+      expect(input.getAttribute('placeholder')).toBe('placeholderActions')
+    })
+
+    it('is not shown for a > typed outside it', () => {
+      renderPalette({ query: '>' })
+      expect(screen.queryByText('sectionActions')).toBeNull()
+    })
+
+    it('Backspace on an empty input leaves it; with text, it only edits', () => {
+      const props = renderPalette({ chip: 'actions', query: 'pin' })
+      const input = screen.getByRole('combobox')
+      fireEvent.keyDown(input, { key: 'Backspace' })
+      expect(props.onLeaveChip).not.toHaveBeenCalled()
+
+      fireEvent.input(input, { target: { value: '' } })
+      fireEvent.keyDown(input, { key: 'Backspace' })
+      expect(props.onLeaveChip).toHaveBeenCalledOnce()
+    })
+
+    it('Escape leaves the chip instead of closing', () => {
+      const props = renderPalette({ chip: 'actions', query: 'pin' })
+      fireEvent.keyDown(screen.getByRole('combobox'), { key: 'Escape' })
+      expect(props.onLeaveChip).toHaveBeenCalledOnce()
+      expect(props.onClose).not.toHaveBeenCalled()
+    })
+
+    it('shows only the keys that work in each mode', () => {
+      const [chip, setChip] = createSignal<'actions' | null>(null)
+      const base = baseProps()
+      render(() => <Palette {...base} chip={chip()} />)
+      expect(footer()).toContain('hintNewTab')
+      expect(footer()).toContain('hintActions')
+      expect(footer()).toContain('hintClose')
+      expect(footer()).not.toContain('hintRun')
+
+      setChip('actions')
+      expect(footer()).toContain('hintRun')
+      expect(footer()).toContain('hintBack')
+      for (const gone of ['hintNewTab', 'hintCurrentTab', 'hintActions', 'hintClose']) {
+        expect(footer()).not.toContain(gone)
+      }
+    })
+  })
+
   describe('pinned row', () => {
     it('shows each pin as a button with its Alt shortcut', () => {
       renderPalette({ pins, pinShortcuts: pins })

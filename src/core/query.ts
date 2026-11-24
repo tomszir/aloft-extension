@@ -3,10 +3,45 @@ export type ParsedQuery =
   | { kind: 'actions'; text: string }
   | { kind: 'text'; text: string; terms: string[]; url: string | null }
 
-export function parseQuery(input: string): ParsedQuery {
+/** What the input is scoped to, shown as a chip in front of it. */
+export type Chip = 'actions'
+
+export interface QueryState {
+  chip: Chip | null
+  text: string
+}
+
+export const EMPTY_QUERY: QueryState = { chip: null, text: '' }
+
+const CHIP_PREFIX: Record<Chip, string> = { actions: '>' }
+
+/** The state after the input's text changes to `input`. */
+export function applyInput(state: QueryState, input: string): QueryState {
+  if (state.chip === null) {
+    const typed = input.trimStart()
+    if (typed.startsWith(CHIP_PREFIX.actions)) {
+      return { chip: 'actions', text: typed.slice(CHIP_PREFIX.actions.length).trimStart() }
+    }
+  }
+  return { chip: state.chip, text: input }
+}
+
+/**
+ * Backspace on an empty input or Esc: the chip turns back into the text that
+ * made it, so leaving loses nothing that was typed.
+ */
+export function leaveChip(state: QueryState): QueryState {
+  if (state.chip === null) return state
+  const text = state.text.trim()
+  return { chip: null, text: CHIP_PREFIX[state.chip] + (text === '' ? '' : ` ${text}`) }
+}
+
+// Only the chip enters actions mode: a ">" left in the input after leaving it
+// is searched for like any other text.
+export function parseQuery(input: string, chip: Chip | null = null): ParsedQuery {
   const text = input.trim()
+  if (chip === 'actions') return { kind: 'actions', text }
   if (text === '') return { kind: 'empty' }
-  if (text.startsWith('>')) return { kind: 'actions', text: text.slice(1).trim() }
   return { kind: 'text', text, terms: text.toLowerCase().split(/\s+/), url: toUrl(text) }
 }
 
