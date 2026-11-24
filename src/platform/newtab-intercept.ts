@@ -4,10 +4,15 @@ import { injectOverlay } from './overlay'
 import { hasSiteAccess } from './permissions'
 import { loadSettings } from './settings'
 
+// Tabs already looked at, so a tab reported by both onCreated and onUpdated
+// isn't handled twice, which would draw the overlay twice.
+const seen = new Set<number>()
+
 async function interceptNewTab(tab: Browser.tabs.Tab): Promise<void> {
   // Background tabs (middle-clicking +) were opened on purpose; leave them.
-  if (tab.id === undefined || !tab.active) return
+  if (tab.id === undefined || !tab.active || seen.has(tab.id)) return
   if (!isNewTabUrl(tab.pendingUrl ?? tab.url, browser.runtime.getURL('/newtab.html'))) return
+  seen.add(tab.id)
 
   const [settings, access] = await Promise.all([loadSettings(), hasSiteAccess()])
   if (!settings.replaceNewTab || !access) return
@@ -34,5 +39,13 @@ async function interceptNewTab(tab: Browser.tabs.Tab): Promise<void> {
 export function watchNewTabs(): void {
   browser.tabs.onCreated.addListener((tab) => {
     void interceptNewTab(tab)
+  })
+  // Firefox creates the tab as about:blank, with no pendingUrl, and reports
+  // the new tab page's address only in a later update.
+  browser.tabs.onUpdated.addListener((_tabId, change, tab) => {
+    if (change.url) void interceptNewTab(tab)
+  })
+  browser.tabs.onRemoved.addListener((tabId) => {
+    seen.delete(tabId)
   })
 }
