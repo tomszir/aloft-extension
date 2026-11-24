@@ -51,6 +51,12 @@ export const test = base.extend<{
         body: `<!doctype html><title>${title || 'Test page'}</title><input id="field" aria-label="Field">`,
       })
     })
+    // A fresh profile opens the onboarding tab once the install finishes, at
+    // a moment no test can predict. Waiting for it here keeps it from being
+    // taken for the tab a test is waiting on, or becoming the tab Ctrl+T
+    // returns to.
+    const isOnboarding = (p: Page) => p.url().endsWith('/onboarding.html')
+    await base.expect.poll(() => context.pages().some(isOnboarding)).toBe(true)
     // Some failures only happen on CI's slower runners, so keep a trace of
     // them there. The built-in trace option doesn't cover a context we launch.
     const trace = Boolean(process.env.CI)
