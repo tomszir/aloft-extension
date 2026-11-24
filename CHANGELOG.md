@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.4.0](https://github.com/tomszir/aloft-extension/compare/v0.3.0...v0.4.0) (2026-11-24)
+
+
+### Features
+
+* make the command bar work over pages in firefox ([#40](https://github.com/tomszir/aloft-extension/issues/40)) ([763af32](https://github.com/tomszir/aloft-extension/commit/763af324839c447229d9a1e8b4b640501b317e14))
+* **overlay:** slide the selection between rows and fade out on close ([#34](https://github.com/tomszir/aloft-extension/issues/34)) ([7f26427](https://github.com/tomszir/aloft-extension/commit/7f2642726b843f5ea03da2be6df4e6e02522ab6e))
+* **search:** learn which page you pick and match initials and typos ([#36](https://github.com/tomszir/aloft-extension/issues/36)) ([c9d88b5](https://github.com/tomszir/aloft-extension/commit/c9d88b53625d532b964fb8bc2282e2500b3c7183))
+* **search:** type @ to see every keyword and pick one ([#30](https://github.com/tomszir/aloft-extension/issues/30)) ([7b5a11f](https://github.com/tomszir/aloft-extension/commit/7b5a11f06b094139603e11ad5e720e5caec06799))
+* show where Enter opens on the selected row and quiet the footer ([#33](https://github.com/tomszir/aloft-extension/issues/33)) ([cd34276](https://github.com/tomszir/aloft-extension/commit/cd34276ac115443dcd7fea20c638ccc7aa0ca36d))
+
+
+### Bug Fixes
+
+* describe aloft without naming a browser ([#46](https://github.com/tomszir/aloft-extension/issues/46)) ([219fb7b](https://github.com/tomszir/aloft-extension/commit/219fb7bebe275d9ca80d5d55c4d5fd7eaf0be895))
+* **newtab:** open aloft on ctrl+t when a browser reports new tabs late ([#39](https://github.com/tomszir/aloft-extension/issues/39)) ([b91eda8](https://github.com/tomszir/aloft-extension/commit/b91eda83d173229859cc0add481000e12d9c4f68))
+* stop result icons flashing while typing ([#32](https://github.com/tomszir/aloft-extension/issues/32)) ([7e2be2e](https://github.com/tomszir/aloft-extension/commit/7e2be2efea85dd196b105eb5b94a3a95df1a4414))
+
+
+### Performance
+
+* stop asking firefox for favicons it can't provide ([#43](https://github.com/tomszir/aloft-extension/issues/43)) ([c91634e](https://github.com/tomszir/aloft-extension/commit/c91634e3b357fe93e12b4500702828f18318c6b3))
+
 ## [0.3.0](https://github.com/tomszir/aloft-extension/compare/v0.2.0...v0.3.0) (2026-11-24)
 
 
