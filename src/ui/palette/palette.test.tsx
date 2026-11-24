@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@solidjs/testing-library'
+import { fireEvent, render, screen } from '@solidjs/testing-library'
 import { createSignal } from 'solid-js'
 import { describe, expect, it, vi } from 'vitest'
 import type { Section, TabEntry } from '../../core/results'
@@ -215,9 +215,7 @@ describe('Palette', () => {
       const calendar = screen.getByRole('button', { name: 'Calendar' })
       expect(mail.textContent).toContain('Mail')
       expect(mail.hasAttribute('data-asleep')).toBe(false)
-      expect(within(mail).queryByTestId('pin-asleep')).toBeNull()
       expect(calendar.hasAttribute('data-asleep')).toBe(true)
-      expect(within(calendar).getByTestId('pin-asleep')).toBeTruthy()
       expect(calendar.title).toBe('pinnedAsleepTitle')
       expect(mail.title).toBe('Mail')
     })

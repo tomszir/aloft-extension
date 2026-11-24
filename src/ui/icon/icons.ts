@@ -10,7 +10,6 @@ export const ICON_NAMES = [
   'copy',
   'copy-x',
   'globe',
-  'moon',
   'pin',
   'pin-off',
   'search',
