@@ -15,6 +15,31 @@ import {
 
 const palette = (page: Page) => page.locator('iframe[title="Aloft"]').contentFrame()
 
+/**
+ * Moves the pointer to (x, y) until `target` itself gets the move. Chromium
+ * routes mouse events into the palette's frame by hit-testing what's been
+ * composited, which on a slow machine lags the DOM by a few frames; a press
+ * before then lands on the page behind, and never becomes a click.
+ */
+async function pointerReaches(page: Page, target: Locator, x: number, y: number) {
+  const reached = target.evaluate(
+    (element) =>
+      new Promise<void>((resolve) =>
+        element.addEventListener('mousemove', () => resolve(), { once: true }),
+      ),
+  )
+  for (let attempt = 0; attempt < 100; attempt++) {
+    // Alternating by a pixel, since moving to the same point fires no event.
+    await page.mouse.move(x + (attempt % 2), y)
+    const landed = await Promise.race([
+      reached.then(() => true),
+      new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 50)),
+    ])
+    if (landed) return
+  }
+  throw new Error('the pointer never reached the target')
+}
+
 /** Presses on `target`, pins `url`, and releases once `reloaded` shows the palette caught up. */
 async function clickAcrossTabEvent(
   page: Page,
@@ -25,7 +50,7 @@ async function clickAcrossTabEvent(
 ) {
   const box = await target.boundingBox()
   if (!box) throw new Error('target is not visible')
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+  await pointerReaches(page, target, box.x + box.width / 2, box.y + box.height / 2)
   await page.mouse.down()
   await tabAction(background, url, 'pin')
   await expect(reloaded).toBeVisible()
