@@ -1,0 +1,52 @@
+name: Publish
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        type: string
+        required: true
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to publish, e.g. v0.2.0
+        type: string
+        required: true
+      dry_run:
+        description: Only check the store credentials; upload nothing
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  chrome-web-store:
+    # Skipped until the store listing exists: the first version has to be
+    # submitted by hand in the developer dashboard. See docs/releasing.md.
+    if: vars.CHROME_EXTENSION_ID != ''
+    runs-on: ubuntu-latest
+    environment: chrome-web-store
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.tag }}
+      - uses: jdx/mise-action@v3
+      - run: pnpm install --frozen-lockfile
+      # The zip attached to the release, so the store gets the exact build
+      # people can download, not a rebuild.
+      - run: gh release download "$TAG" --pattern '*-chrome.zip' --dir release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+      - run: |
+          args=(--chrome-zip release/*-chrome.zip)
+          if [ "$DRY_RUN" = true ]; then args+=(--dry-run); fi
+          pnpm wxt submit "${args[@]}"
+        env:
+          DRY_RUN: ${{ inputs.dry_run }}
+          CHROME_API_VERSION: v2
+          CHROME_EXTENSION_ID: ${{ vars.CHROME_EXTENSION_ID }}
+          CHROME_PUBLISHER_ID: ${{ vars.CHROME_PUBLISHER_ID }}
+          CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL: ${{ vars.CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL }}
+          CHROME_SERVICE_ACCOUNT_PRIVATE_KEY: ${{ secrets.CHROME_SERVICE_ACCOUNT_PRIVATE_KEY }}

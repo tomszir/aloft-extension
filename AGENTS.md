@@ -32,7 +32,7 @@ Run all of the first four before opening a PR. The `pre-push` hook runs the end-
   - The title is a conventional commit; PRs are squash-merged, so it becomes the commit on main.
   - The body is 1–3 lines: what changed and why, and how it was tested. No checklists.
 - **Merging**: agents may squash-merge `docs`, `build`, `ci`, `chore` and `test` PRs once CI is green. `feat`, `fix`, `perf`, `refactor`, `revert` and release PRs wait for the maintainer. Never push to `main` directly or use the admin bypass.
-- **Releases** are cut by release-please from the commits on `main`; never edit `CHANGELOG.md` or the version by hand.
+- **Releases** are cut by release-please from the commits on `main`, then published to the Chrome Web Store ([docs/releasing.md](docs/releasing.md)); never edit `CHANGELOG.md` or the version by hand.
 
 ## Code
 
