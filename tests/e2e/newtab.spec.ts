@@ -8,13 +8,6 @@ const onboardingPage = async (context: BrowserContext) => {
   return context.pages().find(isOnboarding) ?? (await context.waitForEvent('page', isOnboarding))
 }
 
-// A fresh profile opens the onboarding tab whenever the install finishes. If
-// that lands mid-test it becomes the most recent tab, which is where Ctrl+T
-// returns to, and Aloft can't draw on its own pages.
-test.beforeEach(async ({ context }) => {
-  await onboardingPage(context)
-})
-
 test('first install opens the onboarding page, which sees the granted access', async ({
   context,
 }) => {
