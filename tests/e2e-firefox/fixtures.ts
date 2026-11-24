@@ -35,8 +35,14 @@ export async function paletteFrame(page: Page): Promise<Frame> {
       return found !== undefined
     })
     .toBe(true)
-  if (!found) throw new Error('no palette frame')
-  return found
+  const palette = found
+  if (!palette) throw new Error('no palette frame')
+  // Keys typed before the search box takes focus are lost, which a slow
+  // machine makes likely right after the frame loads.
+  await expect
+    .poll(() => palette.evaluate(() => document.activeElement?.getAttribute('role')))
+    .toBe('combobox')
+  return palette
 }
 
 export const test = base.extend<
