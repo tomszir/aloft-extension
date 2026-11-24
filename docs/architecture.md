@@ -38,13 +38,13 @@ In other Chromium browsers pins belong to one window, so the row shows that wind
 
 ## Browser support
 
-Helium reports itself as Google Chrome (same user agent and brand list) to resist fingerprinting, so Aloft can't tell them apart, and doesn't try.
+Which browsers are supported, and what each one can't do: [browsers.md](browsers.md). Helium reports itself as Google Chrome (same user agent and brand list) to resist fingerprinting, so Aloft can't tell them apart, and doesn't try.
 
 - **No browser sniffing.** Nothing checks which browser it's in. Every feature must behave correctly in any Chromium browser.
 - **Check that an API exists** before relying on one that some browsers lack.
 - **Firefox differences are decided at build time:** WXT builds a separate Firefox package and sets `import.meta.env.FIREFOX`. Branches on it live in `platform/` only, so each build drops the other's code.
 - **Copy is browser-neutral.** UI text never claims something only one browser does (for example "Helium keeps pins in every window"). The store description is the one place Helium is named on purpose.
-- **Tested in** Helium and plain Chromium (`ALOFT_BROWSER`). Firefox, once supported, is checked by hand with `web-ext`, because Playwright can't load extensions into Firefox.
+- **Tested in** Helium and plain Chromium (`ALOFT_BROWSER`). Firefox is checked by hand with `web-ext` until there's an automated alternative, because Playwright can't load extensions into Firefox.
 
 ## Layers
 

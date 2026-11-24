@@ -43,7 +43,7 @@ Run all of the first four before opening a PR. The `pre-push` hook runs the end-
   - `entrypoints/` only wires things together.
 - **UI**: one folder per component: `ui/<name>/<name>.tsx`, `<name>.module.css`, `<name>.test.tsx`. Files and CSS classes are kebab-case. Component CSS uses only `--al-*` tokens from `ui/tokens.css` or the theme, never raw colors or sizes.
 - **Strings** go through `src/locales/en.yml` (`i18n.t`), never literals in components.
-- **Browsers**: no browser sniffing. Helium reports itself as Chrome, so everything must work in any Chromium browser. Firefox differences live in `platform/` behind `import.meta.env.FIREFOX`. UI text stays browser-neutral.
+- **Browsers**: every feature must work in every Tier 1 browser in [docs/browsers.md](docs/browsers.md) (all Chromium browsers and Firefox), or record the gap there in the same PR. No browser sniffing: Helium reports itself as Chrome. Check that an API exists, or put Firefox differences in `platform/` behind `import.meta.env.FIREFOX`. UI text stays browser-neutral.
 - **Privacy**: no network requests, no analytics. The palette renders inside an extension iframe, so pages can't read it. Never put tab, history or bookmark data into a page's DOM.
 - **Comments** explain why: constraints, browser quirks, non-obvious decisions. Never restate the code, narrate a change, or add section dividers.
 - **Tests**: every behavior change ships with a test at the right level: `core/` unit tests, UI tests with `@solidjs/testing-library`, Playwright for anything that needs a real browser.
