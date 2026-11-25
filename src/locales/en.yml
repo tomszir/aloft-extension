@@ -1,4 +1,7 @@
-extName: Aloft
+# The store listing title, so it stands apart from other extensions named
+# Aloft; extShortName is what the browser and Aloft itself show.
+extName: Aloft – Command Bar for Tabs & History
+extShortName: Aloft
 extDescription: A floating command bar for your tabs, history and bookmarks.
 commandOpen: Open Aloft
 paletteLabel: Aloft

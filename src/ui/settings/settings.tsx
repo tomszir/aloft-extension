@@ -63,7 +63,7 @@ export function Settings(props: SettingsProps) {
   return (
     <main class={styles.page}>
       <header class={styles.header}>
-        <Logo label={i18n.t('extName')} />
+        <Logo label={i18n.t('extShortName')} />
         <h1 class={styles.title}>{i18n.t('settingsTitle')}</h1>
       </header>
 
