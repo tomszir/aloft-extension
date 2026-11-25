@@ -6,6 +6,7 @@
     </p>
     <p>
         <a href="https://github.com/tomszir/aloft-extension/actions/workflows/ci.yml"><img src="https://github.com/tomszir/aloft-extension/actions/workflows/ci.yml/badge.svg" alt="CI status" /></a>
+        <a href="https://chromewebstore.google.com/detail/neddelfbiddcgalggpghgbephhnebpjh"><img src="https://img.shields.io/chrome-web-store/v/neddelfbiddcgalggpghgbephhnebpjh?label=chrome%20web%20store" alt="Chrome Web Store" /></a>
         <a href="https://github.com/tomszir/aloft-extension/releases/latest"><img src="https://img.shields.io/github/v/release/tomszir/aloft-extension?sort=semver&amp;label=release" alt="Latest release" /></a>
         <a href="LICENSE"><img src="https://img.shields.io/github/license/tomszir/aloft-extension" alt="License: GPL-3.0" /></a>
     </p>
@@ -14,10 +15,6 @@
 <p align="center">
     <img src="docs/screenshots/1-pinned-and-tabs.png" alt="Aloft open over a web page, showing pinned tabs and open tabs" width="840" />
 </p>
-
-> [!NOTE]
-> Aloft is in early development and not on the Chrome Web Store yet.
-> Builds are attached to each [GitHub release](https://github.com/tomszir/aloft-extension/releases).
 
 ## What it does
 
@@ -43,7 +40,9 @@ Press <kbd>Ctrl</kbd>+<kbd>T</kbd> and, instead of a blank tab, a search bar flo
 
 ## Install
 
-Download `aloft-<version>-chrome.zip` from the [latest release](https://github.com/tomszir/aloft-extension/releases/latest) and unzip it. Then:
+Get it from the [Chrome Web Store](https://chromewebstore.google.com/detail/neddelfbiddcgalggpghgbephhnebpjh). It works in any Chromium browser, Helium included.
+
+To run a build from a release instead, download `aloft-<version>-chrome.zip` from the [latest release](https://github.com/tomszir/aloft-extension/releases/latest) and unzip it. Then:
 
 1. Open your browser's extensions page (`chrome://extensions`, or `helium://extensions` in Helium).
 2. Turn on **Developer mode**.
