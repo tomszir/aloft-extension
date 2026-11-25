@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/tomszir/aloft-extension/compare/v0.4.1...v0.5.0) (2026-11-25)
+
+
+### Features
+
+* list aloft as a command bar for tabs and history ([#53](https://github.com/tomszir/aloft-extension/issues/53)) ([47a5ab8](https://github.com/tomszir/aloft-extension/commit/47a5ab8902e6ab18234a873c81874567ef4a1b07))
+
 ## [0.4.1](https://github.com/tomszir/aloft-extension/compare/v0.4.0...v0.4.1) (2026-11-24)
 
 
