@@ -41,10 +41,12 @@ jobs:
           TAG: ${{ inputs.tag }}
       - run: |
           args=(--chrome-zip release/*-chrome.zip)
-          if [ "$DRY_RUN" = true ]; then args+=(--dry-run); fi
+          if [ "$ALOFT_DRY_RUN" = true ]; then args+=(--dry-run); fi
           pnpm wxt submit "${args[@]}"
         env:
-          DRY_RUN: ${{ inputs.dry_run }}
+          # Not DRY_RUN: wxt submit reads that itself, and a release run leaves
+          # it empty, which it rejects.
+          ALOFT_DRY_RUN: ${{ inputs.dry_run }}
           CHROME_API_VERSION: v2
           CHROME_EXTENSION_ID: ${{ vars.CHROME_EXTENSION_ID }}
           CHROME_PUBLISHER_ID: ${{ vars.CHROME_PUBLISHER_ID }}
