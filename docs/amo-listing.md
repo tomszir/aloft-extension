@@ -12,7 +12,7 @@ The text and answers for Aloft's [addons.mozilla.org](https://addons.mozilla.org
 
 ## Listing
 
-**Name:** Aloft (from `extName` in `src/locales/en.yml`)
+**Name:** Aloft – Command Bar for Tabs & History (from `extName` in `src/locales/en.yml`; the browser shows `extShortName`, Aloft)
 
 **Summary** (at most 250 characters):
 

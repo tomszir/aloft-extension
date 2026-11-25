@@ -13,6 +13,7 @@ export default defineConfig({
   }),
   manifest: ({ mode, browser }) => ({
     name: '__MSG_extName__',
+    short_name: '__MSG_extShortName__',
     description: '__MSG_extDescription__',
     default_locale: 'en',
     ...(browser === 'firefox'

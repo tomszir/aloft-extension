@@ -4,7 +4,7 @@ The text and answers for the Web Store developer dashboard, kept here so they ch
 
 ## Store listing
 
-**Name:** Aloft (from `extName` in `src/locales/en.yml`)
+**Name:** Aloft – Command Bar for Tabs & History (from `extName` in `src/locales/en.yml`; the browser shows `extShortName`, Aloft)
 
 **Summary** (from `extDescription`, at most 132 characters):
 
