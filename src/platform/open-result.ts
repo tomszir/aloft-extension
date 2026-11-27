@@ -1,5 +1,6 @@
 import { browser } from 'wxt/browser'
 import { pageKey, type Result, type TabEntry } from '../core/results'
+import { navigableUrl } from '../core/url'
 
 export type Disposition = 'new-tab' | 'current-tab'
 
@@ -23,11 +24,12 @@ async function focusTab(tabId: number, windowId: number): Promise<void> {
 
 /** True when the host tab loads another page, which replaces the palette with it. */
 async function openUrl(
-  url: string,
+  address: string,
   disposition: Disposition,
   context: OpenContext,
 ): Promise<boolean> {
   const { host, openTabs, switchToOpenTabs } = context
+  const url = navigableUrl(address)
   const key = pageKey(url)
   if (switchToOpenTabs) {
     const open = openTabs.find((t) => t.tabId !== host.id && pageKey(t.url) === key)
