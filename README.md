@@ -7,6 +7,7 @@
     <p>
         <a href="https://github.com/tomszir/aloft-extension/actions/workflows/ci.yml"><img src="https://github.com/tomszir/aloft-extension/actions/workflows/ci.yml/badge.svg" alt="CI status" /></a>
         <a href="https://chromewebstore.google.com/detail/neddelfbiddcgalggpghgbephhnebpjh"><img src="https://img.shields.io/chrome-web-store/v/neddelfbiddcgalggpghgbephhnebpjh?label=chrome%20web%20store" alt="Chrome Web Store" /></a>
+        <a href="https://addons.mozilla.org/firefox/addon/aloft/"><img src="https://img.shields.io/amo/v/aloft?label=firefox%20add-ons" alt="Firefox Add-ons" /></a>
         <a href="https://github.com/tomszir/aloft-extension/releases/latest"><img src="https://img.shields.io/github/v/release/tomszir/aloft-extension?sort=semver&amp;label=release" alt="Latest release" /></a>
         <a href="LICENSE"><img src="https://img.shields.io/github/license/tomszir/aloft-extension" alt="License: GPL-3.0" /></a>
     </p>
@@ -40,17 +41,22 @@ Press <kbd>Alt</kbd>+<kbd>Q</kbd>, or <kbd>Ctrl</kbd>+<kbd>T</kbd> if you give i
 
 ## Install
 
-Get it from the [Chrome Web Store](https://chromewebstore.google.com/detail/neddelfbiddcgalggpghgbephhnebpjh) for any Chromium browser, Helium included, or from [Firefox Add-ons](https://addons.mozilla.org/firefox/addon/aloft/). See [what's new](CHANGELOG.md) in each version.
+- **Chrome, Helium and other Chromium browsers:** get it from the [Chrome Web Store](https://chromewebstore.google.com/detail/neddelfbiddcgalggpghgbephhnebpjh).
+- **Firefox 140 and newer:** get it from [Firefox Add-ons](https://addons.mozilla.org/firefox/addon/aloft/).
 
-To run a build from a release instead, download `aloft-<version>-chrome.zip` from the [latest release](https://github.com/tomszir/aloft-extension/releases/latest) and unzip it. Then:
+See [what's new](CHANGELOG.md) in each version.
+
+To run a build from a release instead, download it from the [latest release](https://github.com/tomszir/aloft-extension/releases/latest). In a Chromium browser, unzip `aloft-<version>-chrome.zip`, then:
 
 1. Open your browser's extensions page (`chrome://extensions`, or `helium://extensions` in Helium).
 2. Turn on **Developer mode**.
 3. Click **Load unpacked** and choose the unzipped folder.
 
+In Firefox, open `about:debugging`, choose **This Firefox**, click **Load Temporary Add-on** and pick `aloft-<version>-firefox.zip`. Firefox only keeps it until it restarts, since it isn't the signed copy from Firefox Add-ons.
+
 Aloft opens with <kbd>Alt</kbd>+<kbd>Q</kbd> and needs no access to the sites you visit.
 
-To open it with <kbd>Ctrl</kbd>+<kbd>T</kbd> instead of a blank tab, give it that key yourself: browsers don't let an extension take it. Open your browser's extension shortcuts (`chrome://extensions/shortcuts`; the first-run page has a button), find **Open Aloft (second shortcut, like Ctrl+T)** and press <kbd>Ctrl</kbd>+<kbd>T</kbd> in its box. <kbd>Alt</kbd>+<kbd>Q</kbd> keeps working, and <kbd>&gt;</kbd> **New tab** in Aloft opens an empty tab.
+To open it with <kbd>Ctrl</kbd>+<kbd>T</kbd> instead of a blank tab, give it that key yourself: browsers don't let an extension take it. Open your browser's extension shortcuts (`chrome://extensions/shortcuts`, or in Firefox, `about:addons`, then the gear menu and **Manage Extension Shortcuts**; the first-run page has a button), find **Open Aloft (second shortcut, like Ctrl+T)** and press <kbd>Ctrl</kbd>+<kbd>T</kbd> in its box. <kbd>Alt</kbd>+<kbd>Q</kbd> keeps working, and <kbd>&gt;</kbd> **New tab** in Aloft opens an empty tab.
 
 ## Shortcuts
 
@@ -73,7 +79,9 @@ The command bar is drawn inside an extension frame, so the page you're on can't 
 
 ## Browser support
 
-Aloft is built for [Helium](https://helium.computer) and is tested in Helium and Chromium. It uses no Helium-only features, so other Chromium browsers from version 121 should work too. In Helium, pinned tabs are shared across windows; elsewhere, Aloft shows the pinned tabs of the current window. Aloft also works in Firefox; what it can't do there is listed in [docs/browsers.md](docs/browsers.md).
+Aloft is built for [Helium](https://helium.computer) and is tested in Helium, Chromium and Firefox. It uses no Helium-only features, so other Chromium browsers from version 121 should work too. In Helium, pinned tabs are shared across windows; elsewhere, Aloft shows the pinned tabs of the current window.
+
+In Firefox 140 and newer, Aloft does everything except open the browser's own pages (settings, add-ons and the like), which Firefox doesn't let extensions open, and its results show letter tiles instead of site icons. The full list is in [docs/browsers.md](docs/browsers.md).
 
 ## Development
 
