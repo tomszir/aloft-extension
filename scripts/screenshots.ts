@@ -151,16 +151,31 @@ async function render(html: string, size: Size, name: string) {
   }
 }
 
+// Room under a capture that's shown whole.
+const BOTTOM_MARGIN = 40
+
 /**
  * One store screenshot: the logo, name and number, a headline and a line
  * under it, then the capture, which starts below them and runs off the
- * bottom edge.
+ * bottom edge. A `whole` capture is scaled down instead, if it has to be,
+ * to fit above the bottom edge.
  */
-async function frame(name: string, number: string, capture: Capture, caption: Caption) {
-  const width = Math.round(capture.crop.width * SCALE)
+async function frame(
+  name: string,
+  number: string,
+  capture: Capture,
+  caption: Caption,
+  { whole = false } = {},
+) {
+  const scale = whole
+    ? Math.min(SCALE, (VIEWPORT.height - SHOT_TOP - BOTTOM_MARGIN) / capture.crop.height)
+    : SCALE
+  const width = Math.round(capture.crop.width * scale)
   const left = Math.round((VIEWPORT.width - width) / 2)
   // Low enough that even a short capture runs off the bottom edge.
-  const top = Math.max(SHOT_TOP, VIEWPORT.height - capture.crop.height * SCALE + 24)
+  const top = whole
+    ? SHOT_TOP
+    : Math.max(SHOT_TOP, VIEWPORT.height - capture.crop.height * scale + 24)
   const html = `<!doctype html><html><head><meta charset="utf-8"><style>${base(VIEWPORT)}
 .head{position:absolute;top:52px;left:${left}px;right:${left}px}
 .brand{display:flex;align-items:center;gap:12px;font-weight:600;font-size:17px}
@@ -168,7 +183,7 @@ async function frame(name: string, number: string, capture: Capture, caption: Ca
 .brand span:last-child{color:#C9D6F5;font-weight:400;font-variant-numeric:tabular-nums}
 h1{margin:36px 0 0;font-weight:650;font-size:46px;line-height:1.08;letter-spacing:-.03em}
 p{margin:14px 0 0;font-weight:400;font-size:20px;line-height:1.4;color:#C9D6F5}
-.shot{position:absolute;top:${Math.round(top)}px;left:${left}px;${shotStyle(capture, SCALE, '20px 20px 0 0')}}
+.shot{position:absolute;top:${Math.round(top)}px;left:${left}px;${shotStyle(capture, scale, whole ? '20px' : '20px 20px 0 0')}}
 </style></head><body>
 <div class="head">
   <div class="brand"><span class="logo">${LOGO}</span><span>Aloft</span><span>${number}</span></div>
@@ -244,10 +259,17 @@ try {
   let aloft = await openAloft(worker, host)
   await settle(host)
   const first = await palette(host)
-  await frame('1-pinned-and-tabs', '01', first, {
-    title: 'Your tabs, one keystroke away',
-    text: 'Alt+Q opens Aloft over the page you’re on. Pinned tabs are Alt+1 to 9.',
-  })
+  await frame(
+    '1-pinned-and-tabs',
+    '01',
+    first,
+    {
+      title: 'Your tabs, one keystroke away',
+      text: 'Alt+Q opens Aloft over the page you’re on. Pinned tabs are Alt+1 to 9.',
+    },
+    // The first look at Aloft, so all of it, down to the hints at its foot.
+    { whole: true },
+  )
   await marquee(first)
 
   await aloft.getByRole('combobox').fill('e')
