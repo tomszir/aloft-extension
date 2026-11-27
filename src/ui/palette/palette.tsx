@@ -47,6 +47,9 @@ export interface PaletteProps {
   /** Moves a dragged pin to a position in the row. Without it, pins can't be dragged. */
   onReorderPin?: (pin: TabEntry, position: number) => void
   onUnpin: (pin: TabEntry) => void
+  /** The version Aloft was updated to, while that's still news; offered in the footer. */
+  whatsNew?: string | undefined
+  onWhatsNew?: () => void
 }
 
 const RESULTS_ID = 'al-results'
@@ -340,6 +343,17 @@ export function Palette(props: PaletteProps) {
             when={props.chip}
             fallback={
               <>
+                <Show when={props.whatsNew}>
+                  {(version) => (
+                    <button
+                      type="button"
+                      class={styles.whatsNew}
+                      onClick={() => props.onWhatsNew?.()}
+                    >
+                      {i18n.t('hintWhatsNew', [version()])}
+                    </button>
+                  )}
+                </Show>
                 <span class={`${styles.hint} ${styles.hintEnd}`}>
                   <Kbd>@</Kbd> {i18n.t('hintKeywords')}
                 </span>

@@ -14,6 +14,9 @@ export interface Release {
 
 export const RELEASE_HEADING = /^## (\d+\.\d+\.\d+) — (.+)$/
 
+/** What a release with nothing for people to notice says. */
+export const NOTHING_TO_SAY = 'Small fixes and improvements.'
+
 /** The releases in CHANGELOG.md, in the file's order: newest first. */
 export function parseChangelog(text: string): Release[] {
   const releases: Release[] = []
@@ -61,5 +64,12 @@ export function compareVersions(a: string, b: string): number {
 export function releasesBetween(releases: readonly Release[], from: string, to: string): Release[] {
   return releases.filter(
     (r) => compareVersions(r.version, from) > 0 && compareVersions(r.version, to) <= 0,
+  )
+}
+
+/** The releases between `from` and `to` that say more than {@link NOTHING_TO_SAY}. */
+export function worthTelling(releases: readonly Release[], from: string, to: string): Release[] {
+  return releasesBetween(releases, from, to).filter(
+    (r) => r.intro.length > 0 || r.notes.some((note) => note !== NOTHING_TO_SAY),
   )
 }

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@solidjs/testing-library'
+import { cleanup, fireEvent, render, screen } from '@solidjs/testing-library'
 import { createSignal } from 'solid-js'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { builtInKeyword } from '../../core/keywords'
@@ -217,6 +217,16 @@ describe('Palette', () => {
     input.blur()
     fireEvent.keyDown(document.body, { key: 'Escape' })
     expect(props.onClose).toHaveBeenCalledOnce()
+  })
+
+  it("offers what's new in the footer only after an update", () => {
+    const onWhatsNew = vi.fn()
+    renderPalette({ whatsNew: '0.6.0', onWhatsNew })
+    fireEvent.click(screen.getByRole('button', { name: 'hintWhatsNew' }))
+    expect(onWhatsNew).toHaveBeenCalledOnce()
+    cleanup()
+    renderPalette()
+    expect(screen.queryByRole('button', { name: 'hintWhatsNew' })).toBeNull()
   })
 
   it('keeps the backdrop out of the tab order', () => {

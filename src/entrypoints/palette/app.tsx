@@ -41,6 +41,7 @@ import {
   loadTabs,
   movePinned,
   openResult,
+  openWhatsNew,
   runAction,
   searchBookmarks,
   searchHistory,
@@ -48,6 +49,7 @@ import {
   unpin,
   watchTabs,
 } from '../../platform/palette-api'
+import { currentVersion, loadWhatsNew } from '../../platform/whats-new'
 import { type Move, Palette } from '../../ui/palette/palette'
 
 /**
@@ -94,6 +96,12 @@ export function App(props: AppProps) {
     if (settings().sources.bookmarks) void loadBookmarks().then(setAllBookmarks)
   }, 150)
   onCleanup(() => clearTimeout(bookmarksTimer))
+
+  // After an update, the footer offers what's new, until the settings page
+  // has shown it. The preview leaves it out: it's on that very page.
+  const [updated, setUpdated] = createSignal(false)
+  if (props.host !== 'preview')
+    void loadWhatsNew(Date.now()).then((whatsNew) => setUpdated(whatsNew !== undefined))
 
   const [query, setQuery] = createSignal<QueryState>(EMPTY_QUERY)
   if (props.host === 'overlay') {
@@ -229,6 +237,13 @@ export function App(props: AppProps) {
     else await close()
   }
 
+  async function showWhatsNew(): Promise<void> {
+    const host = hostTab() ?? (await props.hostTab)
+    if (host === undefined) return
+    await openWhatsNew(host)
+    await close()
+  }
+
   async function activate(result: Result, shift: boolean): Promise<void> {
     if (result.kind === 'keyword') {
       setQuery(enterKeyword(result.keyword))
@@ -313,6 +328,8 @@ export function App(props: AppProps) {
       onUnpin={(pin) => {
         if (props.host !== 'preview') void unpin(pin.tabId)
       }}
+      whatsNew={updated() ? currentVersion() : undefined}
+      onWhatsNew={() => void showWhatsNew()}
     />
   )
 }

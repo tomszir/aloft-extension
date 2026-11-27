@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { compareVersions, parseChangelog, releasesBetween } from './changelog'
+import { compareVersions, parseChangelog, releasesBetween, worthTelling } from './changelog'
 
 const CHANGELOG = `# What's new in Aloft
 
@@ -57,5 +57,15 @@ describe('releasesBetween', () => {
       '0.1.0',
     ])
     expect(releasesBetween(releases, '0.2.0', '0.2.0')).toEqual([])
+  })
+})
+
+describe('worthTelling', () => {
+  it('skips releases that only made small fixes', () => {
+    const releases = parseChangelog(
+      '## 0.3.0 — 26 November 2026\n\n- Small fixes and improvements.\n\n' + CHANGELOG,
+    )
+    expect(worthTelling(releases, '0.2.0', '0.3.0')).toEqual([])
+    expect(worthTelling(releases, '0.1.0', '0.3.0').map((r) => r.version)).toEqual(['0.2.0'])
   })
 })

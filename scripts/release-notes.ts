@@ -13,12 +13,11 @@
 //     Prints that version's notes, which become its GitHub release's text.
 import { execFileSync } from 'node:child_process'
 import { readFileSync, writeFileSync } from 'node:fs'
-import { RELEASE_HEADING } from '../src/core/changelog.ts'
+import { NOTHING_TO_SAY, RELEASE_HEADING } from '../src/core/changelog.ts'
 
 export const CHANGELOG = 'CHANGELOG.md'
 const HEADINGS = new RegExp(RELEASE_HEADING.source, 'gm')
 const NOTEWORTHY = /^(feat|fix|perf)(\([a-z0-9][a-z0-9-]*\))?(!)?: (.+)$/
-const NOTHING_TO_SAY = 'Small fixes and improvements.'
 const MONTHS = [
   'January',
   'February',
