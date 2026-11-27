@@ -4,6 +4,46 @@
      added on the release PR (scripts/release-notes.ts); rewrite it in plain
      words before merging. See docs/releasing.md. -->
 
+## 1.0.0 — 27 November 2026
+
+Aloft 1.0 opens over the page you're on without losing a key you type, and it can now look however you like.
+
+- **Breaking:** Aloft no longer takes over new tabs. Alt+Q opens it over the page you're on, and so does Ctrl+T once you give it to Aloft on your browser's shortcuts page. If you used Ctrl+T, Aloft shows you how to set it up again after this update.
+
+### Opening Aloft
+
+- Everything you type while Aloft opens is kept, even a keyword, or Enter, which opens the top result as soon as it's in.
+- Opening Aloft with Ctrl+T no longer flashes the page white.
+- Typing goes to the search box wherever you are in Aloft, and Tab, Esc and the arrow keys stay inside it, input methods included. On a Mac, symbols typed with Option no longer open pinned tabs.
+- Aloft's shortcut also works on its own settings and welcome pages, opening Aloft beside them.
+
+### Appearance and settings
+
+- Make your own themes: choose the colors and corners, see whether text stays readable as you go, and share a theme as a file.
+- Pick any font installed on your computer, and how compact Aloft is.
+- Settings has a new layout, with a full-size live preview beside it, a menu to jump between sections, and switches you can flip by clicking anywhere on their row. It also works better from the keyboard, and asks before you delete a theme or leave unsaved changes.
+- After an update, Aloft mentions what's new once, at the bottom. You can switch that off, and settings lists what changed in each version.
+
+### Results
+
+- A tab or site whose name starts with what you type now comes first, above the web search.
+- Press Delete to close an open tab right from the results.
+- Tabs in another window are marked, and the page you're on no longer shows up in results.
+- Addresses with spaces and accents read normally instead of as escape codes.
+- Switching to a page that's already open closes Aloft, and pressing Enter twice opens a result only once.
+- In Helium, typed helium:// addresses open instead of asking for an outside app.
+
+### Actions
+
+- Type > to open your browser's history, downloads, bookmarks, passwords, extensions, extension shortcuts, settings or clear browsing data. Firefox doesn't let extensions open these pages, so they aren't offered there.
+- The Open settings action is now called Aloft settings.
+
+### Privacy and sync
+
+- Settings has a Privacy section that says what Aloft reads, that nothing leaves your browser and what syncs, with the switch for what Aloft learns beside it. The bottom of settings links to Aloft's source and who makes it.
+- Saving settings keeps any that a newer Aloft on another of your devices added.
+- Websites can no longer see the address Aloft loads from.
+
 ## 0.5.0 — 25 November 2026
 
 - Aloft has a new name in the Chrome Web Store: Aloft – Command Bar for Tabs & History. In your browser it's still just Aloft.
