@@ -1,0 +1,105 @@
+.preview {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--al-space-4);
+  min-height: 0;
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--al-space-4);
+}
+
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--al-space-2);
+}
+
+.heading {
+  margin: 0;
+  font-size: var(--al-font-size-md);
+  font-weight: var(--al-font-weight-semibold);
+}
+
+.note {
+  margin: 0;
+  font-size: var(--al-font-size-sm);
+  line-height: 1.5;
+  color: var(--al-muted);
+}
+
+/* The stand-in page follows the scheme being previewed, not the settings
+   page's own, through system colors. */
+.stage {
+  position: relative;
+  flex: 1;
+  min-height: var(--al-preview-height);
+  overflow: hidden;
+  border: 1px solid var(--al-border);
+  border-radius: var(--al-radius);
+  background: var(--al-mock-canvas);
+  color: var(--al-mock-ink);
+}
+
+.stage[data-scheme="light"] {
+  color-scheme: light;
+}
+
+.stage[data-scheme="dark"] {
+  color-scheme: dark;
+}
+
+.page {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.bar {
+  height: var(--al-input-height);
+  border-bottom: 1px solid var(--al-mock-line);
+}
+
+.lines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--al-space-4);
+  width: min(var(--al-page-width), 80%);
+  margin: var(--al-space-6) auto;
+}
+
+.lines > * {
+  height: var(--al-space-3);
+  border-radius: var(--al-kbd-radius);
+  background: var(--al-mock-line);
+}
+
+.lines > .heading {
+  width: 55%;
+  height: var(--al-space-5);
+  background: var(--al-mock-ink-soft);
+}
+
+.short {
+  width: 70%;
+}
+
+.lines > .block {
+  height: calc(var(--al-preview-height) / 3);
+  background: var(--al-mock-accent);
+}
+
+.frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: transparent;
+}

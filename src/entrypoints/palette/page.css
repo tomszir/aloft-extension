@@ -26,11 +26,11 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-:root[data-host="overlay"] body {
+:root[data-host="overlay"] body,
+:root[data-host="preview"] body {
   background: var(--al-scrim);
 }
 
-:root[data-host="tab"] body,
-:root[data-host="preview"] body {
+:root[data-host="tab"] body {
   background: var(--al-page);
 }

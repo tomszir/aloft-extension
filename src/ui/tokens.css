@@ -50,6 +50,13 @@
   --al-settings-width: 720px;
   --al-keyword-field-width: 140px;
   --al-preview-height: 460px;
+  /* The stand-in page behind the settings preview. System colors, so it
+     follows the scheme being previewed rather than the theme. */
+  --al-mock-canvas: Canvas;
+  --al-mock-ink: CanvasText;
+  --al-mock-ink-soft: color-mix(in srgb, CanvasText 22%, transparent);
+  --al-mock-line: color-mix(in srgb, CanvasText 9%, transparent);
+  --al-mock-accent: color-mix(in srgb, LinkText 14%, transparent);
 
   --al-duration-fast: 120ms;
   /* Short enough to keep up with a held arrow key. */

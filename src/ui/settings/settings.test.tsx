@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@solidjs/testing-library'
+import { fireEvent, render, screen, within } from '@solidjs/testing-library'
 import { createSignal } from 'solid-js'
 import { describe, expect, it, vi } from 'vitest'
 import type { Release } from '../../core/changelog'
@@ -95,7 +95,8 @@ describe('Settings', () => {
     expect(screen.getByRole('group', { name: 'settingsLightTheme' })).toBeTruthy()
     expect(screen.getByRole('group', { name: 'settingsDarkTheme' })).toBeTruthy()
 
-    fireEvent.click(screen.getByRole('radio', { name: 'settingsSchemeDark' }))
+    const scheme = screen.getByRole('group', { name: 'settingsColorScheme' })
+    fireEvent.click(within(scheme).getByRole('radio', { name: 'settingsSchemeDark' }))
     expect(settings().appearance.colorScheme).toBe('dark')
     expect(screen.queryByRole('group', { name: 'settingsLightTheme' })).toBeNull()
 
@@ -117,8 +118,8 @@ describe('Settings', () => {
 
   it('shows the palette as a preview', () => {
     renderSettings()
-    expect(screen.getByTitle('settingsPreview').getAttribute('src')).toBe(
-      'palette.html?host=preview',
+    expect(screen.getByTitle('settingsPreview').getAttribute('src')).toMatch(
+      /^palette\.html\?host=preview#/,
     )
   })
 

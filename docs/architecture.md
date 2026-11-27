@@ -14,6 +14,7 @@ The palette shows tab titles, history and bookmarks. Anything drawn into a web p
 - **Dimming** is the frame's own background, so it follows the theme. **Blur** is set on the iframe element in the page's document, because a filter inside the frame can't reach the page behind it.
 - **Small injected script:** the background reads settings and passes the overlay script only what it needs, so settings parsing and its libraries stay out of the code injected into pages.
 - **Closing:** the palette talks to its host content script with `chrome.tabs.sendMessage` (in Firefox, through the background relay), never `window.postMessage`, which the page could see.
+- **Settings preview:** the same frame, styled like the overlay's (transparent, `light dark`, blur outside it), over a stand-in page. With "Match system", the settings page shows either theme by putting `#light` or `#dark` in the frame's address: a hash change doesn't reload it, and changing the frame's own color scheme instead would make Chrome paint it opaque.
 - **Closed shadow root:** the frame's host uses a closed shadow root, so a page can't read the frame's address (in Firefox it carries an id fixed for the install). The e2e build leaves it open, as Playwright can only reach the frame through an open one. The frame's load doesn't show in the page's resource timing in either browser.
 - **Not detectable by URL:** `palette.html` is web-accessible with `use_dynamic_url`. Firefox doesn't need it: its `moz-extension://` addresses already use a random id per install.
 

@@ -60,6 +60,10 @@ const SUBMIT_WAIT_MS = 1000
 // Enter pressed in the palette itself waits less: the person is watching.
 const LIVE_ENTER_WAIT_MS = 300
 
+function hashScheme(): 'light' | 'dark' | undefined {
+  return location.hash === '#light' ? 'light' : location.hash === '#dark' ? 'dark' : undefined
+}
+
 /**
  * overlay: over a page, in a frame. tab: a tab Aloft opened because it
  * couldn't draw on the page (browser pages, the Web Store, the PDF viewer).
@@ -78,7 +82,16 @@ export interface AppProps {
 export function App(props: AppProps) {
   const { settings } = useSettings(props.settings)
   const { keywords, ready: keywordsReady } = useKeywords()
-  useTheme(settings)
+  // The settings page shows the preview in light or dark through the hash.
+  const [previewScheme, setPreviewScheme] = createSignal(hashScheme())
+  if (props.host === 'preview') {
+    const onHash = () => setPreviewScheme(hashScheme())
+    window.addEventListener('hashchange', onHash)
+    onCleanup(() => window.removeEventListener('hashchange', onHash))
+  }
+  useTheme(settings, document.documentElement, () =>
+    props.host === 'preview' ? previewScheme() : undefined,
+  )
   if (props.host === 'overlay') useZoomCorrection(props.hostTab.then((tab) => tab?.id))
 
   const [hostTab, setHostTab] = createSignal<HostTab>()

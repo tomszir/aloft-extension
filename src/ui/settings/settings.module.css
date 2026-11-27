@@ -1,11 +1,59 @@
+/* One column on narrow windows: the title, the preview, then the settings. */
+.layout {
+  display: grid;
+  grid-template-areas: "top" "side" "page";
+  grid-template-columns: min(var(--al-settings-width), 100%);
+  justify-content: center;
+}
+
+.top {
+  grid-area: top;
+  display: flex;
+  flex-direction: column;
+  gap: var(--al-space-3);
+  padding: var(--al-space-6) var(--al-space-5) 0;
+}
+
 .page {
+  grid-area: page;
   box-sizing: border-box;
-  width: min(var(--al-settings-width), 100%);
-  margin: 0 auto;
-  padding: var(--al-space-6) var(--al-space-5);
+  padding: var(--al-space-5);
   display: flex;
   flex-direction: column;
   gap: var(--al-space-5);
+}
+
+.side {
+  grid-area: side;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: var(--al-space-5) var(--al-space-5) 0;
+}
+
+/* Wide enough for the settings beside a preview at the palette's real width:
+   the settings scroll on their own and the preview stays put, the height of
+   the window, so the page itself never scrolls. A breakpoint can't read a
+   custom property, hence the number. */
+@media (min-width: 1180px) {
+  .layout {
+    grid-template-areas: "top side" "page side";
+    grid-template-columns: var(--al-settings-width) minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    justify-content: stretch;
+    height: 100vh;
+  }
+
+  /* Positioned, so absolutely placed controls inside (hidden radios) scroll
+     with it instead of stretching the page. */
+  .page {
+    position: relative;
+    overflow-y: auto;
+  }
+
+  .side {
+    padding: var(--al-space-6) var(--al-space-6) var(--al-space-6) 0;
+  }
 }
 
 .header {
@@ -40,22 +88,6 @@
   display: flex;
   flex-direction: column;
   gap: var(--al-space-2);
-}
-
-.preview {
-  display: flex;
-  flex-direction: column;
-  gap: var(--al-space-3);
-}
-
-.frame {
-  display: block;
-  width: 100%;
-  height: var(--al-preview-height);
-  margin-top: var(--al-space-3);
-  border: 1px solid var(--al-border);
-  border-radius: var(--al-radius);
-  background: var(--al-page);
 }
 
 .text {

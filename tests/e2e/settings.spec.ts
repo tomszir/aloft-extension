@@ -55,6 +55,25 @@ test('a changed setting is saved and reaches the preview', async ({ context, bac
   await expect(preview(page).getByRole('option').first()).toContainText('Delta notes')
 })
 
+test('the preview shows either theme while Aloft follows the system', async ({
+  context,
+  background,
+}) => {
+  const page = await context.newPage()
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await openSettings(page, background)
+  const scheme = () =>
+    preview(page)
+      .locator('html')
+      .evaluate((root) => root.dataset.scheme)
+  await page.getByRole('group', { name: 'Show' }).getByRole('radio', { name: 'Dark' }).check()
+  await expect.poll(scheme).toBe('dark')
+  await page.getByRole('group', { name: 'Show' }).getByRole('radio', { name: 'Light' }).check()
+  await expect.poll(scheme).toBe('light')
+  // Wide enough for both columns: the settings scroll, the page doesn't.
+  expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBe(900)
+})
+
 test('the preview never acts on what it shows', async ({ context, background }) => {
   const other = await context.newPage()
   await other.goto(`${TEST_ORIGIN}/Epsilon`)
@@ -77,7 +96,10 @@ test('the preview never acts on what it shows', async ({ context, background }) 
 test('picking a theme restyles the page', async ({ context, background }) => {
   const page = await context.newPage()
   await openSettings(page, background)
-  await page.getByRole('radio', { name: 'Dark', exact: true }).check()
+  await page
+    .getByRole('group', { name: 'Color scheme' })
+    .getByRole('radio', { name: 'Dark', exact: true })
+    .check()
   await page.getByRole('radio', { name: 'Moss' }).check()
 
   const panel = () =>
