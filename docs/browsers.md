@@ -38,6 +38,7 @@ Ctrl+T opens Aloft only once someone gives it to Aloft's second shortcut on the 
 
 - **Firefox can't open some addresses:** it refuses to let an extension open `file:`, `about:`, `chrome:`, `data:` and similar addresses, so the Firefox build leaves those history entries and bookmarks out of results. Typed addresses with those schemes still show; opening one fails and Aloft closes. Bookmarklets (`javascript:`) are left out in every browser, since an extension can't run them.
 - **Private windows:** not checked yet in any browser. Aloft has no `incognito` key, so it runs as each browser's default (spanning in Chromium when allowed in private windows).
+- **Firefox's own pages:** Firefox won't open about:preferences, about:addons, about:logins or its other privileged pages for an extension, so the `>` actions for the browser's history, downloads, bookmarks, passwords, extensions and settings pages aren't offered there. In Chromium browsers they open as `chrome://` pages, which every one of them serves; checked in Chrome and Helium, the others by hand.
 - **Firefox favicons:** Firefox has no local favicon cache an extension can read. A tab's `favIconUrl` is nearly always the site's own address, and loading it would be a network request, so every result gets its letter tile. Tabs whose `favIconUrl` is a `data:` URL could show it without a request, but they're rare enough that it isn't done yet.
 
 ## Chromium findings

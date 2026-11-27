@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { type ActionContext, availableActions } from './actions'
+import { type ActionContext, availableActions, BROWSER_PAGE_IDS } from './actions'
 
 const over: ActionContext = {
   overPage: true,
@@ -7,6 +7,7 @@ const over: ActionContext = {
   otherTabsInWindow: 3,
   otherUnpinnedTabs: 2,
   hasRecentlyClosed: true,
+  browserPages: true,
 }
 
 describe('availableActions', () => {
@@ -19,6 +20,7 @@ describe('availableActions', () => {
       'new-tab',
       'new-window',
       'reopen-closed-tab',
+      ...BROWSER_PAGE_IDS,
       'open-settings',
     ])
   })
@@ -46,8 +48,15 @@ describe('availableActions', () => {
       'new-tab',
       'new-window',
       'reopen-closed-tab',
+      ...BROWSER_PAGE_IDS,
       'open-settings',
     ])
+  })
+
+  it("leaves out the browser's own pages where it can't open them", () => {
+    const actions = availableActions({ ...over, browserPages: false })
+    for (const page of BROWSER_PAGE_IDS) expect(actions).not.toContain(page)
+    expect(actions).toContain('open-settings')
   })
 
   it('hides reopen when nothing was closed', () => {

@@ -1,5 +1,13 @@
 import type { Page } from '@playwright/test'
-import { expect, isPinned, palettePainted, pressOpenAloft, TEST_ORIGIN, test } from './fixtures'
+import {
+  activeTabUrl,
+  expect,
+  isPinned,
+  palettePainted,
+  pressOpenAloft,
+  TEST_ORIGIN,
+  test,
+} from './fixtures'
 
 const palette = (page: Page) => page.locator('iframe[title="Aloft"]').contentFrame()
 
@@ -109,4 +117,23 @@ test('says so when no action matches', async ({ context, background }) => {
   await palette(page).getByRole('combobox').fill('>')
   await palette(page).getByRole('combobox').pressSequentially('zzz')
   await expect(palette(page).getByRole('status')).toHaveText('No matching actions')
+})
+
+test("opens the browser's own page beside this one, and switches to it once it's open", async ({
+  context,
+  background,
+}) => {
+  const page = await context.newPage()
+  await page.goto(`${TEST_ORIGIN}/Host`)
+  await pressOpenAloft(background, page)
+  const opened = context.waitForEvent('page')
+  await runAction(page, '> extensions', '^Extensions')
+  const extensions = await opened
+  await expect(extensions).toHaveURL('chrome://extensions/')
+
+  await page.bringToFront()
+  await pressOpenAloft(background, page)
+  await runAction(page, '> extensions', '^Extensions')
+  await expect.poll(() => activeTabUrl(background)).toBe('chrome://extensions/')
+  expect(context.pages().filter((p) => p.url() === 'chrome://extensions/')).toHaveLength(1)
 })

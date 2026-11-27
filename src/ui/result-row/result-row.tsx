@@ -100,6 +100,14 @@ const ACTION_ICON: Record<ActionId, IconName> = {
   'move-to-new-window': 'square-arrow-out-up-right',
   'close-other-tabs': 'copy-x',
   'reopen-closed-tab': 'undo-2',
+  history: 'history',
+  downloads: 'download',
+  bookmarks: 'bookmark',
+  passwords: 'key-round',
+  extensions: 'puzzle',
+  'extension-shortcuts': 'keyboard',
+  'browser-settings': 'sliders-horizontal',
+  'clear-browsing-data': 'eraser',
   'open-settings': 'settings',
 }
 
