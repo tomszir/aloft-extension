@@ -132,7 +132,7 @@ try {
   await settle(host)
   const first = await shoot(host, '1-pinned-and-tabs', {
     title: 'Your tabs, one keystroke away',
-    text: 'Alt+Q or Ctrl+T opens Aloft over the page you’re on. Pins are Alt+1–9.',
+    text: 'Alt+Q opens Aloft over the page you’re on. Pins are Alt+1–9.',
   })
   await marquee(first.shot, first.crop, join(OUT, 'marquee-1400x560.png'))
   console.log('docs/screenshots/marquee-1400x560.png')
@@ -171,8 +171,8 @@ try {
   await frame.getByRole('combobox').fill('handbook')
   await settle(host)
   await shoot(host, '5-themes', {
-    title: 'Themes that suit your browser',
-    text: 'Six built in, previewed live on the settings page.',
+    title: 'Themes that suit you',
+    text: 'Built in or your own colors, font and density, previewed live.',
   })
 } finally {
   await framer.close()
