@@ -172,6 +172,36 @@
   border-top: 1px solid var(--al-divider);
 }
 
+.links,
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--al-space-2) var(--al-space-5);
+  font-size: var(--al-font-size-sm);
+}
+
+.links a,
+.footer a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--al-space-2);
+  color: var(--al-accent);
+  text-decoration: none;
+  --al-glyph-size: var(--al-font-size-sm);
+}
+
+.links a:hover,
+.footer a:hover {
+  text-decoration: underline;
+}
+
+/* Under the last section, like a page's own footer. */
+.footer {
+  padding: var(--al-space-2) var(--al-space-1) 0;
+  color: var(--al-muted);
+}
+
 /* For a list with rows of its own (keywords): its rows sit at the card's
    padding like any other card's, without the space around a single row. */
 .flush > * {

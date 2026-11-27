@@ -15,6 +15,7 @@ addIcons(
       './svg/moon.svg',
       './svg/palette.svg',
       './svg/pencil.svg',
+      './svg/shield-check.svg',
       './svg/sparkles.svg',
       './svg/sun.svg',
       './svg/trash-2.svg',
