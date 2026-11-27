@@ -241,6 +241,18 @@ export function App(props: AppProps) {
     else await close()
   }
 
+  // The selection moves to the row after the closed one, as in a list you're
+  // working down, and the list catches up through the tab events it watches.
+  async function closeResultTab(result: Extract<Result, { kind: 'tab' }>): Promise<void> {
+    const list = results()
+    const at = list.findIndex((r) => r.id === result.id)
+    setActiveId((list[at + 1] ?? list[at - 1])?.id)
+    setTabs((current) => current.filter((t) => t.tabId !== result.tabId))
+    await closeTab(result.tabId)
+    // It's now the most recently closed tab, for "Reopen closed tab".
+    setClosed(await loadRecentlyClosed())
+  }
+
   async function showWhatsNew(): Promise<void> {
     const host = hostTab() ?? (await props.hostTab)
     if (host === undefined) return
@@ -307,6 +319,8 @@ export function App(props: AppProps) {
       onMove={move}
       onHover={setActiveId}
       onActivate={(result, shift) => void activate(result, shift)}
+      onCloseTab={props.host === 'preview' ? undefined : (result) => void closeResultTab(result)}
+      hostWindowId={hostTab()?.windowId}
       onClose={() => void dismiss()}
       enterOpensIn={
         props.host === 'overlay' || props.host === 'preview' ? settings().enterOpensIn : undefined

@@ -33,6 +33,10 @@ export interface PaletteProps {
   onMove: (move: Move) => void
   onHover: (resultId: string) => void
   onActivate: (result: Result, shift: boolean) => void
+  /** Closes an open tab's page; unset where nothing may be closed, like the settings preview. */
+  onCloseTab?: (result: Extract<Result, { kind: 'tab' }>) => void
+  /** The window Aloft is open in, so tabs from other windows can say so. */
+  hostWindowId?: number | undefined
   onClose: () => void
   /** Off in the settings preview, so loading the page doesn't move focus into it. */
   autofocus?: boolean
@@ -211,11 +215,35 @@ export function Palette(props: PaletteProps) {
     if (move) {
       event.preventDefault()
       props.onMove(move)
+    } else if (
+      event.key === 'Delete' &&
+      !event.shiftKey &&
+      !event.ctrlKey &&
+      !event.altKey &&
+      !event.metaKey &&
+      // With text after the cursor, Delete still deletes it.
+      input.selectionStart === input.value.length &&
+      input.selectionEnd === input.value.length
+    ) {
+      const result = activeResult()
+      if (result?.kind === 'tab' && props.onCloseTab) {
+        event.preventDefault()
+        props.onCloseTab(result)
+      }
     } else if (event.key === 'Enter' && !event.isComposing) {
       event.preventDefault()
       const result = activeResult()
       if (result) props.onActivate(result, event.shiftKey)
     }
+  }
+
+  const inOtherWindow = (result: Result) =>
+    result.kind === 'tab' &&
+    props.hostWindowId !== undefined &&
+    result.windowId !== props.hostWindowId
+  const closeFor = (result: Result) => {
+    const close = props.onCloseTab
+    return result.kind === 'tab' && close ? () => close(result) : undefined
   }
 
   // Keys always reach the search box. With nothing focused, after a click on
@@ -330,6 +358,8 @@ export function Palette(props: PaletteProps) {
                       enterOpensIn={props.enterOpensIn}
                       onHover={() => props.onHover(result().id)}
                       onActivate={(shift) => props.onActivate(result(), shift)}
+                      onClose={closeFor(result())}
+                      otherWindow={inOtherWindow(result())}
                     />
                   )}
                 </Keyed>

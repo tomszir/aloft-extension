@@ -54,6 +54,9 @@ menuMoveRight: Move right
 menuUnpin: Unpin
 sectionActions: Actions
 actionRun: Run
+actionClose: Close
+closeTabLabel: Close $1
+resultOtherWindow: Other window
 actionPin: Pin tab
 actionUnpin: Unpin tab
 actionDuplicate: Duplicate tab

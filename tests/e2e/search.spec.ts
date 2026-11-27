@@ -98,3 +98,31 @@ test('a tab picked twice for the same initials becomes what Enter opens', async 
   await sendPaletteKey(page, { key: 'Enter' })
   await expect.poll(() => activeTabUrl(background)).toBe(`${TEST_ORIGIN}/Window%20Rules`)
 })
+
+test('Delete closes the selected open tab and selects the next one', async ({
+  context,
+  background,
+}) => {
+  const first = await context.newPage()
+  await first.goto(`${TEST_ORIGIN}/My%20draft%20one`)
+  const second = await context.newPage()
+  await second.goto(`${TEST_ORIGIN}/My%20draft%20two`)
+  const page = await context.newPage()
+  await page.goto(`${TEST_ORIGIN}/Start`)
+  await pressOpenAloft(background, page)
+
+  const input = palette(page).getByRole('combobox')
+  await input.fill('draft')
+  const tabs = palette(page).getByRole('group', { name: 'Open tabs' })
+  await expect(tabs.getByRole('option')).toHaveCount(2)
+  await page.keyboard.press('ArrowDown')
+  const selected = palette(page).locator('[aria-selected="true"]')
+  const closing = (await selected.textContent())?.includes('draft one') ? first : second
+  await page.keyboard.press('Delete')
+
+  await expect.poll(() => closing.isClosed()).toBe(true)
+  await expect(tabs.getByRole('option')).toHaveCount(1)
+  // Aloft stays open, on the row that took its place.
+  await expect(input).toBeFocused()
+  await expect(selected).toContainText('draft')
+})

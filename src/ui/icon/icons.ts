@@ -18,6 +18,7 @@ export const ICON_NAMES = [
   'square-arrow-out-up-right',
   'terminal',
   'undo-2',
+  'x',
 ] as const
 
 export type IconName = (typeof ICON_NAMES)[number]

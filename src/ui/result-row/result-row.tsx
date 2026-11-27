@@ -19,6 +19,10 @@ export interface ResultRowProps {
   enterOpensIn?: Settings['enterOpensIn']
   onHover: () => void
   onActivate: (shift: boolean) => void
+  /** Closes an open tab's page; unset where nothing may be closed, or for other rows. */
+  onClose?: () => void
+  /** An open tab in a window other than the one Aloft is open in. */
+  otherWindow?: boolean
 }
 
 const verb = (keyword: Keyword) =>
@@ -208,7 +212,12 @@ export function ResultRow(props: ResultRowProps) {
             {(part) => (part.matched ? <mark class={styles.match}>{part.text}</mark> : part.text)}
           </For>
         </span>
-        <span class={styles.subtitle}>{subtitle(props.result)}</span>
+        <span class={styles.subtitle}>
+          {subtitle(props.result)}
+          <Show when={props.otherWindow}>
+            <span class={styles.tag}>{i18n.t('resultOtherWindow')}</span>
+          </Show>
+        </span>
       </span>
       <Switch>
         <Match
@@ -237,12 +246,40 @@ export function ResultRow(props: ResultRowProps) {
             </span>
           )}
         </Match>
+        <Match when={props.active && props.onClose}>
+          <span class={styles.action}>
+            <span class={styles.choice}>
+              {action(props.result)} <Kbd selected>↵</Kbd>
+            </span>
+            <span class={styles.choice}>
+              {i18n.t('actionClose')} <Kbd selected>Del</Kbd>
+            </span>
+          </span>
+        </Match>
         <Match when={props.active}>
           <span class={styles.action}>
             {action(props.result)} <Kbd selected>↵</Kbd>
           </span>
         </Match>
       </Switch>
+      <Show when={props.onClose}>
+        {(close) => (
+          // Mouse only: from the keyboard, Delete does the same.
+          <button
+            type="button"
+            class={styles.close}
+            tabIndex={-1}
+            aria-label={i18n.t('closeTabLabel', [title(props.result)])}
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={(event) => {
+              event.stopPropagation()
+              close()()
+            }}
+          >
+            <Icon name="x" />
+          </button>
+        )}
+      </Show>
     </div>
   )
 }

@@ -229,6 +229,48 @@ describe('Palette', () => {
     expect(screen.queryByRole('button', { name: 'hintWhatsNew' })).toBeNull()
   })
 
+  describe('closing tabs', () => {
+    const tabActive = { activeId: 'tab:2', query: 'aloft' }
+
+    it('closes the selected tab with Delete once the cursor is at the end', () => {
+      const onCloseTab = vi.fn()
+      renderPalette({ ...tabActive, onCloseTab })
+      const input = screen.getByRole('combobox') as HTMLInputElement
+      input.setSelectionRange(2, 2)
+      fireEvent.keyDown(input, { key: 'Delete' })
+      expect(onCloseTab).not.toHaveBeenCalled()
+      input.setSelectionRange(5, 5)
+      fireEvent.keyDown(input, { key: 'Delete' })
+      expect(onCloseTab).toHaveBeenCalledWith(sections[1]?.results[0])
+    })
+
+    it('leaves Delete alone on rows that are not open tabs, and where closing is off', () => {
+      const onCloseTab = vi.fn()
+      renderPalette({ onCloseTab })
+      fireEvent.keyDown(screen.getByRole('combobox'), { key: 'Delete' })
+      expect(onCloseTab).not.toHaveBeenCalled()
+      cleanup()
+      renderPalette(tabActive)
+      expect(screen.queryByRole('button', { name: 'closeTabLabel' })).toBeNull()
+    })
+
+    it('has a close button on tab rows that closes without opening', () => {
+      const onCloseTab = vi.fn()
+      const props = renderPalette({ ...tabActive, onCloseTab })
+      fireEvent.click(screen.getByRole('button', { name: 'closeTabLabel' }))
+      expect(onCloseTab).toHaveBeenCalledOnce()
+      expect(props.onActivate).not.toHaveBeenCalled()
+    })
+
+    it('marks tabs from other windows', () => {
+      renderPalette({ hostWindowId: 2 })
+      expect(screen.getByText('resultOtherWindow')).toBeTruthy()
+      cleanup()
+      renderPalette({ hostWindowId: 1 })
+      expect(screen.queryByText('resultOtherWindow')).toBeNull()
+    })
+  })
+
   it('keeps the backdrop out of the tab order', () => {
     renderPalette()
     expect(screen.getByRole('button', { name: 'hintClose' }).tabIndex).toBe(-1)
