@@ -1,6 +1,6 @@
 import { createHmac } from 'node:crypto'
 import { describe, expect, it } from 'vitest'
-import { token } from './amo.ts'
+import { retryDelay, token } from './amo.ts'
 
 describe('token', () => {
   it('signs a short-lived token for the key', () => {
@@ -18,5 +18,15 @@ describe('token', () => {
 
   it('never repeats', () => {
     expect(token('i', 's', 0)).not.toBe(token('i', 's', 0))
+  })
+})
+
+describe('retryDelay', () => {
+  it('waits as long as AMO says, and a second more', () => {
+    expect(retryDelay('30', '')).toBe(31_000)
+    expect(
+      retryDelay(null, '{"detail":"Request was throttled. Expected available in 57 seconds."}'),
+    ).toBe(58_000)
+    expect(retryDelay(null, 'throttled')).toBe(61_000)
   })
 })
