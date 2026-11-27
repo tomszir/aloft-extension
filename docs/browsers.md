@@ -7,7 +7,7 @@ Every feature has to work in every Tier 1 browser, or leave out a part on purpos
 | Tier                 | Browsers                                                     | Package                                                 | Tested                                                            |
 | -------------------- | ------------------------------------------------------------ | ------------------------------------------------------- | ----------------------------------------------------------------- |
 | **1: Chromium**      | Chrome, Helium, Brave, Edge, Vivaldi, Opera, Arc, Dia        | the Chrome zip (Chrome Web Store; Edge Add-ons planned) | e2e in Chromium and Helium; the others by hand before a release   |
-| **1: Firefox**       | Firefox 140 (the current ESR) and newer                      | the Firefox zip (addons.mozilla.org, planned)           | e2e with Puppeteer (`tests/e2e-firefox`)                          |
+| **1: Firefox**       | Firefox 140 (the current ESR) and newer                      | the Firefox zip (addons.mozilla.org)                    | e2e with Puppeteer (`tests/e2e-firefox`)                          |
 | **2: Firefox forks** | Zen, LibreWolf, Floorp, Waterfox                             | the Firefox zip                                         | best-effort: bugs are fixed when they don't hurt a Tier 1 browser |
 | **Not supported**    | Safari, Orion, mobile browsers, Tor Browser, Mullvad Browser | none                                                    | none                                                              |
 
@@ -23,16 +23,16 @@ Why some browsers aren't supported:
 
 Ctrl+T opens Aloft only once someone gives it to Aloft's second shortcut on the browser's shortcuts page; extensions can't suggest it themselves.
 
-| Browser          | Alt+Q                                 | Ctrl+T, once set | Favicons    | Pinned tabs        |
-| ---------------- | ------------------------------------- | ---------------- | ----------- | ------------------ |
-| Chrome, Chromium | yes                                   | unchecked        | yes         | this window's pins |
-| Helium           | yes                                   | yes              | yes         | persistent pins    |
-| Edge             | yes                                   | unchecked        | yes         | this window's pins |
-| Brave            | yes                                   | unchecked        | yes         | this window's pins |
-| Vivaldi          | yes                                   | unchecked        | yes         | this window's pins |
-| Opera            | unchecked                             | unchecked        | unchecked   | unchecked          |
-| Arc, Dia         | unchecked                             | unchecked        | unchecked   | unchecked          |
-| Firefox          | works in CI builds; not published yet | unchecked        | letter tile | this window's pins |
+| Browser          | Alt+Q     | Ctrl+T, once set | Favicons    | Pinned tabs        |
+| ---------------- | --------- | ---------------- | ----------- | ------------------ |
+| Chrome, Chromium | yes       | unchecked        | yes         | this window's pins |
+| Helium           | yes       | yes              | yes         | persistent pins    |
+| Edge             | yes       | unchecked        | yes         | this window's pins |
+| Brave            | yes       | unchecked        | yes         | this window's pins |
+| Vivaldi          | yes       | unchecked        | yes         | this window's pins |
+| Opera            | unchecked | unchecked        | unchecked   | unchecked          |
+| Arc, Dia         | unchecked | unchecked        | unchecked   | unchecked          |
+| Firefox          | yes       | unchecked        | letter tile | this window's pins |
 
 ## Decided gaps
 
