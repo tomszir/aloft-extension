@@ -1,6 +1,11 @@
 import { type Browser, browser } from 'wxt/browser'
 import { runAction } from './actions'
-import { CLOSE_OVERLAY, type CloseOverlayMessage } from './messages'
+import {
+  CLOSE_OVERLAY,
+  type CloseOverlayMessage,
+  TAKE_TYPED,
+  type TakeTypedMessage,
+} from './messages'
 import { type HostTab, openResult } from './open-result'
 import { movePinned, unpin } from './pinned'
 import {
@@ -22,6 +27,13 @@ function toHostTab(tab: Browser.tabs.Tab | undefined): HostTab | undefined {
 async function closeOverlay(tabId: number): Promise<void> {
   const message: CloseOverlayMessage = { type: CLOSE_OVERLAY }
   await browser.tabs.sendMessage(tabId, message, { frameId: 0 })
+}
+
+/** What was typed on the page while the overlay palette loaded; see prepareInPage. */
+async function takeTyped(tabId: number): Promise<string> {
+  const message: TakeTypedMessage = { type: TAKE_TYPED }
+  const reply: unknown = await browser.tabs.sendMessage(tabId, message, { frameId: 0 })
+  return typeof reply === 'string' ? reply : ''
 }
 
 // window.close() is ignored for tabs the user opened, like Ctrl+T's.
@@ -49,6 +61,7 @@ export function paletteCalls(tab: () => Promise<Browser.tabs.Tab | undefined>) {
     unpin,
     zoomCorrection,
     closeOverlay,
+    takeTyped,
     closeTab,
   }
 }

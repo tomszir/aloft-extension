@@ -1,6 +1,11 @@
 import { browser } from 'wxt/browser'
 import { createIframeUi } from '#imports'
-import { isCloseOverlayMessage, readOverlayOptions } from '../platform/messages'
+import {
+  isCloseOverlayMessage,
+  isTakeTypedMessage,
+  readHeldKeys,
+  readOverlayOptions,
+} from '../platform/messages'
 
 // Only an iframe goes into the page: anything Aloft drew in the page's own DOM
 // (tab titles, history) could be read by the page's scripts. Keep this file
@@ -35,11 +40,15 @@ export default defineContentScript({
   registration: 'runtime',
   main(ctx) {
     const scope = globalThis as Scope
+    // Keys typed since the shortcut, kept from the page (see prepareInPage).
+    const held = readHeldKeys(scope)
     const closeExisting = scope[OPEN]
     if (closeExisting) {
+      held?.release()
       closeExisting()
       return
     }
+    if (held) held.claimed = true
 
     const { blur } = readOverlayOptions(scope)
     const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -94,18 +103,45 @@ export default defineContentScript({
         requestAnimationFrame(() => {
           iframe.style.opacity = '1'
         })
-        iframe.focus()
+        // Keys sent into a frame that is still loading are lost, so they stay
+        // out here, held, until the palette is there to ask for them.
+        iframe.addEventListener(
+          'load',
+          () => {
+            frame = iframe
+            if (!closing) iframe.focus()
+          },
+          { once: true },
+        )
       },
     })
 
-    const onMessage = (message: unknown) => {
+    // Set once the palette has loaded. A key that reaches the page after that
+    // means focus left the frame: it's held, and the palette asks for it as
+    // focus comes back.
+    let frame: HTMLIFrameElement | undefined
+    if (held)
+      held.onKey = () => {
+        if (!closing) frame?.focus()
+      }
+
+    const onMessage = (
+      message: unknown,
+      _sender: unknown,
+      sendResponse: (reply: unknown) => void,
+    ) => {
       if (isCloseOverlayMessage(message)) close()
+      else if (isTakeTypedMessage(message)) {
+        sendResponse(held?.text ?? '')
+        if (held) held.text = ''
+      }
     }
 
     let closing = false
     function close() {
       if (closing) return
       closing = true
+      held?.release()
       browser.runtime.onMessage.removeListener(onMessage)
       delete scope[OPEN]
       const remove = () => {

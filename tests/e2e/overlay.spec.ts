@@ -45,6 +45,30 @@ test('typing straight after Esc lands in the page, while the bar fades out', asy
   await expect(frame).toHaveCount(0)
 })
 
+test('what is typed while it opens goes into the bar, not the page', async ({
+  context,
+  background,
+}) => {
+  const page = await context.newPage()
+  await page.goto(`${TEST_ORIGIN}/`)
+  await page.locator('#field').focus()
+  const pageKeys = await page.evaluateHandle(() => {
+    const keys: string[] = []
+    addEventListener('keydown', (event) => keys.push(event.key))
+    return keys
+  })
+
+  await pressOpenAloft(background, page)
+  // Straight away, while the palette is still loading.
+  await page.keyboard.type('reading')
+
+  const input = page.locator('iframe[title="Aloft"]').contentFrame().getByRole('combobox')
+  await expect(input).toHaveValue('reading')
+  await expect(input).toBeFocused()
+  await expect(page.locator('#field')).toHaveValue('')
+  expect(await pageKeys.evaluate((keys) => keys.length)).toBe(0)
+})
+
 test('the page cannot read anything inside the palette', async ({ context, background }) => {
   const page = await context.newPage()
   await page.goto(`${TEST_ORIGIN}/`)

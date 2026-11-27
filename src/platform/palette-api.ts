@@ -26,6 +26,7 @@ export const movePinned = call('movePinned')
 export const unpin = call('unpin')
 export const zoomCorrection = call('zoomCorrection')
 export const closeOverlay = call('closeOverlay')
+export const takeTyped = call('takeTyped')
 export const closeTab = call('closeTab')
 
 export function watchTabs(onChange: () => void): () => void {

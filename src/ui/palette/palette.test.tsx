@@ -189,6 +189,36 @@ describe('Palette', () => {
     expect(props.onClose).toHaveBeenCalledTimes(2)
   })
 
+  it('focuses the input when its frame gets focus, unless focus is on a tile', () => {
+    renderPalette({ pins, pinShortcuts: pins })
+    const input = screen.getByRole('combobox')
+    input.blur()
+    window.dispatchEvent(new FocusEvent('focus'))
+    expect(document.activeElement).toBe(input)
+    const music = screen.getByRole('button', { name: 'Music' })
+    music.focus()
+    window.dispatchEvent(new FocusEvent('focus'))
+    expect(document.activeElement).toBe(music)
+  })
+
+  it('leaves focus alone in the settings preview', () => {
+    renderPalette({ autofocus: false })
+    window.dispatchEvent(new FocusEvent('focus'))
+    expect(document.activeElement).not.toBe(screen.getByRole('combobox'))
+  })
+
+  it('with nothing focused, keys still work as in the input', () => {
+    const props = renderPalette()
+    const input = screen.getByRole('combobox')
+    input.blur()
+    fireEvent.keyDown(document.body, { key: 'ArrowDown' })
+    expect(props.onMove).toHaveBeenCalledWith('next')
+    expect(document.activeElement).toBe(input)
+    input.blur()
+    fireEvent.keyDown(document.body, { key: 'Escape' })
+    expect(props.onClose).toHaveBeenCalledOnce()
+  })
+
   it('keeps the backdrop out of the tab order', () => {
     renderPalette()
     expect(screen.getByRole('button', { name: 'hintClose' }).tabIndex).toBe(-1)
@@ -337,6 +367,26 @@ describe('Palette', () => {
       music.focus()
       fireEvent.keyDown(music, { key: 'Enter' })
       expect(props.onActivate).not.toHaveBeenCalled()
+    })
+
+    it('typing on a focused tile moves to the input, while Space still presses the tile', () => {
+      renderPalette({ pins, pinShortcuts: pins })
+      const music = screen.getByRole('button', { name: 'Music' })
+      music.focus()
+      fireEvent.keyDown(music, { key: ' ' })
+      expect(document.activeElement).toBe(music)
+      fireEvent.keyDown(music, { key: 'Control', ctrlKey: true })
+      expect(document.activeElement).toBe(music)
+      fireEvent.keyDown(music, { key: 'g' })
+      expect(document.activeElement).toBe(screen.getByRole('combobox'))
+    })
+
+    it('typing in the menu closes it and moves to the input', () => {
+      renderPalette({ pins, pinShortcuts: pins })
+      fireEvent.contextMenu(screen.getByRole('button', { name: 'Mail' }))
+      fireEvent.keyDown(screen.getByRole('menuitem', { name: 'menuOpen' }), { key: 'g' })
+      expect(screen.queryByRole('menu')).toBeNull()
+      expect(document.activeElement).toBe(screen.getByRole('combobox'))
     })
 
     it('offers move and unpin from the context menu, with the ends disabled', () => {

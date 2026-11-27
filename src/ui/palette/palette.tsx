@@ -85,9 +85,17 @@ const MOVES: Record<string, Move> = {
 
 export function Palette(props: PaletteProps) {
   let input: HTMLInputElement | undefined
-  onMount(() => {
+  const autofocus = () => {
     if (props.autofocus ?? true) input?.focus()
-  })
+  }
+  onMount(autofocus)
+  // A frame can't give itself focus: over a page, the input only gets it once
+  // the overlay focuses the frame. Focus left on a tile is kept.
+  const onWindowFocus = () => {
+    if (document.activeElement === null || document.activeElement === document.body) autofocus()
+  }
+  window.addEventListener('focus', onWindowFocus)
+  onCleanup(() => window.removeEventListener('focus', onWindowFocus))
 
   // aria-activedescendant needs stable, valid ids; result ids contain URLs.
   const optionIds = createMemo(() => {
@@ -161,7 +169,7 @@ export function Palette(props: PaletteProps) {
     ]
   }
 
-  const onKeyDown = (event: KeyboardEvent) => {
+  const onKeyDown = (event: KeyboardEvent, inInput = event.target === input) => {
     if (event.altKey && !event.ctrlKey && !event.metaKey) {
       const slot = shortcutSlot(event.code)
       const pin = slot === undefined ? undefined : props.pinShortcuts[slot]
@@ -179,7 +187,7 @@ export function Palette(props: PaletteProps) {
     }
     // Result keys belong to the search box; on a focused tile, Enter is the
     // tile's own click.
-    if (event.target !== input) return
+    if (!input || !inInput) return
     if (
       event.key === 'Tab' &&
       !event.shiftKey &&
@@ -206,6 +214,28 @@ export function Palette(props: PaletteProps) {
       if (result) props.onActivate(result, event.shiftKey)
     }
   }
+
+  // Keys always reach the search box. With nothing focused, after a click on
+  // the panel, they act as if typed there; on a pin or in its menu, typing
+  // moves there, and Space still presses a focused tile.
+  const onWindowKeyDown = (event: KeyboardEvent) => {
+    if (!input || event.defaultPrevented || event.target === input || event.isComposing) return
+    if (event.target === document.body || event.target === document.documentElement) {
+      input.focus()
+      onKeyDown(event, true)
+      return
+    }
+    const typing =
+      (event.key === 'Backspace' || [...event.key].length === 1) &&
+      !event.metaKey &&
+      // AltGr types characters, though Windows reports it as Ctrl+Alt.
+      (!(event.ctrlKey || event.altKey) || event.getModifierState('AltGraph'))
+    if (!typing || (event.key === ' ' && event.target instanceof HTMLButtonElement)) return
+    setMenu(undefined)
+    input.focus()
+  }
+  window.addEventListener('keydown', onWindowKeyDown)
+  onCleanup(() => window.removeEventListener('keydown', onWindowKeyDown))
 
   return (
     <div class={styles.layout} data-position={props.position}>

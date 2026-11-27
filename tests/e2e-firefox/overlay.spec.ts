@@ -40,6 +40,25 @@ test('opens over the page, lists open tabs, and Esc gives focus back', async ({
   await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe('field')
 })
 
+test('what is typed while it opens goes into the bar, not the page', async ({
+  firefox,
+  control,
+  origin,
+}) => {
+  const page = await openPage(firefox, control, `${origin}/Notes`)
+  await page.focus('#field')
+
+  await pressOpenAloft(control, page)
+  // Straight away, while the palette is still loading.
+  await page.keyboard.type('reading')
+
+  const palette = await paletteFrame(page)
+  await expect
+    .poll(() => palette.evaluate(() => document.querySelector('input')?.value))
+    .toBe('reading')
+  expect(await page.evaluate(() => document.querySelector('input')?.value)).toBe('')
+})
+
 test('Enter on an open tab switches to it', async ({ firefox, control, origin }) => {
   const reading = await openPage(firefox, control, `${origin}/Reading list`)
   const page = await openPage(firefox, control, `${origin}/Notes`)

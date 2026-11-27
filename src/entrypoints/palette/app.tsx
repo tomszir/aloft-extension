@@ -17,6 +17,7 @@ import {
   offeredKeyword,
   parseQuery,
   type QueryState,
+  replayTyped,
 } from '../../core/query'
 import {
   type BookmarkEntry,
@@ -43,6 +44,7 @@ import {
   runAction,
   searchBookmarks,
   searchHistory,
+  takeTyped,
   unpin,
   watchTabs,
 } from '../../platform/palette-api'
@@ -94,6 +96,21 @@ export function App(props: AppProps) {
   onCleanup(() => clearTimeout(bookmarksTimer))
 
   const [query, setQuery] = createSignal<QueryState>(EMPTY_QUERY)
+  if (props.host === 'overlay') {
+    // What was typed while the palette loaded was held on the page (see
+    // prepareInPage), and so is a key that reaches the page after focus left
+    // the frame. It's asked for on opening and whenever focus comes back.
+    const takeHeld = async () => {
+      const tab = await props.hostTab
+      if (tab === undefined) return
+      const typed = await takeTyped(tab.id).catch(() => '')
+      if (typed !== '') setQuery((q) => replayTyped(q, typed, keywords()))
+    }
+    const onFocus = () => void takeHeld()
+    onFocus()
+    window.addEventListener('focus', onFocus)
+    onCleanup(() => window.removeEventListener('focus', onFocus))
+  }
   const parsed = createMemo(() => parseQuery(query().text, query().chip))
   const offered = createMemo(() => offeredKeyword(query(), keywords()))
   const listed = createMemo(() => listedKeywords(query(), keywords()))

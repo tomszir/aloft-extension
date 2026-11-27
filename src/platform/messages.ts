@@ -46,3 +46,45 @@ export function isNewTabStaysMessage(message: unknown): message is NewTabStaysMe
     message.type === NEW_TAB_STAYS
   )
 }
+
+// The palette asks for the keys held for it while it loaded (see holdKeys in
+// overlay.ts); the overlay answers with them as text and starts over.
+export const TAKE_TYPED = 'aloft:take-typed'
+
+export interface TakeTypedMessage {
+  type: typeof TAKE_TYPED
+}
+
+export function isTakeTypedMessage(message: unknown): message is TakeTypedMessage {
+  return (
+    typeof message === 'object' &&
+    message !== null &&
+    'type' in message &&
+    message.type === TAKE_TYPED
+  )
+}
+
+/** Text typed on the page while the overlay opens, kept from the page. */
+export interface HeldKeys {
+  text: string
+  /** Set by the overlay once it's drawn, so the hold doesn't time out under it. */
+  claimed: boolean
+  /** Runs after each held key. */
+  onKey: (() => void) | undefined
+  release: () => void
+}
+
+// On the content script's isolated-world global, like the overlay options.
+export const HELD_KEYS_KEY = 'aloftHeldKeys'
+
+export function readHeldKeys(scope: object): HeldKeys | undefined {
+  const raw: unknown = Reflect.get(scope, HELD_KEYS_KEY)
+  return typeof raw === 'object' &&
+    raw !== null &&
+    'text' in raw &&
+    typeof raw.text === 'string' &&
+    'release' in raw &&
+    typeof raw.release === 'function'
+    ? (raw as HeldKeys)
+    : undefined
+}

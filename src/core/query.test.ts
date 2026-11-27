@@ -8,6 +8,7 @@ import {
   listedKeywords,
   offeredKeyword,
   parseQuery,
+  replayTyped,
   toUrl,
 } from './query'
 
@@ -91,6 +92,27 @@ describe('keyword chips', () => {
     expect(left).toEqual({ chip: null, text: 'yt cats' })
     expect(leaveChip(enterKeyword(youtube))).toEqual({ chip: null, text: 'yt' })
     expect(applyInput(left, 'yt catsx', keywords).chip).toBeNull()
+  })
+})
+
+describe('replayTyped', () => {
+  it('enters held text as if typed, so a keyword and Space still make the chip', () => {
+    expect(replayTyped(EMPTY_QUERY, 'aloft', keywords)).toEqual({ chip: null, text: 'aloft' })
+    expect(replayTyped(EMPTY_QUERY, 'yt cats', keywords)).toEqual({ chip: youtube, text: 'cats' })
+    expect(replayTyped(EMPTY_QUERY, '>pin', keywords)).toEqual({ chip: 'actions', text: 'pin' })
+  })
+
+  it('goes in front of what the input took since, chips included', () => {
+    expect(replayTyped({ chip: null, text: 'ft' }, 'alo')).toEqual({ chip: null, text: 'aloft' })
+    expect(replayTyped({ chip: youtube, text: 'cats' }, 'y', keywords)).toEqual({
+      chip: null,
+      text: 'yyt cats',
+    })
+    expect(replayTyped(enterKeyword(youtube), '@', keywords)).toEqual({ chip: youtube, text: '' })
+    expect(replayTyped({ chip: 'actions', text: 'pin' }, '')).toEqual({
+      chip: 'actions',
+      text: 'pin',
+    })
   })
 })
 
