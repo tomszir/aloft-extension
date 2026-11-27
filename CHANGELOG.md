@@ -40,9 +40,9 @@ Aloft 1.0 opens over the page you're on without losing a key you type, and it ca
 
 ### Privacy and sync
 
+- Settings has a Privacy section that says what Aloft reads, that nothing leaves your browser and what syncs, with the switch for what Aloft learns beside it. The bottom of settings links to Aloft's source and who makes it.
 - Saving settings keeps any that a newer Aloft on another of your devices added.
 - Websites can no longer see the address Aloft loads from.
-- Show what Aloft reads and syncs, and who makes it.
 
 ## 0.5.0 — 25 November 2026
 
