@@ -8,6 +8,7 @@ commandOpenSecond: Open Aloft (second shortcut, like Ctrl+T)
 paletteLabel: Aloft
 palettePlaceholder: Search or enter address
 placeholderActions: Search actions
+actionsNone: No matching actions
 resultsLabel: Results
 hintActions: Actions
 hintKeywords: Keywords

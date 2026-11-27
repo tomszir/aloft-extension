@@ -49,6 +49,7 @@ export function prepareInPage(
     ((event.ctrlKey || event.altKey) && !event.getModifierState('AltGraph'))
   const held: HeldKeys = {
     text: '',
+    submit: undefined,
     claimed: false,
     onKey: undefined,
     release: () => {
@@ -61,7 +62,12 @@ export function prepareInPage(
     if (passes(event)) return
     event.preventDefault()
     event.stopImmediatePropagation()
-    if (event.key === 'Backspace') held.text = [...held.text].slice(0, -1).join('')
+    // After Enter the palette would already have gone; what follows went
+    // nowhere, so it isn't kept either.
+    if (held.submit) return
+    if (event.key === 'Enter' && held.text.trim() !== '' && !event.isComposing)
+      held.submit = event.shiftKey ? 'shift-enter' : 'enter'
+    else if (event.key === 'Backspace') held.text = [...held.text].slice(0, -1).join('')
     else if ([...event.key].length === 1) held.text += event.key
     held.onKey?.()
   }

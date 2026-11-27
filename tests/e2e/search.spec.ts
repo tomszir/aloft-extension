@@ -3,7 +3,10 @@ import { activeTabUrl, expect, pressOpenAloft, sendPaletteKey, TEST_ORIGIN, test
 
 const palette = (page: Page) => page.locator('iframe[title="Aloft"]').contentFrame()
 
-test('finds an open tab by title and switches to it', async ({ context, background }) => {
+test('an open tab whose title starts with the text is the top row, and Enter switches to it', async ({
+  context,
+  background,
+}) => {
   const other = await context.newPage()
   await other.goto(`${TEST_ORIGIN}/Alpha%20notes`)
   const page = await context.newPage()
@@ -11,10 +14,12 @@ test('finds an open tab by title and switches to it', async ({ context, backgrou
   await pressOpenAloft(background, page)
 
   await palette(page).getByRole('combobox').fill('alpha')
-  const tabs = palette(page).getByRole('group', { name: 'Open tabs' })
-  await expect(tabs.getByRole('option', { name: /Alpha notes/ })).toBeVisible()
+  const top = palette(page).getByRole('option').first()
+  await expect(top).toContainText('Alpha notes')
+  // Its address reads like the address bar shows it.
+  await expect(top).toContainText('aloft.test/Alpha notes')
+  await expect(palette(page).getByRole('option').nth(1)).toContainText('Search the web')
 
-  await page.keyboard.press('ArrowDown')
   await sendPaletteKey(page, { key: 'Enter' })
 
   await expect.poll(() => activeTabUrl(background)).toBe(`${TEST_ORIGIN}/Alpha%20notes`)
@@ -125,4 +130,33 @@ test('Delete closes the selected open tab and selects the next one', async ({
   // Aloft stays open, on the row that took its place.
   await expect(input).toBeFocused()
   await expect(selected).toContainText('draft')
+})
+
+test('Enter typed while Aloft opens acts on the top row once results are in', async ({
+  context,
+  background,
+}) => {
+  const other = await context.newPage()
+  await other.goto(`${TEST_ORIGIN}/Gamma%20board`)
+  const page = await context.newPage()
+  await page.goto(`${TEST_ORIGIN}/Start`)
+
+  await pressOpenAloft(background, page)
+  // Straight away, while the palette is still loading.
+  await page.keyboard.type('gamma')
+  await page.keyboard.press('Enter')
+
+  await expect.poll(() => activeTabUrl(background)).toBe(`${TEST_ORIGIN}/Gamma%20board`)
+  await expect(page.locator('iframe[title="Aloft"]')).toHaveCount(0)
+})
+
+test('a keyword typed while Aloft opens still makes its chip', async ({ context, background }) => {
+  const page = await context.newPage()
+  await page.goto(`${TEST_ORIGIN}/Start`)
+  await pressOpenAloft(background, page)
+  await page.keyboard.type('yt cats')
+
+  const input = palette(page).getByRole('combobox')
+  await expect(input).toHaveValue('cats')
+  await expect(input).toHaveAttribute('placeholder', /YouTube/)
 })

@@ -15,6 +15,7 @@ import {
   leaveChip,
   listedKeywords,
   offeredKeyword,
+  type ParsedQuery,
   parseQuery,
   type QueryState,
   replayTyped,
@@ -32,6 +33,7 @@ import {
 import type { Settings } from '../../core/settings'
 import { pageFavicon } from '../../platform/favicon'
 import { loadLearned, savePick } from '../../platform/learned'
+import type { HeldTyping, Submit } from '../../platform/messages'
 import type { Disposition, HostTab } from '../../platform/open-result'
 import {
   closeOverlay,
@@ -53,6 +55,9 @@ import {
 import { currentVersion, takeWhatsNewOffer } from '../../platform/whats-new'
 import { type Move, Palette } from '../../ui/palette/palette'
 
+// Long enough for the browser's searches; past it, Enter acts on what's shown.
+const SUBMIT_WAIT_MS = 1000
+
 /**
  * overlay: over a page, in a frame. tab: a tab Aloft opened because it
  * couldn't draw on the page (browser pages, the Web Store, the PDF viewer).
@@ -70,7 +75,7 @@ export interface AppProps {
 
 export function App(props: AppProps) {
   const { settings } = useSettings(props.settings)
-  const { keywords } = useKeywords()
+  const { keywords, ready: keywordsReady } = useKeywords()
   useTheme(settings)
   if (props.host === 'overlay') useZoomCorrection(props.hostTab.then((tab) => tab?.id))
 
@@ -83,14 +88,19 @@ export function App(props: AppProps) {
   const [learned, setLearned] = createSignal(EMPTY_LEARNED)
   void props.hostTab.then(setHostTab)
   const reloadTabs = () => void loadTabs().then(setTabs)
-  reloadTabs()
   // Pins move, hibernate and wake while Aloft is open; keep the row truthful.
   onCleanup(watchTabs(reloadTabs))
   void loadRecentlyClosed().then(setClosed)
-  // Read once on open: the browser's own searches match whole words only, so
-  // these are what initials and typos are matched against.
-  void loadRecentHistory().then(setRecentHistory)
-  void loadLearned().then(setLearned)
+  // What's read once on opening, and what an Enter typed before the palette
+  // was ready waits for. Recent history and learned picks are read once
+  // because the browser's own searches match whole words only, so these are
+  // what initials and typos are matched against.
+  const [opened, setOpened] = createSignal(false)
+  void Promise.allSettled([
+    loadTabs().then(setTabs),
+    loadRecentHistory().then(setRecentHistory),
+    loadLearned().then(setLearned),
+  ]).then(() => setOpened(true))
   // Reading every bookmark keeps the browser busy for long enough with a
   // large library (about 95 ms for 20,000) to delay the palette appearing, so
   // it waits until the palette has faded in; the browser's own word search
@@ -116,8 +126,12 @@ export function App(props: AppProps) {
     const takeHeld = async () => {
       const tab = await props.hostTab
       if (tab === undefined) return
-      const typed = await takeTyped(tab.id).catch(() => '')
-      if (typed !== '') setQuery((q) => replayTyped(q, typed, keywords()))
+      const { text, submit } = await takeTyped(tab.id).catch((): HeldTyping => ({ text: '' }))
+      if (text === '') return
+      // Read with the stored keywords, so "yt " typed early still makes its chip.
+      await keywordsReady
+      setQuery((q) => replayTyped(q, text, keywords()))
+      if (submit) submitWhenSettled(submit)
     }
     const onFocus = () => void takeHeld()
     onFocus()
@@ -127,6 +141,9 @@ export function App(props: AppProps) {
   const parsed = createMemo(() => parseQuery(query().text, query().chip))
   const offered = createMemo(() => offeredKeyword(query(), keywords()))
   const listed = createMemo(() => listedKeywords(query(), keywords()))
+
+  // The query whose browser searches have landed, so its results are whole.
+  const [settled, setSettled] = createSignal<ParsedQuery>()
 
   // Each keystroke starts a lookup; only the latest one may land, or a slow
   // early query could overwrite the results for what was typed after it.
@@ -138,6 +155,7 @@ export function App(props: AppProps) {
       if (!searchable) {
         setHistory([])
         setBookmarks([])
+        setSettled(q)
         return
       }
       const { sources } = settings()
@@ -152,6 +170,7 @@ export function App(props: AppProps) {
       if (id !== lookup) return
       setHistory(h)
       setBookmarks(b)
+      setSettled(q)
     }),
   )
 
@@ -299,6 +318,25 @@ export function App(props: AppProps) {
       disposition === 'current-tab' && result.kind !== 'tab' && result.kind !== 'closed'
     if (!navigatesHost) await close()
   }
+
+  // Enter typed with the held text runs once the results for that text are
+  // whole, so it opens what the palette would have shown on its top row. A
+  // search that never answers doesn't keep it waiting for long.
+  const [submitting, setSubmitting] = createSignal<Submit>()
+  const [waitedOut, setWaitedOut] = createSignal(false)
+  let submitTimer: ReturnType<typeof setTimeout> | undefined
+  onCleanup(() => clearTimeout(submitTimer))
+  function submitWhenSettled(submit: Submit): void {
+    setSubmitting(submit)
+    submitTimer = setTimeout(() => setWaitedOut(true), SUBMIT_WAIT_MS)
+  }
+  createEffect(() => {
+    const submit = submitting()
+    if (!submit || !((opened() && settled() === parsed()) || waitedOut())) return
+    setSubmitting(undefined)
+    const top = results()[0]
+    if (top) void activate(top, submit === 'shift-enter')
+  })
 
   return (
     <Palette

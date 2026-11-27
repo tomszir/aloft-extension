@@ -28,7 +28,7 @@ describe('prepareInPage', () => {
     document.body.addEventListener('keydown', page)
     prepareInPage(OVERLAY_OPTIONS_KEY, { blur: true }, HELD_KEYS_KEY, 1000)
 
-    for (const key of ['g', 'h', 'x', 'Backspace', ' ', 'é', 'Enter', 'ArrowDown']) {
+    for (const key of ['g', 'h', 'x', 'Backspace', ' ', 'é', 'Tab', 'ArrowDown']) {
       expect(press(key).defaultPrevented).toBe(true)
     }
     // AltGr+Q on a German layout, which Windows reports as Ctrl+Alt.
@@ -36,6 +36,18 @@ describe('prepareInPage', () => {
     expect(page).not.toHaveBeenCalled()
     expect(readHeldKeys(globalThis)?.text).toBe('gh é@')
     document.body.removeEventListener('keydown', page)
+  })
+
+  it('keeps Enter after the text, for the palette to act on, and nothing after it', () => {
+    prepareInPage(OVERLAY_OPTIONS_KEY, { blur: true }, HELD_KEYS_KEY, 1000)
+    const held = readHeldKeys(globalThis)
+    press('Enter')
+    expect(held?.submit).toBeUndefined()
+    press('g')
+    expect(press('Enter', { shiftKey: true }).defaultPrevented).toBe(true)
+    press('x')
+    expect(held?.text).toBe('g')
+    expect(held?.submit).toBe('shift-enter')
   })
 
   it('lets Esc, function keys and shortcuts through', () => {

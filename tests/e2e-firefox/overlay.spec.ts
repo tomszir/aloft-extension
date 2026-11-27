@@ -57,8 +57,7 @@ test('Enter on an open tab switches to it', async ({ firefox, control, origin })
   await pressOpenAloft(control, page)
   const palette = await paletteFrame(page)
   await page.keyboard.type('reading list')
-  // Searching the web is always the first row.
-  await page.keyboard.press('ArrowDown')
+  // A tab whose title starts with the text is the top row.
   await expect
     .poll(() =>
       palette.evaluate(() => document.querySelector('[aria-selected="true"]')?.textContent),

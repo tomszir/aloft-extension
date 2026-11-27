@@ -326,6 +326,12 @@ export function Palette(props: PaletteProps) {
             onReorder={props.onReorderPin}
           />
         </Show>
+        {/* Actions mode has no search row to fall back on, so say it. */}
+        <Show when={props.chip === 'actions' && props.sections.length === 0}>
+          <p class={styles.empty} role="status">
+            {i18n.t('actionsNone')}
+          </p>
+        </Show>
         <div
           id={RESULTS_ID}
           class={styles.results}

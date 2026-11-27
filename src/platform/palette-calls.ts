@@ -3,6 +3,8 @@ import { runAction } from './actions'
 import {
   CLOSE_OVERLAY,
   type CloseOverlayMessage,
+  type HeldTyping,
+  readHeldTyping,
   TAKE_TYPED,
   type TakeTypedMessage,
 } from './messages'
@@ -30,10 +32,9 @@ async function closeOverlay(tabId: number): Promise<void> {
 }
 
 /** What was typed on the page while the overlay palette loaded; see prepareInPage. */
-async function takeTyped(tabId: number): Promise<string> {
+async function takeTyped(tabId: number): Promise<HeldTyping> {
   const message: TakeTypedMessage = { type: TAKE_TYPED }
-  const reply: unknown = await browser.tabs.sendMessage(tabId, message, { frameId: 0 })
-  return typeof reply === 'string' ? reply : ''
+  return readHeldTyping(await browser.tabs.sendMessage(tabId, message, { frameId: 0 }))
 }
 
 /** Opens the settings page at what's new, next to the tab the palette is on. */

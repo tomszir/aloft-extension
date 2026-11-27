@@ -47,9 +47,29 @@ export function isTakeTypedMessage(message: unknown): message is TakeTypedMessag
   )
 }
 
+export type Submit = 'enter' | 'shift-enter'
+
+/** What the palette gets back: the held text, and Enter if it came after it. */
+export interface HeldTyping {
+  text: string
+  submit?: Submit | undefined
+}
+
+export function readHeldTyping(reply: unknown): HeldTyping {
+  if (typeof reply !== 'object' || reply === null) return { text: '' }
+  const text: unknown = Reflect.get(reply, 'text')
+  const submit: unknown = Reflect.get(reply, 'submit')
+  return {
+    text: typeof text === 'string' ? text : '',
+    submit: submit === 'enter' || submit === 'shift-enter' ? submit : undefined,
+  }
+}
+
 /** Text typed on the page while the overlay opens, kept from the page. */
 export interface HeldKeys {
   text: string
+  /** Enter pressed after the text: Shift+Enter flips where it opens, as in the palette. */
+  submit: Submit | undefined
   /** Set by the overlay once it's drawn, so the hold doesn't time out under it. */
   claimed: boolean
   /** Runs after each held key. */
