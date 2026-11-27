@@ -33,7 +33,7 @@ Run all of the first four before opening a PR. The `pre-push` hook runs the end-
   - The body is 1–3 lines: what changed and why, and how it was tested. No checklists.
 - **Merging**: agents may squash-merge `docs`, `build`, `ci`, `chore` and `test` PRs once CI is green. `feat`, `fix`, `perf`, `refactor`, `revert` and release PRs wait for the maintainer. Never push to `main` directly or use the admin bypass.
 - **Releases** are cut by release-please from the commits on `main`, then published to the Chrome Web Store ([docs/releasing.md](docs/releasing.md)). Never edit the version by hand.
-- **Release notes** live in `CHANGELOG.md`, written for the people using Aloft: plain sentences, "you", no scopes, PR numbers or browser names. The release PR gets a drafted section for its version; it's rewritten there before merging, and never changed for a version already released.
+- **Release notes** live in `CHANGELOG.md`, written for the people using Aloft: plain sentences, "you", no scopes or PR numbers, and a browser named only when the change is about that browser. The release PR gets a drafted section for its version; it's rewritten there before merging, and never changed for a version already released.
 
 ## Code
 
