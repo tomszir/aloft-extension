@@ -25,7 +25,7 @@ Press <kbd>Alt</kbd>+<kbd>Q</kbd>, or <kbd>Ctrl</kbd>+<kbd>T</kbd> if you give i
 - **Pinned tabs, one key away:** your pinned tabs sit at the top. <kbd>Alt</kbd>+<kbd>1</kbd> to <kbd>9</kbd> opens them.
 - **Tab actions:** type <kbd>&gt;</kbd> to pin, duplicate, move to a new window, close other tabs or reopen a closed one.
 - **Stays out of the way:** the page dims behind the bar instead of being replaced, and <kbd>Esc</kbd> puts you back exactly where you were.
-- **Looks like your browser:** light and dark follow the browser, with built-in themes to choose from.
+- **Looks like your browser, or like you want:** light and dark follow the browser, with built-in themes, or make your own (colors, corners, font and density) and share it as a file.
 
 <table>
     <tr>

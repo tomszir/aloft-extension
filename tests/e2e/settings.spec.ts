@@ -55,6 +55,28 @@ test('a changed setting is saved and reaches the preview', async ({ context, bac
   await expect(preview(page).getByRole('option').first()).toContainText('Delta notes')
 })
 
+test('the preview shows either theme while Aloft follows the system', async ({
+  context,
+  background,
+}) => {
+  const page = await context.newPage()
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await openSettings(page, background)
+  const scheme = () =>
+    preview(page)
+      .locator('html')
+      .evaluate((root) => root.dataset.scheme)
+  await page.getByRole('group', { name: 'Preview in' }).getByRole('radio', { name: 'Dark' }).check()
+  await expect.poll(scheme).toBe('dark')
+  await page
+    .getByRole('group', { name: 'Preview in' })
+    .getByRole('radio', { name: 'Light' })
+    .check()
+  await expect.poll(scheme).toBe('light')
+  // Wide enough for both columns: the settings scroll, the page doesn't.
+  expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBe(900)
+})
+
 test('the preview never acts on what it shows', async ({ context, background }) => {
   const other = await context.newPage()
   await other.goto(`${TEST_ORIGIN}/Epsilon`)
@@ -77,7 +99,10 @@ test('the preview never acts on what it shows', async ({ context, background }) 
 test('picking a theme restyles the page', async ({ context, background }) => {
   const page = await context.newPage()
   await openSettings(page, background)
-  await page.getByRole('radio', { name: 'Dark', exact: true }).check()
+  await page
+    .getByRole('group', { name: 'Color scheme' })
+    .getByRole('radio', { name: 'Dark', exact: true })
+    .check()
   await page.getByRole('radio', { name: 'Moss' }).check()
 
   const panel = () =>
@@ -111,4 +136,86 @@ test('saving a setting keeps ones a newer Aloft stored', async ({ context, backg
   await expect
     .poll(() => storedSettings(background))
     .toMatchObject({ fromTheFuture: 1, learnFromPicks: false })
+})
+
+test('a customized theme is previewed while edited, then used by Aloft once saved', async ({
+  context,
+  background,
+}) => {
+  const page = await context.newPage()
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await openSettings(page, background)
+  await page.getByRole('button', { name: 'New theme' }).first().click()
+  const form = page.getByRole('form', { name: 'New theme' })
+  await form.getByRole('textbox', { name: 'Name' }).fill('Ember')
+  await form.getByRole('textbox', { name: 'Background', exact: true }).fill('#FFF4EC')
+  await form.getByRole('textbox', { name: 'Background', exact: true }).press('Tab')
+  await form.getByRole('slider').fill('6')
+
+  const panel = (root: Page | ReturnType<typeof preview>) =>
+    root.locator('html').evaluate((html) => html.style.getPropertyValue('--al-panel'))
+  await expect.poll(() => panel(preview(page))).toBe('#FFF4EC')
+
+  await form.getByRole('button', { name: 'Save theme' }).click()
+  await expect(page.getByRole('radio', { name: 'Ember' })).toBeChecked()
+
+  const host = await context.newPage()
+  await host.goto(`${TEST_ORIGIN}/Host`)
+  await pressOpenAloft(background, host)
+  const radius = () =>
+    palette(host)
+      .locator('html')
+      .evaluate((html) => html.style.getPropertyValue('--al-radius'))
+  await expect.poll(() => panel(palette(host))).toBe('#FFF4EC')
+  await expect.poll(radius).toBe('6px')
+})
+
+test('font and density reach the palette', async ({ context, background }) => {
+  await setSettingsAppearance(background, { font: 'mono', density: 'compact' })
+  const host = await context.newPage()
+  await host.goto(`${TEST_ORIGIN}/Host`)
+  await pressOpenAloft(background, host)
+  const css = (name: string) =>
+    palette(host)
+      .locator('html')
+      .evaluate((html, prop) => html.style.getPropertyValue(prop), name)
+  await expect.poll(() => css('--al-font-family')).toMatch(/monospace$/)
+  await expect.poll(() => css('--al-row-height')).toBe('36px')
+})
+
+async function setSettingsAppearance(background: Worker, appearance: object): Promise<void> {
+  await background.evaluate(async (value) => {
+    const api = Reflect.get(globalThis, 'chrome') as {
+      storage: { sync: { set: (items: object) => Promise<void> } }
+    }
+    await api.storage.sync.set({ settings: { appearance: value } })
+  }, appearance)
+}
+
+test('the menu jumps to a section and marks it, as does scrolling', async ({
+  context,
+  background,
+}) => {
+  const page = await context.newPage()
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await openSettings(page, background)
+  const menu = page.getByRole('navigation', { name: 'Settings sections' })
+  await menu.getByRole('link', { name: 'Appearance' }).click()
+  await expect(menu.getByRole('link', { name: 'Appearance' })).toHaveAttribute(
+    'aria-current',
+    'location',
+  )
+  // Keyboard focus goes along, so the next Tab is in that section.
+  await expect(page.locator('#al-appearance-title')).toBeFocused()
+  await expect
+    .poll(() =>
+      page.locator('#appearance').evaluate((el) => Math.round(el.getBoundingClientRect().top)),
+    )
+    .toBeLessThan(40)
+
+  await page.locator('#whats-new').evaluate((el) => el.scrollIntoView())
+  await expect(menu.getByRole('link', { name: "What's new" })).toHaveAttribute(
+    'aria-current',
+    'location',
+  )
 })

@@ -12,6 +12,8 @@ import {
 } from '../../core/keywords'
 import { displayUrl, tileLetter } from '../../core/results'
 import { Button } from '../button/button'
+import { Icon } from '../icon/icon'
+import '../icon/page-icons'
 import { Favicon, type FaviconLoader } from '../favicon/favicon'
 import { Toggle } from '../toggle/toggle'
 import styles from './keyword-settings.module.css'
@@ -38,18 +40,40 @@ const EMPTY_DRAFT: KeywordDraft = { name: '', keyword: '', url: 'https://' }
 
 const defaultId = () => `custom-${Date.now().toString(36)}`
 
+// The site a keyword searches, without the search address around it: the
+// whole template is in the editor.
+function siteOf(url: string): string {
+  try {
+    return new URL(url.replace('%s', '')).hostname.replace(/^www\./, '')
+  } catch {
+    return displayUrl(url)
+  }
+}
+
 export function KeywordSettings(props: KeywordSettingsProps) {
   const [editing, setEditing] = createSignal<Editing>()
   const [error, setError] = createSignal<DraftError | 'full'>()
   const [confirmReset, setConfirmReset] = createSignal(false)
 
+  // The form replaces the button that opened it, so focus moves into the
+  // form and, when it closes, back to that button (or what took its place).
+  let formElement: HTMLFormElement | undefined
+  let opener: HTMLElement | undefined
   const edit = (keyword: Keyword | undefined) => {
     setError(undefined)
+    opener = document.activeElement instanceof HTMLElement ? document.activeElement : undefined
     setEditing({
       id: keyword?.id,
       draft: keyword
         ? { name: keyword.name, keyword: keyword.keyword, url: keyword.url }
         : EMPTY_DRAFT,
+    })
+    requestAnimationFrame(() => formElement?.querySelector('input')?.focus())
+  }
+  const close = () => {
+    setEditing(undefined)
+    requestAnimationFrame(() => {
+      if (opener?.isConnected) opener.focus()
     })
   }
   const change = (field: keyof KeywordDraft, value: string) => {
@@ -70,16 +94,17 @@ export function KeywordSettings(props: KeywordSettingsProps) {
       return
     }
     const next = saveDraft(props.keywords, current.draft, current.id, props.newId ?? defaultId)
-    if (await save(next)) setEditing(undefined)
+    if (await save(next)) close()
   }
   const remove = async (id: string) => {
-    if (await save(props.keywords.filter((k) => k.id !== id))) setEditing(undefined)
+    if (await save(props.keywords.filter((k) => k.id !== id))) close()
   }
   const toggle = (id: string, on: boolean) =>
     void save(props.keywords.map((k) => (k.id === id ? { ...k, enabled: on } : k)))
 
   const form = (current: Editing) => (
     <form
+      ref={formElement}
       class={styles.form}
       aria-label={current.id ? i18n.t('keywordEdit', [current.draft.name]) : i18n.t('keywordAdd')}
       onSubmit={(event) => {
@@ -127,17 +152,20 @@ export function KeywordSettings(props: KeywordSettingsProps) {
       </Show>
       <div class={`${styles.buttons} ${styles.wide}`}>
         <Show when={current.id && !props.keywords.find((k) => k.id === current.id)?.builtIn}>
-          <button
-            type="button"
-            class={styles.danger}
+          <Button
+            variant="ghost"
+            danger
+            icon="trash-2"
             onClick={() => current.id && void remove(current.id)}
           >
             {i18n.t('keywordDelete')}
-          </button>
+          </Button>
         </Show>
         <span class={styles.spacer} />
-        <Button onClick={() => setEditing(undefined)}>{i18n.t('keywordCancel')}</Button>
-        <Button type="submit" variant="primary">
+        <Button icon="x" onClick={close}>
+          {i18n.t('keywordCancel')}
+        </Button>
+        <Button type="submit" variant="primary" icon="check">
           {i18n.t('keywordSave')}
         </Button>
       </div>
@@ -153,39 +181,41 @@ export function KeywordSettings(props: KeywordSettingsProps) {
               <Show
                 when={editing()?.id === keyword.id && editing()}
                 fallback={
-                  <div class={styles.row} data-off={!keyword.enabled || undefined}>
-                    <span class={styles.icon}>
+                  // Like every other switch in settings: the row flips it, and
+                  // Edit, beside the switch, is a control of its own.
+                  <Toggle
+                    label={keyword.name}
+                    checked={keyword.enabled}
+                    muted={!keyword.enabled}
+                    onChange={(on) => toggle(keyword.id, on)}
+                    leading={
                       <Favicon
                         pageUrl={keywordUrl(keyword, '')}
                         load={props.favicon}
                         letter={tileLetter(keyword.name, keyword.url)}
                       />
-                    </span>
-                    <span class={styles.text}>
-                      <span class={styles.name}>
-                        {keyword.name}
+                    }
+                    note={
+                      <span class={styles.detail}>
+                        <kbd class={styles.word}>{keyword.keyword}</kbd>
+                        <span class={styles.url}>{siteOf(keyword.url)}</span>
                         <Show when={!keyword.builtIn}>
                           <span class={styles.tag}>{i18n.t('keywordYours')}</span>
                         </Show>
                       </span>
-                      <span class={styles.url}>{displayUrl(keyword.url)}</span>
-                    </span>
-                    <kbd class={styles.word}>{keyword.keyword}</kbd>
-                    <button
-                      type="button"
-                      class={styles.edit}
-                      aria-label={i18n.t('keywordEdit', [keyword.name])}
-                      onClick={() => edit(keyword)}
-                    >
-                      {i18n.t('keywordEditShort')}
-                    </button>
-                    <Toggle
-                      label={i18n.t('keywordUse', [keyword.name])}
-                      labelHidden
-                      checked={keyword.enabled}
-                      onChange={(on) => toggle(keyword.id, on)}
-                    />
-                  </div>
+                    }
+                    action={
+                      <button
+                        type="button"
+                        class={styles.edit}
+                        aria-label={i18n.t('keywordEdit', [keyword.name])}
+                        title={i18n.t('keywordEdit', [keyword.name])}
+                        onClick={() => edit(keyword)}
+                      >
+                        <Icon name="pencil" />
+                      </button>
+                    }
+                  />
                 }
               >
                 {(current) => form(current())}
@@ -199,27 +229,33 @@ export function KeywordSettings(props: KeywordSettingsProps) {
       </Show>
       <div class={styles.actions}>
         <Show when={editing() === undefined}>
-          <Button onClick={() => edit(undefined)}>{i18n.t('keywordAdd')}</Button>
+          <Button icon="plus" onClick={() => edit(undefined)}>
+            {i18n.t('keywordAdd')}
+          </Button>
         </Show>
         <span class={styles.spacer} />
         <Show
           when={confirmReset()}
           fallback={
-            <button
-              type="button"
-              class={styles.danger}
+            <Button
+              variant="ghost"
+              danger
+              icon="undo-2"
               disabled={!props.keywords.some(isChanged)}
               onClick={() => setConfirmReset(true)}
             >
               {i18n.t('keywordReset')}
-            </button>
+            </Button>
           }
         >
           <span class={styles.confirm}>
             {i18n.t('keywordResetConfirm')}
-            <Button onClick={() => setConfirmReset(false)}>{i18n.t('keywordCancel')}</Button>
+            <Button icon="x" onClick={() => setConfirmReset(false)}>
+              {i18n.t('keywordCancel')}
+            </Button>
             <Button
               variant="primary"
+              icon="undo-2"
               onClick={() => {
                 setConfirmReset(false)
                 setEditing(undefined)

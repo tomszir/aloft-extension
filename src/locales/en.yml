@@ -38,14 +38,15 @@ onboardingTitle: Aloft is ready
 onboardingShortcut: Press $1 on any page to open Aloft.
 onboardingNoShortcut: Aloft has no shortcut set. Pick one to open it from any page.
 onboardingChangeShortcut: Change shortcut
-onboardingCtrlTTitle: Open with Ctrl+T
+onboardingCtrlTTitle: Open with $1
 onboardingCtrlTMoved: Aloft no longer takes over new tabs, which showed a blank tab for a moment each time. Ctrl+T now opens Aloft only once you give it to Aloft, which takes two steps below. Until then, Aloft's own shortcut still opens it.
-ctrlTBody: Ctrl+T can open Aloft over the page you're on instead of an empty tab. Browsers only let you set that yourself, in two steps.
+ctrlTBody: $1 can open Aloft over the page you're on instead of an empty tab. Browsers only let you set that yourself, in two steps.
 ctrlTStepOpen: Open your browser's shortcuts for extensions.
-ctrlTStepSet: Find "$1" under Aloft, and press Ctrl+T in its box.
+ctrlTStepSet: Find "$1" under Aloft, and press $2 in its box.
 ctrlTButton: Open shortcut settings
-ctrlTNote: Alt+Q keeps working too. For an empty tab, type > new tab in Aloft.
-ctrlTDone: Done. Ctrl+T opens Aloft over the page you're on. For an empty tab, type > new tab in Aloft.
+ctrlTNote: $1 keeps working too. For an empty tab, type > new tab in Aloft.
+ctrlTNoteNoShortcut: For an empty tab, type > new tab in Aloft.
+ctrlTDone: Done. $1 opens Aloft over the page you're on. For an empty tab, type > new tab in Aloft.
 pinnedLabel: Pinned
 pinnedHint: 1–9 to open
 pinnedMenuLabel: Options for $1
@@ -68,6 +69,8 @@ actionCloseOtherTabs: Close other tabs
 actionReopenClosedTab: Reopen closed tab
 actionOpenSettings: Open settings
 settingsTitle: Settings
+settingsShortcut: Keyboard shortcut
+settingsSectionsLabel: Settings sections
 settingsUpdated: Aloft was updated to $1.
 settingsSeeWhatsNew: See what's new
 settingsWhatsNew: What's new
@@ -77,7 +80,10 @@ settingsWhatsNewInAloft: Mention updates in Aloft
 settingsWhatsNewInAloftNote: After an update, a link to what's new shows once at the bottom of Aloft.
 settingsReleaseNew: New
 settingsPreview: Preview
-settingsPreviewNote: Your real tabs, history and bookmarks, as Aloft will show them. Nothing opens from here.
+settingsPreviewScheme: Preview in
+settingsPreviewEditing: Previewing $1, not saved yet
+settingsPreviewEditingUnnamed: Previewing a theme not saved yet
+settingsPreviewNote: Your real tabs. Nothing opens from here.
 settingsOpening: Opening Aloft
 settingsResults: Results
 settingsEnterOpensIn: Enter opens a result in
@@ -89,13 +95,13 @@ settingsSources: Show results from
 settingsLearnFromPicks: Learn from what you pick
 settingsLearnFromPicksNote: A page you pick a few times for the same text moves to the top, so Enter opens it. What Aloft learns stays on this device and fades after a few weeks.
 settingsForgetPicks: Forget what Aloft learned
+settingsForgetPicksNote: Clears every page Aloft has learned on this device.
+settingsForgetPicksButton: Forget
 settingsPicksForgotten: Forgotten.
 settingsShowPinned: Show pinned tabs above the results
 settingsKeywords: Keywords
 settingsKeywordsNote: Type a keyword, then Space or Tab, to search a site or ask an AI from Aloft. Type @ in Aloft to see them all; starting with @ always works. What you type becomes part of the site's address, so it's saved in your history.
-keywordUse: Use $1
 keywordEdit: Edit $1
-keywordEditShort: Edit
 keywordYours: Yours
 keywordName: Name
 keywordKeyword: Keyword
@@ -122,4 +128,71 @@ settingsDarkTheme: Dark theme
 settingsPosition: Position
 settingsPositionUpperThird: Upper third
 settingsPositionCenter: Center
+settingsFont: Font
+settingsFontNote: Only fonts already on this computer; Aloft downloads nothing.
+settingsFontSystem: System
+settingsFontSans: Sans
+settingsFontSerif: Serif
+settingsFontRounded: Rounded
+settingsFontMono: Mono
+settingsFontCustom: Other
+settingsFontName: Font name
+settingsFontNameInvalid: Font names can only have letters, digits, spaces, dots, dashes and underscores.
+settingsDensity: Density
+settingsDensityCompact: Compact
+settingsDensityDefault: Default
+settingsDensityComfortable: Comfortable
+themeNew: New theme
+themeEditShort: Edit
+themeEditNamed: Edit $1
+themeImport: Import theme
+themeImportTooLarge: That file is too big to be a theme (8 KB at most).
+themeImportNotJson: That file isn't a theme. Themes are JSON files exported from Aloft.
+themeImportInvalid: That theme file is missing something or has a value Aloft can't use.
+themeCopyName: $1 copy
+themeEditTitle: Edit theme
+themeNewTitle: New theme
+themeBack: Back
+themeForLight: A light theme
+themeForDark: A dark theme
+themeGroupSurfaces: Surfaces
+themeGroupText: Text
+themeGroupAccent: Accent
+themeGroupCorners: Corners
+themeColorPanelNote: Behind everything in Aloft
+themeColorSelectedNote: The highlighted row, and tiles under the mouse
+themeColorBorderNote: Edges and dividers
+themeColorTextNote: Titles and what you type
+themeColorMutedNote: Addresses, hints and labels
+themeColorAccentNote: Chips, focus rings and the selection marker
+themeContrastOk: $1:1
+themeContrastLow: $1:1, hard to read
+themeContrastHint: Contrast on the background, the selected row and the settings page; small text needs 4.5:1 to be easy to read.
+themeRadiusSquare: Square
+themeRadiusSoft: Soft
+themeRadiusRound: Round
+themeRadiusRounder: Rounder
+themeName: Name
+themeColorPanel: Background
+themeColorSelected: Selected row
+themeColorBorder: Border
+themeColorText: Text
+themeColorMuted: Secondary text
+themeColorAccent: Accent
+themeColorPick: Pick $1
+themeRadius: Corner radius
+themeRadiusValue: $1 px
+themeSave: Save theme
+themeExport: Export
+themeDelete: Delete theme
+themeDeleteAsk: Delete this theme? It goes from every device you sync with.
+themeDiscardAsk: Leave without saving? Your changes to this theme are lost.
+themeDiscard: Discard changes
+themeKeep: Keep editing
+themeTooMany: There's no room for this theme. Aloft keeps up to 16, and they have to fit in what your browser syncs. Delete one you don't use.
+themeSaveFailed: Your browser didn't save the theme just now. Try again in a minute.
+themeSavedLight: Saved $1 as your light theme.
+themeSavedDark: Saved $1 as your dark theme.
+themeAtLimit: You have 16 themes, the most Aloft keeps. Delete one to add or import another.
+themeImportInvalidField: That theme file has a value Aloft can't use ($1).
 settingsBlur: Blur the page behind Aloft

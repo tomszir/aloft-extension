@@ -1,5 +1,6 @@
 import * as v from 'valibot'
 import { DEFAULT_DARK_THEME_ID, DEFAULT_LIGHT_THEME_ID } from './theme'
+import { DENSITIES, FONTS, FontName } from './typography'
 
 // Settings sync between devices that may run different Aloft versions, so
 // every read goes through normalizeSettings instead of trusting storage.
@@ -32,6 +33,10 @@ export const SettingsSchema = v.object({
     darkTheme: ThemeId,
     position: v.picklist(['upper-third', 'center']),
     blur: v.boolean(),
+    font: v.picklist(FONTS),
+    /** A font installed on this computer, used when `font` is "custom". */
+    customFont: FontName,
+    density: v.picklist(DENSITIES),
   }),
 })
 
@@ -50,6 +55,9 @@ export const DEFAULT_SETTINGS: Settings = {
     darkTheme: DEFAULT_DARK_THEME_ID,
     position: 'upper-third',
     blur: true,
+    font: 'system',
+    customFont: '',
+    density: 'default',
   },
 }
 

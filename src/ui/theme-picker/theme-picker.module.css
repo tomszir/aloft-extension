@@ -1,4 +1,11 @@
+/* A definite width: in a column flexbox, a fieldset otherwise measures its
+   height with the grid at its narrowest, one card per row. */
+/* The page's accent, read here before each card sets its own: outlines drawn
+   in a card's accent would vanish on the page for some themes. */
 .field {
+  --al-ring: var(--al-accent);
+  box-sizing: border-box;
+  width: 100%;
   min-width: 0;
   margin: 0;
   padding: 0;
@@ -27,16 +34,42 @@
   background: var(--al-panel);
   color: var(--al-text);
   cursor: pointer;
+  transition:
+    border-color var(--al-duration-fast) var(--al-ease-out),
+    transform var(--al-duration-fast) var(--al-ease-out);
+}
+
+.card:hover {
+  border-color: color-mix(in srgb, var(--al-border), var(--al-text) 25%);
 }
 
 .card:has(:checked) {
-  outline: 2px solid var(--al-accent);
+  outline: 2px solid var(--al-ring);
   outline-offset: 2px;
 }
 
 .card:has(:focus-visible) {
-  outline: 2px solid var(--al-accent);
+  outline: 2px dashed var(--al-ring);
   outline-offset: 4px;
+}
+
+/* Selected is marked by more than its outline. */
+.check {
+  position: absolute;
+  bottom: var(--al-space-2);
+  right: var(--al-space-2);
+  display: none;
+  place-items: center;
+  width: var(--al-badge-size);
+  height: var(--al-badge-size);
+  border-radius: 50%;
+  background: var(--al-ring);
+  color: var(--al-page);
+  --al-glyph-size: calc(var(--al-badge-size) - var(--al-space-1));
+}
+
+.card:has(:checked) .check {
+  display: grid;
 }
 
 .radio {
@@ -78,4 +111,62 @@
 .name {
   font-size: var(--al-font-size-sm);
   font-weight: var(--al-font-weight-medium);
+}
+
+.slot {
+  position: relative;
+  display: flex;
+}
+
+.slot > .card {
+  flex: 1;
+}
+
+/* On the card's own colors, top right. */
+.edit {
+  position: absolute;
+  top: var(--al-space-2);
+  right: var(--al-space-2);
+  padding: 0 var(--al-space-2);
+  border: 0;
+  /* Concentric with the card's corner, which sits the same distance away. */
+  border-radius: max(calc(var(--al-radius) - var(--al-space-2)), 2px);
+  background: var(--al-accent-soft);
+  color: var(--al-accent-soft-text);
+  font: inherit;
+  font-size: var(--al-font-size-xs);
+  font-weight: var(--al-font-weight-semibold);
+  line-height: var(--al-kbd-size);
+  cursor: pointer;
+}
+
+.edit:focus-visible,
+.new:focus-visible {
+  outline: 2px solid var(--al-ring);
+  outline-offset: 2px;
+}
+
+.new {
+  transition:
+    border-color var(--al-duration-fast) var(--al-ease-out),
+    color var(--al-duration-fast) var(--al-ease-out);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--al-space-2);
+  min-height: calc(var(--al-tile-height) * 1.6);
+  padding: var(--al-space-3);
+  border: var(--al-slot-border) dashed var(--al-border);
+  border-radius: var(--al-radius);
+  background: none;
+  color: var(--al-muted);
+  font: inherit;
+  font-size: var(--al-font-size-sm);
+  cursor: pointer;
+}
+
+.new:hover {
+  border-color: var(--al-accent);
+  color: var(--al-text);
 }

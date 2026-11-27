@@ -11,6 +11,16 @@
   font-size: var(--al-font-size-md);
   font-weight: var(--al-font-weight-medium);
   cursor: pointer;
+  transition:
+    background-color var(--al-duration-fast) var(--al-ease-out),
+    border-color var(--al-duration-fast) var(--al-ease-out),
+    color var(--al-duration-fast) var(--al-ease-out),
+    transform var(--al-duration-fast) var(--al-ease-out);
+}
+
+/* Pressed: a nudge down, so a click registers before anything happens. */
+.button:active:not(:disabled) {
+  transform: translateY(1px);
 }
 
 .button:focus-visible {
@@ -32,4 +42,40 @@
   background: var(--al-selected);
   border-color: var(--al-border);
   color: var(--al-text);
+}
+
+/* Hover moves each a step toward the text color: darker on light themes,
+   lighter on dark ones. */
+.primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--al-accent), var(--al-text) 14%);
+}
+
+.secondary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--al-selected), var(--al-text) 7%);
+  border-color: color-mix(in srgb, var(--al-border), var(--al-text) 18%);
+}
+
+.ghost {
+  padding: 0 var(--al-space-4);
+  background: none;
+  color: var(--al-text);
+}
+
+.danger {
+  color: var(--al-danger);
+}
+
+/* Tinted with the button's own color, so a danger one turns faintly red. */
+.ghost:hover:not(:disabled) {
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button {
+    transition: none;
+  }
+
+  .button:active:not(:disabled) {
+    transform: none;
+  }
 }

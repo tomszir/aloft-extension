@@ -1,10 +1,11 @@
-import { fireEvent, render, screen } from '@solidjs/testing-library'
+import { fireEvent, render, screen, within } from '@solidjs/testing-library'
 import { createSignal } from 'solid-js'
 import { describe, expect, it, vi } from 'vitest'
 import type { Release } from '../../core/changelog'
 import { BUILT_IN_KEYWORDS } from '../../core/keywords'
 import { DEFAULT_SETTINGS, type Settings as SettingsValue } from '../../core/settings'
 import type { Shortcuts } from '../../core/shortcut'
+import { PRESET_THEMES, type Theme } from '../../core/theme'
 import { Settings } from './settings'
 
 const release = (version: string): Release => ({
@@ -20,12 +21,19 @@ function renderSettings(
   initial: Partial<SettingsValue> = {},
   shortcuts: Shortcuts = { main: 'Alt+Q', second: '' },
   updatedFrom?: string,
+  initialThemes: readonly Theme[] = [],
 ) {
   const [settings, setSettings] = createSignal<SettingsValue>({ ...DEFAULT_SETTINGS, ...initial })
   const onChange = vi.fn((change: (current: SettingsValue) => SettingsValue) =>
     setSettings(change(settings())),
   )
   const onChangeShortcut = vi.fn()
+  const [customThemes, setCustomThemes] = createSignal<readonly Theme[]>(initialThemes)
+  const onSaveThemes = vi.fn(async (themes: readonly Theme[]) => {
+    setCustomThemes(themes)
+    return 'saved' as const
+  })
+  const onExportTheme = vi.fn()
   const onForgetPicks = vi.fn(async () => {})
   render(() => (
     <Settings
@@ -41,9 +49,20 @@ function renderSettings(
       version="0.6.0"
       releases={RELEASES}
       updatedFrom={updatedFrom}
+      customThemes={customThemes()}
+      onSaveThemes={onSaveThemes}
+      onExportTheme={onExportTheme}
     />
   ))
-  return { settings, onChange, onChangeShortcut, onForgetPicks }
+  return {
+    settings,
+    onChange,
+    onChangeShortcut,
+    onForgetPicks,
+    customThemes,
+    onSaveThemes,
+    onExportTheme,
+  }
 }
 
 describe('Settings', () => {
@@ -95,12 +114,144 @@ describe('Settings', () => {
     expect(screen.getByRole('group', { name: 'settingsLightTheme' })).toBeTruthy()
     expect(screen.getByRole('group', { name: 'settingsDarkTheme' })).toBeTruthy()
 
-    fireEvent.click(screen.getByRole('radio', { name: 'settingsSchemeDark' }))
+    const scheme = screen.getByRole('group', { name: 'settingsColorScheme' })
+    fireEvent.click(within(scheme).getByRole('radio', { name: 'settingsSchemeDark' }))
     expect(settings().appearance.colorScheme).toBe('dark')
     expect(screen.queryByRole('group', { name: 'settingsLightTheme' })).toBeNull()
 
     fireEvent.click(screen.getByRole('radio', { name: 'Moss' }))
     expect(settings().appearance.darkTheme).toBe('moss')
+  })
+
+  describe('custom themes', () => {
+    const editor = () => screen.getByRole('form')
+    const previewSrc = () => screen.getByTitle('settingsPreview').getAttribute('src') ?? ''
+
+    it('starts a new theme from the one in use, shows it in the preview, and saves it', async () => {
+      const { settings, onSaveThemes } = renderSettings({
+        appearance: { ...DEFAULT_SETTINGS.appearance, colorScheme: 'dark' },
+      })
+      fireEvent.click(screen.getByRole('button', { name: 'themeNew' }))
+      expect(editor()).toBeTruthy()
+      expect(previewSrc()).toContain('scheme=dark&theme=')
+
+      fireEvent.click(within(editor()).getByRole('button', { name: 'themeSave' }))
+      await vi.waitFor(() => expect(onSaveThemes).toHaveBeenCalled())
+      const saved = onSaveThemes.mock.calls[0]?.[0]?.[0]
+      expect(saved?.id).toMatch(/^custom-/)
+      await vi.waitFor(() => expect(settings().appearance.darkTheme).toBe(saved?.id))
+      expect(screen.queryByRole('form')).toBeNull()
+      expect(previewSrc()).not.toContain('theme=')
+    })
+
+    it('edits a saved theme in place, and deleting it goes back to the built-in one', async () => {
+      const { settings, onSaveThemes, customThemes } = renderSettings({
+        appearance: { ...DEFAULT_SETTINGS.appearance, colorScheme: 'dark' },
+      })
+      fireEvent.click(screen.getByRole('button', { name: 'themeNew' }))
+      fireEvent.click(within(editor()).getByRole('button', { name: 'themeSave' }))
+      await vi.waitFor(() => expect(customThemes()).toHaveLength(1))
+
+      fireEvent.click(screen.getByRole('button', { name: 'themeEditNamed' }))
+      fireEvent.click(within(editor()).getByRole('button', { name: 'themeDelete' }))
+      fireEvent.click(
+        within(screen.getByRole('alert')).getByRole('button', { name: 'themeDelete' }),
+      )
+      await vi.waitFor(() => expect(customThemes()).toHaveLength(0))
+      expect(onSaveThemes).toHaveBeenCalledTimes(2)
+      expect(settings().appearance.darkTheme).toBe('helium-dark')
+    })
+
+    it('opens an imported theme in the editor, and explains a file it cannot use', async () => {
+      renderSettings()
+      const input = document.querySelector('input[type="file"]') as HTMLInputElement
+      const file = (text: string) => new File([text], 'theme.json', { type: 'application/json' })
+      const exported = JSON.stringify({
+        format: 'aloft-theme',
+        version: 1,
+        theme: { name: 'Shared', scheme: 'light', radius: 8, colors: PRESET_THEMES[1]?.colors },
+      })
+      fireEvent.change(input, { target: { files: [file(exported)] } })
+      await vi.waitFor(() => expect(editor()).toBeTruthy())
+      expect(
+        (within(editor()).getByRole('textbox', { name: 'themeName' }) as HTMLInputElement).value,
+      ).toBe('Shared')
+
+      fireEvent.click(within(editor()).getByRole('button', { name: 'themeBack' }))
+      fireEvent.change(input, { target: { files: [file('not json')] } })
+      await vi.waitFor(() =>
+        expect(screen.getByRole('alert').textContent).toBe('themeImportNotJson'),
+      )
+    })
+  })
+
+  describe('theme limits and feedback', () => {
+    it("says where a saved theme went, which can be a picker that's hidden", async () => {
+      renderSettings({ appearance: { ...DEFAULT_SETTINGS.appearance, colorScheme: 'dark' } })
+      fireEvent.click(screen.getByRole('button', { name: 'themeNew' }))
+      fireEvent.click(within(screen.getByRole('form')).getByRole('button', { name: 'themeSave' }))
+      await vi.waitFor(() => expect(screen.getByRole('status').textContent).toBe('themeSavedDark'))
+    })
+
+    it('offers no new theme or import once the limit is reached, and says why', () => {
+      const [first] = PRESET_THEMES
+      if (!first) throw new Error('missing presets')
+      const full = Array.from({ length: 16 }, (_, i) => ({
+        ...first,
+        id: `custom-${i}`,
+        name: `T${i}`,
+      }))
+      renderSettings({}, undefined, undefined, full)
+      expect(screen.queryByRole('button', { name: 'themeNew' })).toBeNull()
+      expect(
+        (screen.getByRole('button', { name: 'themeImport' }) as HTMLButtonElement).disabled,
+      ).toBe(true)
+      expect(screen.getByText('themeAtLimit')).toBeTruthy()
+    })
+
+    it('renames an imported theme whose name is taken', async () => {
+      renderSettings()
+      const input = document.querySelector('input[type="file"]') as HTMLInputElement
+      const exported = JSON.stringify({
+        format: 'aloft-theme',
+        version: 1,
+        theme: { name: 'Paper', scheme: 'light', radius: 8, colors: PRESET_THEMES[1]?.colors },
+      })
+      fireEvent.change(input, { target: { files: [new File([exported], 't.json')] } })
+      await vi.waitFor(() =>
+        expect(
+          (
+            within(screen.getByRole('form')).getByRole('textbox', {
+              name: 'themeName',
+            }) as HTMLInputElement
+          ).value,
+        ).toBe('Paper 2'),
+      )
+    })
+  })
+
+  it('says why a custom font name was refused, and keeps the last good one', () => {
+    const { settings } = renderSettings({
+      appearance: { ...DEFAULT_SETTINGS.appearance, font: 'custom', customFont: 'Inter' },
+    })
+    fireEvent.change(screen.getByRole('textbox', { name: 'settingsFontName' }), {
+      target: { value: "Inter'; color: red" },
+    })
+    expect(screen.getByRole('alert').textContent).toBe('settingsFontNameInvalid')
+    expect(settings().appearance.customFont).toBe('Inter')
+  })
+
+  it('picks a font installed on the computer by name, and a density', () => {
+    const { settings } = renderSettings()
+    fireEvent.change(screen.getByRole('combobox', { name: 'settingsFont' }), {
+      target: { value: 'custom' },
+    })
+    const name = screen.getByRole('textbox', { name: 'settingsFontName' })
+    fireEvent.change(name, { target: { value: ' Atkinson Hyperlegible ' } })
+    expect(settings().appearance.customFont).toBe('Atkinson Hyperlegible')
+    const density = screen.getByRole('group', { name: 'settingsDensity' })
+    fireEvent.click(within(density).getByRole('radio', { name: 'settingsDensityCompact' }))
+    expect(settings().appearance.density).toBe('compact')
   })
 
   it("offers to set Ctrl+T on the browser's shortcuts page until it's set", () => {
@@ -117,8 +268,8 @@ describe('Settings', () => {
 
   it('shows the palette as a preview', () => {
     renderSettings()
-    expect(screen.getByTitle('settingsPreview').getAttribute('src')).toBe(
-      'palette.html?host=preview',
+    expect(screen.getByTitle('settingsPreview').getAttribute('src')).toMatch(
+      /^palette\.html\?host=preview#/,
     )
   })
 
@@ -126,7 +277,7 @@ describe('Settings', () => {
     const { settings, onForgetPicks } = renderSettings()
     fireEvent.click(screen.getByRole('switch', { name: 'settingsLearnFromPicks' }))
     expect(settings().learnFromPicks).toBe(false)
-    fireEvent.click(screen.getByRole('button', { name: 'settingsForgetPicks' }))
+    fireEvent.click(screen.getByRole('button', { name: 'settingsForgetPicksButton' }))
     expect(onForgetPicks).toHaveBeenCalledOnce()
     expect(await screen.findByText('settingsPicksForgotten')).toBeTruthy()
   })

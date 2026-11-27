@@ -1,0 +1,134 @@
+.preview {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+/* The stand-in page follows the scheme being previewed, not the settings
+   page's own, through system colors. */
+.stage {
+  position: relative;
+  flex: 1;
+  min-height: var(--al-preview-height);
+  overflow: hidden;
+  border: 1px solid var(--al-border);
+  border-radius: var(--al-preview-radius);
+  background: var(--al-mock-canvas);
+  box-shadow: var(--al-elevation);
+  color: var(--al-mock-ink);
+}
+
+.stage[data-scheme="light"] {
+  color-scheme: light;
+}
+
+.stage[data-scheme="dark"] {
+  color-scheme: dark;
+}
+
+.page {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.bar {
+  height: var(--al-input-height);
+  border-bottom: 1px solid var(--al-mock-line);
+}
+
+.lines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--al-space-4);
+  width: min(var(--al-page-width), 80%);
+  margin: var(--al-space-6) auto;
+}
+
+.lines > * {
+  height: var(--al-space-3);
+  border-radius: var(--al-kbd-radius);
+  background: var(--al-mock-line);
+}
+
+.lines > .heading {
+  width: 55%;
+  height: var(--al-space-5);
+  background: var(--al-mock-ink-soft);
+}
+
+.short {
+  width: 70%;
+}
+
+.lines > .block {
+  height: calc(var(--al-preview-height) / 3);
+  background: var(--al-mock-accent);
+}
+
+.frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: transparent;
+}
+
+/* Tab reaches the preview to try the palette; show where focus went. */
+.stage:has(.frame:focus-visible) {
+  outline: 2px solid var(--al-accent);
+  outline-offset: 2px;
+}
+
+/* In the settings page's own colors, whatever the preview shows. */
+.panel {
+  position: absolute;
+  left: 50%;
+  bottom: var(--al-space-5);
+  display: flex;
+  align-items: center;
+  gap: var(--al-space-4);
+  max-width: calc(100% - 2 * var(--al-space-5));
+  box-sizing: border-box;
+  padding: var(--al-space-2) var(--al-space-2) var(--al-space-2) var(--al-space-5);
+  transform: translateX(-50%);
+  border: 1px solid var(--al-border);
+  /* Concentric with the switch inside: its radius plus the padding around it. */
+  border-radius: calc(var(--al-button-radius) + var(--al-space-2));
+  background: var(--al-panel);
+  box-shadow: var(--al-float-elevation);
+  color: var(--al-text);
+  color-scheme: normal;
+}
+
+.panel:not(:has(fieldset)) {
+  padding-right: var(--al-space-5);
+  min-height: var(--al-button-height);
+}
+
+.caption {
+  font-size: var(--al-font-size-sm);
+  color: var(--al-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.panel > fieldset {
+  flex: none;
+}
+
+.panel > fieldset > div {
+  flex-wrap: nowrap;
+}

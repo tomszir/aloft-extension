@@ -9,6 +9,7 @@ import { Icon } from '../icon/icon'
 import { Kbd } from '../kbd/kbd'
 import { Keyed } from '../keyed/keyed'
 import { KeywordChip } from '../keyword-chip/keyword-chip'
+import { slideHighlight } from '../motion/slide'
 import { PinnedRow } from '../pinned-row/pinned-row'
 import { ResultRow } from '../result-row/result-row'
 import { TileMenu } from '../tile-menu/tile-menu'
@@ -57,21 +58,6 @@ export interface PaletteProps {
 }
 
 const RESULTS_ID = 'al-results'
-
-function slideSelection(from: HTMLElement, to: HTMLElement): void {
-  if (typeof to.animate !== 'function') return
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
-  // Tokens live on :root, where themes set them too.
-  const style = getComputedStyle(document.documentElement)
-  const duration = Number.parseFloat(style.getPropertyValue('--al-duration-select'))
-  if (!(duration > 0)) return
-  const distance = from.getBoundingClientRect().top - to.getBoundingClientRect().top
-  to.animate([{ transform: `translateY(${distance}px)` }, { transform: 'none' }], {
-    duration,
-    easing: style.getPropertyValue('--al-ease-out').trim() || 'ease-out',
-    pseudoElement: '::before',
-  })
-}
 
 const SECTION_LABEL: Record<SectionId, (() => string) | undefined> = {
   keywords: () => i18n.t('sectionKeywords'),
@@ -136,7 +122,7 @@ export function Palette(props: PaletteProps) {
       const sameResults =
         previous !== undefined && previous[1] === props.query && previous[2] === props.chip
       if (!row || !from || from === row || !from.isConnected || !sameResults) return
-      slideSelection(from, row)
+      slideHighlight(from, row, '--al-duration-select')
     }),
   )
 

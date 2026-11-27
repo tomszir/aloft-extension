@@ -3,6 +3,7 @@
    can edit them. Components use only these variables, never raw values. */
 :root {
   --al-font-family: system-ui, sans-serif;
+  --al-font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --al-font-size-xs: 11px;
   --al-font-size-sm: 12px;
   --al-font-size-md: 14px;
@@ -34,6 +35,8 @@
   --al-slot-border: 1.5px;
   --al-badge-size: 16px;
   --al-button-height: 34px;
+  /* For an action beside a section title rather than in a row. */
+  --al-button-height-small: 28px;
   --al-button-radius: 8px;
   --al-page-width: 560px;
   --al-icon-size: 16px;
@@ -50,6 +53,21 @@
   --al-settings-width: 720px;
   --al-keyword-field-width: 140px;
   --al-preview-height: 460px;
+  /* The preview's share of a narrow window, above the settings. */
+  --al-preview-narrow-height: 70vh;
+  /* The settings column's side padding, which full-width bars reach past. */
+  --al-settings-gutter: 28px;
+  /* The settings preview: rounder than the palette, lifted off the page. */
+  --al-preview-radius: 22px;
+  --al-elevation: 0 24px 60px rgba(15, 20, 25, 0.18), 0 4px 14px rgba(15, 20, 25, 0.1);
+  --al-float-elevation: 0 10px 30px rgba(15, 20, 25, 0.22), 0 2px 6px rgba(15, 20, 25, 0.12);
+  /* The stand-in page behind the settings preview. System colors, so it
+     follows the scheme being previewed rather than the theme. */
+  --al-mock-canvas: Canvas;
+  --al-mock-ink: CanvasText;
+  --al-mock-ink-soft: color-mix(in srgb, CanvasText 22%, transparent);
+  --al-mock-line: color-mix(in srgb, CanvasText 9%, transparent);
+  --al-mock-accent: color-mix(in srgb, LinkText 14%, transparent);
 
   --al-duration-fast: 120ms;
   /* Short enough to keep up with a held arrow key. */

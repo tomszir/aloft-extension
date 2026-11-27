@@ -38,10 +38,15 @@ describe('KeywordSettings', () => {
     expect(within(rowOf('YouTube')).getByText('yt')).toBeTruthy()
   })
 
-  it('switches a keyword off', async () => {
+  it('switches a keyword off from anywhere on its row except the edit button', async () => {
     const { keywords } = renderEditor()
-    fireEvent.click(within(rowOf('Reddit')).getByRole('switch'))
-    await vi.waitFor(() => expect(keywords().find((k) => k.id === 'reddit')?.enabled).toBe(false))
+    const enabled = (id: string) => keywords().find((k) => k.id === id)?.enabled
+    fireEvent.click(screen.getByRole('switch', { name: 'Reddit' }))
+    await vi.waitFor(() => expect(enabled('reddit')).toBe(false))
+    fireEvent.click(screen.getByText('YouTube'))
+    await vi.waitFor(() => expect(enabled('youtube')).toBe(false))
+    fireEvent.click(within(rowOf('GitHub')).getByRole('button', { name: 'keywordEdit' }))
+    expect(enabled('github')).toBe(true)
   })
 
   it('adds a keyword of the user’s own', async () => {

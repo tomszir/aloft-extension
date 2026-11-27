@@ -33,7 +33,7 @@ export const DEFAULT_LIGHT_THEME_ID = 'helium-light'
 export const PRESET_THEMES: readonly Theme[] = [
   {
     id: 'helium-dark',
-    name: 'Helium Dark',
+    name: 'Default Dark',
     scheme: 'dark',
     radius: 14,
     colors: {
@@ -47,7 +47,7 @@ export const PRESET_THEMES: readonly Theme[] = [
   },
   {
     id: 'helium-light',
-    name: 'Helium Light',
+    name: 'Default Light',
     scheme: 'light',
     radius: 14,
     colors: {
@@ -123,7 +123,7 @@ export interface ThemeChoice {
   darkTheme: string
 }
 
-/** Falls back to the Helium presets so a deleted custom theme never leaves Aloft unstyled. */
+/** Falls back to the default presets so a deleted custom theme never leaves Aloft unstyled. */
 export function resolveTheme(
   choice: ThemeChoice,
   systemPrefersDark: boolean,
@@ -259,6 +259,12 @@ export function tokensToCssVars(tokens: ThemeTokens): Record<`--al-${string}`, s
 
 export const MIN_TEXT_CONTRAST = 4.5
 
+/**
+ * The page behind Aloft's own pages (settings, onboarding) in each scheme. A
+ * theme's text is drawn on it there, so it counts in the contrast check.
+ */
+export const PAGE_COLORS = { light: '#F2F3F3', dark: '#131515' } as const
+
 export interface ContrastIssue {
   foreground: keyof ThemeColors
   background: keyof ThemeColors
@@ -283,7 +289,7 @@ export function contrastIssues(colors: ThemeColors): ContrastIssue[] {
 const EXPORT_FORMAT = 'aloft-theme'
 const EXPORT_VERSION = 1
 /** Imported text comes from users and the internet: keep parsing bounded. */
-const MAX_IMPORT_BYTES = 8 * 1024
+export const MAX_IMPORT_BYTES = 8 * 1024
 
 const ExportSchema = v.object({
   format: v.literal(EXPORT_FORMAT),
@@ -341,4 +347,62 @@ export function makeThemeId(name: string, taken: ReadonlySet<string>): string {
   let id = `custom-${base}`.slice(0, 40)
   for (let n = 2; taken.has(id); n++) id = `custom-${base}-${n}`.slice(0, 40)
   return id
+}
+
+/** Custom themes live in one sync item, which holds 8 KB; these fit with room. */
+export const MAX_CUSTOM_THEMES = 16
+const SYNC_ITEM_BYTES = 8192
+const PRESET_IDS = new Set(PRESET_THEMES.map((t) => t.id))
+
+/**
+ * Stored custom themes, keeping each valid one: they sync from other devices
+ * and may come from other versions, so nothing is trusted.
+ */
+export function normalizeCustomThemes(raw: unknown): Theme[] {
+  if (!Array.isArray(raw)) return []
+  const seen = new Set<string>()
+  const themes: Theme[] = []
+  for (const item of raw) {
+    const parsed = v.safeParse(ThemeSchema, item)
+    if (!parsed.success) continue
+    const theme = parsed.output
+    if (PRESET_IDS.has(theme.id) || seen.has(theme.id)) continue
+    seen.add(theme.id)
+    themes.push(theme)
+  }
+  return themes.slice(0, MAX_CUSTOM_THEMES)
+}
+
+export function customThemesFitSync(themes: readonly Theme[]): boolean {
+  const bytes = new TextEncoder().encode(`themes${JSON.stringify(themes)}`).length
+  return themes.length <= MAX_CUSTOM_THEMES && bytes <= SYNC_ITEM_BYTES
+}
+
+/** A theme being edited, for the settings preview's address. */
+export function encodePreviewTheme(theme: Theme): string {
+  return encodeURIComponent(JSON.stringify(theme))
+}
+
+/** `text` as the address gives it back, already decoded (URLSearchParams does that). */
+export function decodePreviewTheme(text: string): Theme | undefined {
+  try {
+    const parsed = v.safeParse(ThemeSchema, JSON.parse(text))
+    return parsed.success ? parsed.output : undefined
+  } catch {
+    return undefined
+  }
+}
+
+/** Saved; no room (too many themes, or too much for one sync item); or refused. */
+export type ThemesSaved = 'saved' | 'full' | 'failed'
+
+/** `name`, or with a number after it when a theme already has that name: "Mine 2". */
+export function uniqueName(name: string, themes: readonly Theme[]): string {
+  const taken = new Set(themes.map((t) => t.name.toLowerCase()))
+  if (!taken.has(name.toLowerCase())) return name
+  for (let n = 2; ; n++) {
+    const suffix = ` ${n}`
+    const candidate = `${name.slice(0, 40 - suffix.length)}${suffix}`
+    if (!taken.has(candidate.toLowerCase())) return candidate
+  }
 }

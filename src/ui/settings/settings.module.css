@@ -1,14 +1,83 @@
-.page {
+/* One column on narrow windows. The preview shows above the settings, though
+   it comes after them in the page, so the settings are read and tabbed to
+   first. */
+.layout {
+  display: flex;
+  flex-direction: column;
+}
+
+.column {
+  order: 2;
+}
+
+.content {
   box-sizing: border-box;
   width: min(var(--al-settings-width), 100%);
   margin: 0 auto;
-  padding: var(--al-space-6) var(--al-space-5);
+  padding: var(--al-space-6) var(--al-settings-gutter) calc(var(--al-space-6) * 3);
+}
+
+/* Only beside the settings, where there's room for it. */
+.nav {
+  display: none;
+}
+
+.side {
+  order: 1;
   display: flex;
-  flex-direction: column;
-  gap: var(--al-space-5);
+  box-sizing: border-box;
+  height: var(--al-preview-narrow-height);
+  min-height: calc(var(--al-preview-height) + 2 * var(--al-space-5));
+  padding: var(--al-space-5);
+}
+
+/* Wide enough for the settings beside a preview at the palette's real width.
+   The settings column is the window's full height and scrolls on its own,
+   edge to edge, with its padding inside, so nothing is cut off at the top or
+   bottom; the preview stays put beside it. A breakpoint can't read a custom
+   property, hence the number. */
+@media (min-width: 1180px) {
+  .layout {
+    flex-direction: row;
+    height: 100vh;
+  }
+
+  .column {
+    order: 0;
+    flex: 0 0 auto;
+    width: min(var(--al-settings-width), 50vw);
+    height: 100vh;
+    overflow-y: auto;
+    /* Positioned, so absolutely placed controls inside (hidden radios)
+       scroll with it instead of stretching the page. */
+    position: relative;
+    scrollbar-gutter: stable;
+  }
+
+  .content {
+    width: auto;
+    margin: 0;
+  }
+
+  .side {
+    order: 0;
+    flex: 1;
+    min-width: 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    padding: var(--al-space-5) var(--al-space-5) var(--al-space-5) var(--al-space-3);
+  }
 }
 
 .header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--al-space-3);
+  margin-bottom: var(--al-space-6);
+}
+
+.brand {
   display: flex;
   align-items: center;
   gap: var(--al-space-4);
@@ -18,92 +87,6 @@
   margin: 0;
   font-size: var(--al-font-size-xl);
   font-weight: var(--al-font-weight-semibold);
-}
-
-.heading {
-  margin: 0;
-  font-size: var(--al-font-size-md);
-  font-weight: var(--al-font-weight-semibold);
-}
-
-.card {
-  display: flex;
-  flex-direction: column;
-  gap: var(--al-space-6);
-  padding: var(--al-space-6);
-  background: var(--al-panel);
-  border: 1px solid var(--al-border);
-  border-radius: var(--al-radius);
-}
-
-.intro {
-  display: flex;
-  flex-direction: column;
-  gap: var(--al-space-2);
-}
-
-.preview {
-  display: flex;
-  flex-direction: column;
-  gap: var(--al-space-3);
-}
-
-.frame {
-  display: block;
-  width: 100%;
-  height: var(--al-preview-height);
-  margin-top: var(--al-space-3);
-  border: 1px solid var(--al-border);
-  border-radius: var(--al-radius);
-  background: var(--al-page);
-}
-
-.text {
-  margin: 0;
-  line-height: 1.6;
-}
-
-.note {
-  margin: 0;
-  font-size: var(--al-font-size-sm);
-  line-height: 1.5;
-  color: var(--al-muted);
-}
-
-.shortcut {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--al-space-4);
-}
-
-.noteBody {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--al-space-3);
-}
-
-.group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--al-space-4);
-  min-width: 0;
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-
-.legend {
-  padding: 0;
-  margin-bottom: var(--al-space-4);
-}
-
-.forget {
-  display: flex;
-  align-items: center;
-  gap: var(--al-space-3);
 }
 
 .updated {
@@ -116,13 +99,279 @@
   color: var(--al-text);
 }
 
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--al-space-6) * 1.5);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--al-space-4);
+  /* A jump from the menu stops with room above the title. */
+  scroll-margin-top: var(--al-space-6);
+}
+
+.section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--al-space-1) var(--al-space-4);
+}
+
+.section-title {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--al-space-3);
+  margin: 0;
+  padding: 0 var(--al-space-1);
+  font-size: var(--al-font-size-md);
+  font-weight: var(--al-font-weight-semibold);
+}
+
+.section-note {
+  flex-basis: 100%;
+  order: 2;
+  margin: 0;
+  padding: 0 var(--al-space-1);
+  font-size: var(--al-font-size-sm);
+  line-height: 1.5;
+  color: var(--al-muted);
+}
+
+/* Overhangs the title row equally above and below, so this section's card
+   sits as far below its title as every other section's. The row is as tall
+   as the title's icon. */
+.head-action {
+  flex: none;
+  height: var(--al-button-height-small);
+  padding-inline: var(--al-space-4);
+  font-size: var(--al-font-size-sm);
+  margin-block: calc((var(--al-icon-size) - var(--al-button-height-small)) / 2);
+}
+
+/* A grouped list: one card per cluster, its rows divided by lines rather
+   than each setting in its own box. */
+/* The block padding matches how far a row's hover reaches past its text,
+   so a hovered first or last row sits as far from the card's edge on every
+   side. */
+.group {
+  padding: var(--al-space-3) var(--al-space-5);
+  border: 1px solid var(--al-border);
+  border-radius: var(--al-radius);
+  background: var(--al-panel);
+}
+
+.group > * {
+  padding-block: var(--al-space-4);
+}
+
+.group > * + * {
+  border-top: 1px solid var(--al-divider);
+}
+
+/* For a list with rows of its own (keywords): its rows sit at the card's
+   padding like any other card's, without the space around a single row. */
+.flush > * {
+  padding-block: 0;
+}
+
+.section > .group + .group {
+  margin-top: var(--al-space-3);
+}
+
+.plain {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.select,
+.text-input {
+  box-sizing: border-box;
+  height: var(--al-button-height);
+  padding: 0 var(--al-space-3);
+  border: 1px solid var(--al-border);
+  border-radius: var(--al-button-radius);
+  background: var(--al-page);
+  color: var(--al-text);
+  font: inherit;
+  font-size: var(--al-font-size-sm);
+}
+
+.text-input {
+  width: calc(var(--al-theme-card-width) * 1.5);
+}
+
+.select:focus-visible,
+.text-input:focus-visible {
+  outline: 2px solid var(--al-accent);
+  outline-offset: 1px;
+}
+
+.hidden-input {
+  display: none;
+}
+
+.import-error {
+  margin: 0;
+  padding: 0 var(--al-space-1);
+  font-size: var(--al-font-size-sm);
+  color: var(--al-danger);
+}
+
 .earlier > summary {
-  margin-bottom: var(--al-space-5);
+  margin-top: var(--al-space-5);
   font-size: var(--al-font-size-sm);
   color: var(--al-muted);
   cursor: pointer;
 }
 
-.earlier:not([open]) > summary {
-  margin-bottom: 0;
+.earlier[open] > summary {
+  margin-bottom: var(--al-space-5);
+}
+
+/* A quiet marker beside the title, in the secondary text color, so sections
+   can be found while scrolling without competing with the settings. */
+.section-icon {
+  display: inline-flex;
+  flex: none;
+  color: var(--al-muted);
+  --al-glyph-size: var(--al-icon-size);
+}
+
+/* Trimmed to the capitals and the baseline, so centering lines the icon up
+   with the letters rather than with the line box, whose descender space
+   would leave the icon looking low. Browsers without text-box keep the
+   line box. */
+.section-label {
+  text-box: trim-both cap alphabetic;
+}
+
+@media (min-width: 1180px) {
+  /* An icon rail; the names show from 1600px, and always on hover and to
+     screen readers. */
+  .nav {
+    order: 0;
+    /* Above the settings column, which comes later and would cover the
+       labels that reach over it. */
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    gap: var(--al-space-1);
+    box-sizing: border-box;
+    height: 100vh;
+    padding: calc(var(--al-space-6) + var(--al-logo-size) + var(--al-space-6)) var(--al-space-3) 0;
+  }
+
+  .nav-item {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    align-items: center;
+    gap: var(--al-space-3);
+    height: var(--al-button-height);
+    padding: 0 var(--al-space-3);
+    border-radius: var(--al-button-radius);
+    color: var(--al-muted);
+    font-size: var(--al-font-size-sm);
+    font-weight: var(--al-font-weight-medium);
+    text-decoration: none;
+    white-space: nowrap;
+    transition:
+      color var(--al-duration-fast) var(--al-ease-out),
+      background-color var(--al-duration-fast) var(--al-ease-out);
+    --al-glyph-size: var(--al-icon-size);
+  }
+
+  /* The current section's mark is a layer of its own, so it slides from the
+     one before (see slideHighlight). */
+  .nav-item::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: var(--al-panel);
+    box-shadow: inset 0 0 0 1px var(--al-border);
+    opacity: 0;
+  }
+
+  .nav-item:hover {
+    background: var(--al-selected);
+    color: var(--al-text);
+  }
+
+  .nav-item[aria-current] {
+    background: none;
+    color: var(--al-text);
+  }
+
+  .nav-item[aria-current]::before {
+    opacity: 1;
+  }
+
+  .nav-item:focus-visible {
+    outline: 2px solid var(--al-accent);
+    outline-offset: 1px;
+  }
+}
+
+/* Only on the rail: wider, the names show in the menu itself. */
+@media (min-width: 1180px) and (max-width: 1599.98px) {
+  /* On the rail, the name is a label that shows beside the icon on hover
+     or keyboard focus. Still in the page, so it stays the link's name. */
+  .nav-label {
+    position: absolute;
+    top: 50%;
+    left: calc(100% + var(--al-space-3));
+    z-index: 2;
+    padding: var(--al-space-1) var(--al-space-3);
+    border-radius: var(--al-kbd-radius);
+    background: var(--al-text);
+    box-shadow: var(--al-float-elevation);
+    color: var(--al-panel);
+    font-size: var(--al-font-size-xs);
+    font-weight: var(--al-font-weight-medium);
+    line-height: var(--al-line-height);
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(calc(-1 * var(--al-space-1)), -50%);
+    transition:
+      opacity var(--al-duration-fast) var(--al-ease-out),
+      transform var(--al-duration-fast) var(--al-ease-out);
+  }
+
+  .nav-item:hover .nav-label,
+  .nav-item:focus-visible .nav-label {
+    opacity: 1;
+    transform: translate(0, -50%);
+  }
+}
+
+@media (min-width: 1600px) {
+  .nav {
+    width: calc(var(--al-theme-card-width) * 1.6);
+    padding-inline: var(--al-space-5) var(--al-space-3);
+  }
+}
+
+.saved-note {
+  margin: 0;
+  padding: 0 var(--al-space-1);
+  font-size: var(--al-font-size-sm);
+  color: var(--al-muted);
+}
+
+.saved-note:empty {
+  display: none;
+}
+
+/* Focused from the menu or after the theme editor closes, as a place for
+   the next Tab to start from, not as something to act on. */
+.section-title:focus {
+  outline: none;
 }

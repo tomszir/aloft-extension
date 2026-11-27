@@ -1,19 +1,64 @@
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--al-space-2);
-}
-
+/* The whole row toggles. */
 .row {
+  position: relative;
+  isolation: isolate;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--al-space-5);
+  gap: var(--al-space-4);
   cursor: pointer;
 }
 
+/* The hover reaches a little past the text on both sides, as one pressable
+   row, drawn behind it so the row itself, and the divider above it, keep the
+   card's width. A card keeps the same gap above and below its rows, so the
+   corners stay concentric with the card's. */
+.row::before {
+  content: "";
+  position: absolute;
+  inset: 0 calc(-1 * var(--al-space-3));
+  z-index: -1;
+  border-radius: max(calc(var(--al-radius) - var(--al-space-3)), 2px);
+  background: var(--al-selected);
+  opacity: 0;
+  transition: opacity var(--al-duration-fast) var(--al-ease-out);
+}
+
+.row:hover::before {
+  opacity: 1;
+}
+
+.hit {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--al-space-4);
+  min-width: 0;
+  align-self: stretch;
+  cursor: pointer;
+}
+
+.leading {
+  display: flex;
+  flex: none;
+}
+
+.text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--al-space-1);
+  min-width: 0;
+}
+
 .label {
+  font-weight: var(--al-font-weight-medium);
   line-height: var(--al-line-height);
+}
+
+.row[data-muted] .leading,
+.row[data-muted] .text {
+  opacity: var(--al-asleep-opacity);
 }
 
 .switch {
@@ -71,13 +116,4 @@
   font-size: var(--al-font-size-sm);
   line-height: 1.5;
   color: var(--al-muted);
-}
-
-.hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
 }
