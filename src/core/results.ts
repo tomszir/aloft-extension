@@ -280,6 +280,9 @@ export function buildSections(
     LIMITS.tabs,
   )
   const shown = new Set(matchedTabs.map((t) => pageKey(t.url)))
+  // The page Aloft is open over isn't worth offering from history or
+  // bookmarks either: Enter would only open it again.
+  if (hostUrl) shown.add(pageKey(hostUrl))
   if (pickKey) shown.add(pickKey)
 
   const bookmarks = sources.bookmarks

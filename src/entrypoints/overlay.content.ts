@@ -14,8 +14,9 @@ import {
 
 // Each injection runs main() again, so pressing the shortcut twice closes.
 const OPEN = Symbol.for('aloft.overlay')
-// Long past when any palette asks for the keys it was held.
-const FOCUS_FALLBACK_MS = 1000
+// Long past when any palette asks for the keys it was held, even one slow to
+// read its settings: focusing before it has drawn its input would lose keys.
+const FOCUS_FALLBACK_MS = 3000
 type Scope = typeof globalThis & { [OPEN]?: () => void }
 
 // The dialog only lifts the frame into the top layer; the palette draws its own
@@ -61,9 +62,13 @@ export default defineContentScript({
     // z-index, and a modal dialog makes everything outside it inert. Opening
     // Aloft as a modal dialog of its own puts it on top of both and makes the
     // page inert instead. The shadow root keeps the page's CSS for
-    // dialog and iframe elements off it.
+    // dialog and iframe elements off it, and is closed so the page can't
+    // reach in for the frame's address: in Firefox it holds an id fixed for
+    // the install, which any site could read to recognise the person. The
+    // e2e build leaves it open, because Playwright can only find the frame
+    // through an open root.
     const host = document.createElement('aloft-overlay')
-    const shadow = host.attachShadow({ mode: 'open' })
+    const shadow = host.attachShadow({ mode: import.meta.env.MODE === 'e2e' ? 'open' : 'closed' })
     const style = document.createElement('style')
     style.textContent = SHADOW_CSS
     const dialog = document.createElement('dialog')
@@ -148,9 +153,8 @@ export default defineContentScript({
           held.text = ''
           held.submit = undefined
         }
-        ;('')
         const iframe = shadow.querySelector('iframe')
-        if (iframe && document.activeElement !== host) focusFrame(iframe)
+        if (iframe && shadow.activeElement !== iframe) focusFrame(iframe)
       }
     }
 

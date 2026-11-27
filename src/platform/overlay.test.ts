@@ -34,7 +34,7 @@ describe('prepareInPage', () => {
     // AltGr+Q on a German layout, which Windows reports as Ctrl+Alt.
     expect(press('@', { altKey: true, ctrlKey: true }, true).defaultPrevented).toBe(true)
     expect(page).not.toHaveBeenCalled()
-    expect(readHeldKeys(globalThis)?.text).toBe('gh é@')
+    expect(readHeldKeys(globalThis)?.text).toBe('gh é\t@')
     document.body.removeEventListener('keydown', page)
   })
 
@@ -48,6 +48,15 @@ describe('prepareInPage', () => {
     press('x')
     expect(held?.text).toBe('g')
     expect(held?.submit).toBe('shift-enter')
+  })
+
+  it('holds Tab, which makes a keyword chip, and symbols typed with Option on a Mac', () => {
+    prepareInPage(OVERLAY_OPTIONS_KEY, { blur: true }, HELD_KEYS_KEY, 1000)
+    press('y')
+    press('t')
+    expect(press('Tab').defaultPrevented).toBe(true)
+    expect(press('[', { altKey: true }).defaultPrevented).toBe(true)
+    expect(readHeldKeys(globalThis)?.text).toBe('yt\t[')
   })
 
   it('lets Esc, function keys and shortcuts through', () => {

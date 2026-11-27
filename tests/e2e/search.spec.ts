@@ -160,3 +160,42 @@ test('a keyword typed while Aloft opens still makes its chip', async ({ context,
   await expect(input).toHaveValue('cats')
   await expect(input).toHaveAttribute('placeholder', /YouTube/)
 })
+
+test('switching to a page already open closes Aloft, even as a tab of its own', async ({
+  context,
+  background,
+}) => {
+  const reading = await context.newPage()
+  await reading.goto(`${TEST_ORIGIN}/Reading`)
+  const page = await context.newPage()
+  await page.goto('chrome://version')
+  const opened = context.waitForEvent('page')
+  await pressOpenAloft(background, page)
+  const paletteTab = await opened
+  const input = paletteTab.getByRole('combobox')
+  await input.fill('aloft.test/Reading')
+  await expect(paletteTab.getByRole('option').first()).toContainText('aloft.test/Reading')
+  await input.press('Enter')
+
+  await expect.poll(() => activeTabUrl(background)).toBe(`${TEST_ORIGIN}/Reading`)
+  await expect.poll(() => paletteTab.isClosed()).toBe(true)
+})
+
+test('Enter pressed twice opens the result once', async ({ context, background }) => {
+  const page = await context.newPage()
+  await page.goto(`${TEST_ORIGIN}/Start`)
+  await pressOpenAloft(background, page)
+  const input = palette(page).getByRole('combobox')
+  await input.fill('aloft.test/Once')
+  await expect(palette(page).getByRole('option').first()).toContainText('aloft.test/Once')
+  const before = context.pages().length
+  await input.evaluate((el) => {
+    for (let i = 0; i < 2; i++)
+      el.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }),
+      )
+  })
+  await expect.poll(() => context.pages().length).toBe(before + 1)
+  await page.waitForTimeout(500)
+  expect(context.pages().length).toBe(before + 1)
+})

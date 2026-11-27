@@ -215,6 +215,20 @@ describe('learned picks', () => {
     expect(ids('host', learned('https://host.test/', 5))[0]).toBe('search')
   })
 
+  it("doesn't offer the page Aloft is open over from history or bookmarks, even as the best match", () => {
+    const withHost: SourceData = {
+      ...data,
+      history: [
+        ...data.history,
+        { title: 'Host page', url: 'https://host.test/', visitCount: 9, lastVisitTime: NOW },
+      ],
+      bookmarks: [...data.bookmarks, { id: 'b2', title: 'Host page', url: 'https://host.test/' }],
+    }
+    const results = flatten(buildSections(parseQuery('host'), withHost, options)).map((r) => r.id)
+    expect(results[0]).toBe('search')
+    expect(results.some((id) => id.includes('host.test'))).toBe(false)
+  })
+
   it('respects sources that are turned off', () => {
     const off = {
       ...learned('https://gone.test/page', 2, 'Gone page'),

@@ -41,12 +41,16 @@ export function prepareInPage(
     if (typeof release === 'function') release()
   }
   // AltGr types characters, though Windows reports it as Ctrl+Alt.
+  // Option with a symbol on a Mac layout ([ ] | { } @) types it; with a
+  // letter or digit it's a shortcut. Same rule as typesWithAlt in core.
+  const typesWithAlt = (event: KeyboardEvent) =>
+    event.altKey && !event.ctrlKey && /^[!-/:-@[-`{-~]$/.test(event.key)
   const passes = (event: KeyboardEvent) =>
     event.isComposing ||
     event.key === 'Escape' ||
     /^F\d+$/.test(event.key) ||
     event.metaKey ||
-    ((event.ctrlKey || event.altKey) && !event.getModifierState('AltGraph'))
+    ((event.ctrlKey || event.altKey) && !event.getModifierState('AltGraph') && !typesWithAlt(event))
   const held: HeldKeys = {
     text: '',
     submit: undefined,
@@ -65,9 +69,11 @@ export function prepareInPage(
     // After Enter the palette would already have gone; what follows went
     // nowhere, so it isn't kept either.
     if (held.submit) return
-    if (event.key === 'Enter' && held.text.trim() !== '' && !event.isComposing)
+    if (event.key === 'Enter' && held.text.trim() !== '')
       held.submit = event.shiftKey ? 'shift-enter' : 'enter'
     else if (event.key === 'Backspace') held.text = [...held.text].slice(0, -1).join('')
+    // Tab is kept as a tab character: after a keyword it makes the chip.
+    else if (event.key === 'Tab' && !event.shiftKey) held.text += '\t'
     else if ([...event.key].length === 1) held.text += event.key
     held.onKey?.()
   }

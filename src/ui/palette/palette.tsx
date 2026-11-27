@@ -1,6 +1,6 @@
 import { createEffect, createMemo, createSignal, on, onCleanup, onMount, Show } from 'solid-js'
 import { i18n } from '#i18n'
-import { shortcutSlot } from '../../core/pinned'
+import { shortcutSlot, typesWithAlt } from '../../core/pinned'
 import type { Chip } from '../../core/query'
 import type { Result, Section, SectionId, TabEntry } from '../../core/results'
 import type { Settings } from '../../core/settings'
@@ -92,6 +92,7 @@ const MOVES: Record<string, Move> = {
 
 export function Palette(props: PaletteProps) {
   let input: HTMLInputElement | undefined
+  let panel: HTMLDivElement | undefined
   const autofocus = () => {
     if (props.autofocus ?? true) input?.focus()
   }
@@ -142,7 +143,9 @@ export function Palette(props: PaletteProps) {
   // Number badges appear only while Alt is held, like the browser's own
   // access-key hints, so the row stays calm the rest of the time.
   const [altHeld, setAltHeld] = createSignal(false)
-  const trackAlt = (event: KeyboardEvent) => setAltHeld(event.altKey)
+  // AltGr types characters, though Windows reports it as Ctrl+Alt.
+  const trackAlt = (event: KeyboardEvent) =>
+    setAltHeld(event.altKey && !event.ctrlKey && !event.metaKey)
   const releaseAlt = () => setAltHeld(false)
   window.addEventListener('keydown', trackAlt)
   window.addEventListener('keyup', trackAlt)
@@ -177,7 +180,10 @@ export function Palette(props: PaletteProps) {
   }
 
   const onKeyDown = (event: KeyboardEvent, inInput = event.target === input) => {
-    if (event.altKey && !event.ctrlKey && !event.metaKey) {
+    // Keys pressed while an input method composes text are its own: Esc
+    // cancels a candidate, arrows pick one.
+    if (event.isComposing) return
+    if (event.altKey && !event.ctrlKey && !event.metaKey && !typesWithAlt(event.key)) {
       const slot = shortcutSlot(event.code)
       const pin = slot === undefined ? undefined : props.pinShortcuts[slot]
       if (pin) {
@@ -192,20 +198,22 @@ export function Palette(props: PaletteProps) {
       else props.onClose()
       return
     }
+    if (event.key === 'Tab' && !event.altKey && !event.ctrlKey && !event.metaKey) {
+      event.preventDefault()
+      if (inInput && !event.shiftKey && props.onTab?.()) return
+      // Tab cycles within the palette: past its last control it would
+      // leave the frame for the browser, where typing no longer reaches it.
+      const stops = [
+        ...(panel?.querySelectorAll<HTMLElement>('input, button:not([tabindex="-1"])') ?? []),
+      ]
+      const at = stops.findIndex((stop) => stop === document.activeElement)
+      const step = event.shiftKey ? -1 : 1
+      stops[(at + step + stops.length) % stops.length]?.focus()
+      return
+    }
     // Result keys belong to the search box; on a focused tile, Enter is the
     // tile's own click.
     if (!input || !inInput) return
-    if (
-      event.key === 'Tab' &&
-      !event.shiftKey &&
-      !event.altKey &&
-      !event.ctrlKey &&
-      !event.metaKey &&
-      props.onTab?.()
-    ) {
-      event.preventDefault()
-      return
-    }
     if (event.key === 'Backspace' && props.chip && input.value === '') {
       event.preventDefault()
       props.onLeaveChip()
@@ -259,8 +267,11 @@ export function Palette(props: PaletteProps) {
     const typing =
       (event.key === 'Backspace' || [...event.key].length === 1) &&
       !event.metaKey &&
-      // AltGr types characters, though Windows reports it as Ctrl+Alt.
-      (!(event.ctrlKey || event.altKey) || event.getModifierState('AltGraph'))
+      // AltGr types characters, though Windows reports it as Ctrl+Alt; so
+      // does Option with some keys on a Mac.
+      (!(event.ctrlKey || event.altKey) ||
+        event.getModifierState('AltGraph') ||
+        (!event.ctrlKey && typesWithAlt(event.key)))
     if (!typing || (event.key === ' ' && event.target instanceof HTMLButtonElement)) return
     setMenu(undefined)
     input.focus()
@@ -279,6 +290,7 @@ export function Palette(props: PaletteProps) {
         onClick={() => props.onClose()}
       />
       <div
+        ref={panel}
         class={styles.panel}
         role="dialog"
         aria-modal="true"

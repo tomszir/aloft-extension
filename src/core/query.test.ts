@@ -102,6 +102,11 @@ describe('replayTyped', () => {
     expect(replayTyped(EMPTY_QUERY, '>pin', keywords)).toEqual({ chip: 'actions', text: 'pin' })
   })
 
+  it('enters a keyword on a held Tab, as Tab in the input does, and drops other Tabs', () => {
+    expect(replayTyped(EMPTY_QUERY, 'yt\tcats', keywords)).toEqual({ chip: youtube, text: 'cats' })
+    expect(replayTyped(EMPTY_QUERY, 'nope\tx', keywords)).toEqual({ chip: null, text: 'nopex' })
+  })
+
   it('goes in front of what the input took since, chips included', () => {
     expect(replayTyped({ chip: null, text: 'ft' }, 'alo')).toEqual({ chip: null, text: 'aloft' })
     expect(replayTyped({ chip: youtube, text: 'cats' }, 'y', keywords)).toEqual({

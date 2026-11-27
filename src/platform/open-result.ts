@@ -21,25 +21,40 @@ async function focusTab(tabId: number, windowId: number): Promise<void> {
   await browser.windows.update(windowId, { focused: true })
 }
 
-async function openUrl(url: string, disposition: Disposition, context: OpenContext) {
+/** True when the host tab loads another page, which replaces the palette with it. */
+async function openUrl(
+  url: string,
+  disposition: Disposition,
+  context: OpenContext,
+): Promise<boolean> {
   const { host, openTabs, switchToOpenTabs } = context
+  const key = pageKey(url)
   if (switchToOpenTabs) {
-    const key = pageKey(url)
     const open = openTabs.find((t) => t.tabId !== host.id && pageKey(t.url) === key)
-    if (open) return focusTab(open.tabId, open.windowId)
+    if (open) {
+      await focusTab(open.tabId, open.windowId)
+      return false
+    }
   }
   if (disposition === 'current-tab') {
     await browser.tabs.update(host.id, { url })
-    return
+    // Only the fragment changes on the same page, which doesn't load anything.
+    const hostUrl = openTabs.find((t) => t.tabId === host.id)?.url
+    return hostUrl === undefined || pageKey(hostUrl) !== key
   }
   await browser.tabs.create({ url, windowId: host.windowId, index: host.index + 1 })
+  return false
 }
 
+/**
+ * Opens a result. True when it loaded a page in the host tab, which replaces
+ * the palette; otherwise the palette is still there and has to close itself.
+ */
 export async function openResult(
   result: Result,
   disposition: Disposition,
   context: OpenContext,
-): Promise<void> {
+): Promise<boolean> {
   switch (result.kind) {
     case 'search':
       await browser.search.query({
@@ -48,21 +63,21 @@ export async function openResult(
           ? { tabId: context.host.id }
           : { disposition: 'NEW_TAB' as const }),
       })
-      return
+      return disposition === 'current-tab'
     case 'tab':
       await focusTab(result.tabId, result.windowId)
-      return
+      return false
     case 'closed':
       await browser.sessions.restore(result.sessionId)
-      return
+      return false
     case 'url':
     case 'site':
     case 'history':
     case 'bookmark':
-      await openUrl(result.url, disposition, context)
-      return
+      return openUrl(result.url, disposition, context)
     case 'keyword':
       // Offers a chip; the palette enters it instead of opening anything.
-      return
+      return false
   }
+  return false
 }

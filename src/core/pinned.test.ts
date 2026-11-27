@@ -7,6 +7,7 @@ import {
   pinnedRow,
   reorder,
   shortcutSlot,
+  typesWithAlt,
 } from './pinned'
 import type { TabEntry } from './results'
 
@@ -107,5 +108,12 @@ describe('heldOrder', () => {
   it('lets go when pins were added or removed meanwhile', () => {
     expect(heldOrder(row, [2, 1])).toBeUndefined()
     expect(heldOrder(row, [2, 1, 7])).toBeUndefined()
+  })
+})
+
+describe('typesWithAlt', () => {
+  it('treats symbols Mac layouts type with Option as typing, letters and digits as shortcuts', () => {
+    for (const key of ['[', ']', '|', '{', '}', '@']) expect(typesWithAlt(key)).toBe(true)
+    for (const key of ['1', 'a', 'Q', '¡', 'Enter']) expect(typesWithAlt(key)).toBe(false)
   })
 })

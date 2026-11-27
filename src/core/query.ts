@@ -92,6 +92,12 @@ export function replayTyped(
         : `${state.chip.keyword} ${state.text}`
   let next = EMPTY_QUERY
   for (const char of typed + since) {
+    // A held Tab does what Tab does in the input: enters a keyword typed out.
+    if (char === '\t') {
+      const keyword = offeredKeyword(next, keywords)
+      if (keyword) next = enterKeyword(keyword)
+      continue
+    }
     next = applyInput(next, next.text + char, keywords)
   }
   return next

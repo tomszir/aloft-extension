@@ -14,6 +14,15 @@ export function pinnedRow(tabs: readonly TabEntry[], windowId: number): TabEntry
  * Alt+1–9 by physical key, so it works on layouts where Alt+digit types a
  * symbol (macOS Option, AZERTY).
  */
+/**
+ * Whether Alt (Option on a Mac) with this key types a symbol rather than
+ * being a shortcut: Mac layouts put [ ] | { } @ on Option, and those should
+ * type. Letters and digits with Alt stay shortcuts.
+ */
+export function typesWithAlt(key: string): boolean {
+  return /^[!-/:-@[-`{-~]$/.test(key)
+}
+
 export function shortcutSlot(code: string): number | undefined {
   const match = /^(?:Digit|Numpad)([1-9])$/.exec(code)
   return match ? Number(match[1]) - 1 : undefined
