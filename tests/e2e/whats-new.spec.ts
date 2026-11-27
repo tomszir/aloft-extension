@@ -1,5 +1,13 @@
 import type { Worker } from '@playwright/test'
-import { expect, pressOpenAloft, sendPaletteKey, setSettings, TEST_ORIGIN, test } from './fixtures'
+import {
+  expect,
+  palettePainted,
+  pressOpenAloft,
+  sendPaletteKey,
+  setSettings,
+  TEST_ORIGIN,
+  test,
+} from './fixtures'
 
 /** What the background stores after an update from `from` worth mentioning. */
 async function updatedFrom(background: Worker, from: string): Promise<void> {
@@ -20,6 +28,7 @@ test("after an update, the footer mentions what's new and opens it", async ({
   await page.goto(`${TEST_ORIGIN}/`)
   await pressOpenAloft(background, page)
 
+  await palettePainted(page)
   const palette = page.locator('iframe[title="Aloft"]').contentFrame()
   const link = palette.getByRole('button', { name: /^What's new in / })
   const opened = context.waitForEvent('page')
