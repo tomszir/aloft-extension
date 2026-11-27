@@ -4,6 +4,10 @@
      added on the release PR (scripts/release-notes.ts); rewrite it in plain
      words before merging. See docs/releasing.md. -->
 
+## 1.0.1 — 27 November 2026
+
+- Small fixes and improvements.
+
 ## 1.0.0 — 27 November 2026
 
 Aloft 1.0 opens over the page you're on without losing a key you type, and it can now look however you like.
