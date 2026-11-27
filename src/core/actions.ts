@@ -7,7 +7,25 @@ export type ActionId =
   | 'move-to-new-window'
   | 'close-other-tabs'
   | 'reopen-closed-tab'
+  | BrowserPageId
   | 'open-settings'
+
+/** The browser's own pages, each opened by an action of the same name. */
+export const BROWSER_PAGE_IDS = [
+  'history',
+  'downloads',
+  'bookmarks',
+  'passwords',
+  'extensions',
+  'extension-shortcuts',
+  'browser-settings',
+  'clear-browsing-data',
+] as const
+
+export type BrowserPageId = (typeof BROWSER_PAGE_IDS)[number]
+
+export const isBrowserPage = (id: ActionId): id is BrowserPageId =>
+  (BROWSER_PAGE_IDS as readonly ActionId[]).includes(id)
 
 /** Already translated by the caller, since core can't reach the i18n API. */
 export interface ActionEntry {
@@ -27,6 +45,8 @@ export interface ActionContext {
   /** "Close other tabs" leaves pins alone, so only these count for it. */
   otherUnpinnedTabs: number
   hasRecentlyClosed: boolean
+  /** Whether this browser lets an extension open its own pages. */
+  browserPages: boolean
 }
 
 const ORDER: readonly ActionId[] = [
@@ -38,12 +58,13 @@ const ORDER: readonly ActionId[] = [
   'new-tab',
   'new-window',
   'reopen-closed-tab',
+  ...BROWSER_PAGE_IDS,
   'open-settings',
 ]
 
 export function availableActions(context: ActionContext): ActionId[] {
   const { overPage, hostPinned, otherTabsInWindow, otherUnpinnedTabs, hasRecentlyClosed } = context
-  const available: Record<ActionId, boolean> = {
+  const available: Record<Exclude<ActionId, BrowserPageId>, boolean> = {
     pin: overPage && !hostPinned,
     unpin: overPage && hostPinned,
     duplicate: overPage,
@@ -56,5 +77,5 @@ export function availableActions(context: ActionContext): ActionId[] {
     'reopen-closed-tab': hasRecentlyClosed,
     'open-settings': true,
   }
-  return ORDER.filter((id) => available[id])
+  return ORDER.filter((id) => (isBrowserPage(id) ? context.browserPages : available[id]))
 }

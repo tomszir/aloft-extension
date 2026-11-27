@@ -55,10 +55,25 @@ test('reopens the last closed tab', async ({ firefox, control, origin }) => {
   await expect.poll(() => tabUrls(control)).toContain(`${origin}/Closed-one`)
 })
 
+test("> doesn't offer Firefox's own pages, which it won't open for an extension", async ({
+  firefox,
+  control,
+  origin,
+}) => {
+  const page = await openPage(firefox, control, `${origin}/Host`)
+  await pressOpenAloft(control, page)
+  const palette = await paletteFrame(page)
+  await page.keyboard.type('> extensions')
+
+  await expect
+    .poll(() => palette.evaluate(() => document.querySelector('[role="status"]')?.textContent))
+    .toBe('No matching actions')
+})
+
 test('> open settings opens the settings page', async ({ firefox, control, origin }) => {
   const page = await openPage(firefox, control, `${origin}/Host`)
 
-  await runAction(page, control, '> settings', 'Open settings')
+  await runAction(page, control, '> settings', 'Aloft settings')
 
   await expect.poll(() => activeTabUrl(control)).toBe(`${EXTENSION_ORIGIN}/options.html`)
 })

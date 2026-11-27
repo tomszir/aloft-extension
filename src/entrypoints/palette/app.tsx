@@ -33,6 +33,7 @@ import {
 } from '../../core/results'
 import type { Settings } from '../../core/settings'
 import { decodePreviewTheme, type Theme } from '../../core/theme'
+import { HAS_BROWSER_PAGES } from '../../platform/browser-pages'
 import { pageFavicon } from '../../platform/favicon'
 import { loadLearned, savePick } from '../../platform/learned'
 import type { HeldTyping, Submit } from '../../platform/messages'
@@ -229,6 +230,7 @@ export function App(props: AppProps) {
         otherTabsInWindow: inWindow.length,
         otherUnpinnedTabs: inWindow.filter((t) => !t.pinned).length,
         hasRecentlyClosed: closed().length > 0,
+        browserPages: HAS_BROWSER_PAGES,
       }),
     )
   })

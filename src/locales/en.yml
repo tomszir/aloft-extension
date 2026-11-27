@@ -67,7 +67,15 @@ actionNewWindow: New window
 actionMoveToNewWindow: Move tab to new window
 actionCloseOtherTabs: Close other tabs
 actionReopenClosedTab: Reopen closed tab
-actionOpenSettings: Open settings
+actionOpenSettings: Aloft settings
+actionHistory: History
+actionDownloads: Downloads
+actionBookmarks: Bookmarks
+actionPasswords: Passwords
+actionExtensions: Extensions
+actionExtensionShortcuts: Extension shortcuts
+actionBrowserSettings: Browser settings
+actionClearBrowsingData: Clear browsing data
 settingsTitle: Settings
 settingsShortcut: Keyboard shortcut
 settingsSectionsLabel: Settings sections

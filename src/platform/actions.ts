@@ -1,6 +1,7 @@
 import { browser } from 'wxt/browser'
-import type { ActionId } from '../core/actions'
-import type { ClosedEntry } from '../core/results'
+import { type ActionId, isBrowserPage } from '../core/actions'
+import { type ClosedEntry, pageKey } from '../core/results'
+import { BROWSER_PAGE_URLS } from './browser-pages'
 import type { HostTab } from './open-result'
 
 export interface ActionTarget {
@@ -9,8 +10,22 @@ export interface ActionTarget {
   lastClosed: ClosedEntry | undefined
 }
 
+// Like typing an address with "switch to open tabs" on: a page already open
+// is brought forward rather than opened twice.
+async function openBrowserPage(url: string, host: HostTab): Promise<void> {
+  const key = pageKey(url)
+  const open = (await browser.tabs.query({})).find((t) => t.url && pageKey(t.url) === key)
+  if (open?.id !== undefined) {
+    await browser.tabs.update(open.id, { active: true })
+    await browser.windows.update(open.windowId, { focused: true })
+    return
+  }
+  await browser.tabs.create({ url, windowId: host.windowId, index: host.index + 1 })
+}
+
 export async function runAction(action: ActionId, target: ActionTarget): Promise<void> {
   const { host, lastClosed } = target
+  if (isBrowserPage(action)) return openBrowserPage(BROWSER_PAGE_URLS[action], host)
   switch (action) {
     case 'pin':
     case 'unpin':

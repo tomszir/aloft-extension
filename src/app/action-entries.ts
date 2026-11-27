@@ -12,7 +12,15 @@ const KEYWORDS: Record<ActionId, string> = {
   'move-to-new-window': 'window detach split',
   'close-other-tabs': 'close tabs others clean',
   'reopen-closed-tab': 'restore undo closed',
-  'open-settings': 'settings preferences options theme',
+  history: 'history visited past pages',
+  downloads: 'downloads files',
+  bookmarks: 'bookmarks manager favorites',
+  passwords: 'passwords password manager logins keys autofill',
+  extensions: 'extensions addons add-ons plugins',
+  'extension-shortcuts': 'extensions shortcuts keyboard keys hotkeys',
+  'browser-settings': 'settings preferences options browser',
+  'clear-browsing-data': 'clear browsing data cache cookies delete privacy',
+  'open-settings': 'settings preferences options theme aloft',
 }
 
 const LABEL: Record<ActionId, () => string> = {
@@ -24,15 +32,38 @@ const LABEL: Record<ActionId, () => string> = {
   'move-to-new-window': () => i18n.t('actionMoveToNewWindow'),
   'close-other-tabs': () => i18n.t('actionCloseOtherTabs'),
   'reopen-closed-tab': () => i18n.t('actionReopenClosedTab'),
+  history: () => i18n.t('actionHistory'),
+  downloads: () => i18n.t('actionDownloads'),
+  bookmarks: () => i18n.t('actionBookmarks'),
+  passwords: () => i18n.t('actionPasswords'),
+  extensions: () => i18n.t('actionExtensions'),
+  'extension-shortcuts': () => i18n.t('actionExtensionShortcuts'),
+  'browser-settings': () => i18n.t('actionBrowserSettings'),
+  'clear-browsing-data': () => i18n.t('actionClearBrowsingData'),
   'open-settings': () => i18n.t('actionOpenSettings'),
 }
 
-// The OS, not the browser, decides how shortcuts are written.
+// The OS, not the browser, decides how shortcuts are written. The page
+// shortcuts are Chromium's; Firefox doesn't offer those actions.
 const isMac = /mac/i.test(navigator.platform)
 
 const HINT: Partial<Record<ActionId, string>> = isMac
-  ? { 'new-window': '⌘N', 'reopen-closed-tab': '⇧⌘T' }
-  : { 'new-window': 'Ctrl+N', 'reopen-closed-tab': 'Ctrl+Shift+T' }
+  ? {
+      'new-window': '⌘N',
+      'reopen-closed-tab': '⇧⌘T',
+      history: '⌘Y',
+      downloads: '⌥⌘L',
+      bookmarks: '⌥⌘B',
+      'clear-browsing-data': '⇧⌘⌫',
+    }
+  : {
+      'new-window': 'Ctrl+N',
+      'reopen-closed-tab': 'Ctrl+Shift+T',
+      history: 'Ctrl+H',
+      downloads: 'Ctrl+J',
+      bookmarks: 'Ctrl+Shift+O',
+      'clear-browsing-data': 'Ctrl+Shift+Delete',
+    }
 
 export function actionEntries(ids: readonly ActionId[]): ActionEntry[] {
   return ids.map((id) => ({ id, label: LABEL[id](), keywords: KEYWORDS[id], hint: HINT[id] ?? '' }))
