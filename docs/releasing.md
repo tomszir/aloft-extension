@@ -17,6 +17,8 @@
 
 Aloft shows the notes too. After an update whose notes say more than small fixes, the palette's footer mentions what's new once (it can be switched off), and the settings page lists everything since the version you had. So write them for someone reading them there.
 
+To release a particular version instead of the one the commits imply (1.0.0, say), set `"release-as"` for the package in `release-please-config.json` in a `chore` PR. Once that version is out, `release.yml` opens a PR that removes the pin again; merge it, or the next release PR asks for the same version and fails.
+
 `publish.yml` can also be run by hand from the Actions tab for any release tag, for example to retry after a failed upload. Its **dry run** option only checks the store credentials.
 
 ## Chrome Web Store setup

@@ -84,3 +84,31 @@ test('picking a theme restyles the page', async ({ context, background }) => {
     page.evaluate(() => document.documentElement.style.getPropertyValue('--al-panel'))
   await expect.poll(panel).toBe('#1E2420')
 })
+
+test("the shortcut on Aloft's own pages opens the palette beside them", async ({
+  context,
+  background,
+}) => {
+  const page = await context.newPage()
+  await openSettings(page, background)
+  const opened = context.waitForEvent('page')
+  await pressOpenAloft(background, page)
+  const paletteTab = await opened
+  await expect(paletteTab).toHaveURL(/\/palette\.html\?host=tab$/)
+  await expect(paletteTab.getByRole('combobox')).toBeFocused()
+})
+
+test('saving a setting keeps ones a newer Aloft stored', async ({ context, background }) => {
+  await background.evaluate(async () => {
+    const api = Reflect.get(globalThis, 'chrome') as {
+      storage: { sync: { set: (items: object) => Promise<void> } }
+    }
+    await api.storage.sync.set({ settings: { fromTheFuture: 1, learnFromPicks: true } })
+  })
+  const page = await context.newPage()
+  await openSettings(page, background)
+  await page.getByRole('switch', { name: 'Learn from what you pick' }).click()
+  await expect
+    .poll(() => storedSettings(background))
+    .toMatchObject({ fromTheFuture: 1, learnFromPicks: false })
+})

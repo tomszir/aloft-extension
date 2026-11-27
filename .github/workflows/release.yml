@@ -8,6 +8,12 @@ permissions:
   contents: write
   pull-requests: write
 
+# One run at a time: two quick merges would otherwise both rebuild the release
+# PR and push drafted notes to it at once.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
   release-please:
     runs-on: ubuntu-latest
@@ -108,3 +114,39 @@ jobs:
     with:
       tag: ${{ needs.release-please.outputs.tag }}
     secrets: inherit
+
+  # A "release-as" pin in release-please-config.json makes every release that
+  # version. Once it's out, the pin has to go, or the next release PR asks
+  # for the same version again and fails; this opens that PR.
+  unpin:
+    needs: release-please
+    if: needs.release-please.outputs.created == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - id: pin
+        env:
+          TAG: ${{ needs.release-please.outputs.tag }}
+        run: |
+          pinned=$(jq -r '.packages["."]["release-as"] // empty' release-please-config.json)
+          if [ "v$pinned" = "$TAG" ]; then echo "pinned=$pinned" >> "$GITHUB_OUTPUT"; fi
+      - if: ${{ steps.pin.outputs.pinned }}
+        env:
+          TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          PINNED: ${{ steps.pin.outputs.pinned }}
+        run: |
+          branch="chore/unpin-$PINNED"
+          # Just the line, so the rest of the file keeps its formatting.
+          sed -i '/"release-as":/d' release-please-config.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch -c "$branch"
+          git commit -qam "chore: stop pinning releases to $PINNED"
+          auth=$(printf 'x-access-token:%s' "$TOKEN" | base64 -w0)
+          echo "::add-mask::$auth"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $auth" push origin "HEAD:$branch"
+          gh pr create --head "$branch" --title "chore: stop pinning releases to $PINNED" \
+            --body "$PINNED is out, so the release-as pin comes off; later releases follow the commits again."

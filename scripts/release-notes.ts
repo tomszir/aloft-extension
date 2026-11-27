@@ -92,6 +92,12 @@ export interface DraftInput {
   date: Date
   /** Commit summaries since the last release, or since the previous head when there is one. */
   subjects: readonly string[]
+  /**
+   * The version the previous head's draft was for, when the release's version
+   * has changed since (a fix release that a feature made a minor one, or a
+   * pin): its notes carry over to the new version rather than being lost.
+   */
+  carriedFrom?: string | undefined
 }
 
 /** CHANGELOG.md with a section for `version` above the newest release. */
@@ -99,7 +105,11 @@ export function draftNotes(input: DraftInput): string {
   const { notes, version } = input
   if (findSection(notes, version) !== undefined) return notes
 
-  const kept = input.previous === undefined ? undefined : sectionBody(input.previous, version)
+  const kept =
+    input.previous === undefined
+      ? undefined
+      : (sectionBody(input.previous, version) ??
+        (input.carriedFrom ? sectionBody(input.previous, input.carriedFrom) : undefined))
   const body = kept === undefined || kept === `- ${NOTHING_TO_SAY}` ? '' : kept
   const fresh = input.subjects
     .map(noteFor)
@@ -152,12 +162,24 @@ function draft(previousHead: string | undefined): void {
       previous = undefined
     }
   }
-  const subjects =
-    previous !== undefined && previousHead && findSection(previous, version) !== undefined
-      ? // The previous head sat on main as it was then; only commits after that are new.
-        subjectsIn(`${git('merge-base', previousHead, 'HEAD')}..HEAD`)
-      : subjectsIn(`${git('describe', '--tags', '--abbrev=0', 'HEAD^')}..HEAD`)
-  writeFileSync(CHANGELOG, draftNotes({ notes, previous, version, date: new Date(), subjects }))
+  // The previous draft's version, when it differs from this one and was never
+  // released: the newest section there with no tag of its own.
+  const top = previous === undefined ? undefined : HEADINGS.exec(previous)?.[1]
+  HEADINGS.lastIndex = 0
+  const carriedFrom =
+    top !== undefined && top !== version && git('tag', '--list', `v${top}`) === '' ? top : undefined
+  const hasDraft =
+    previous !== undefined &&
+    previousHead &&
+    (findSection(previous, version) !== undefined || carriedFrom !== undefined)
+  const subjects = hasDraft
+    ? // The previous head sat on main as it was then; only commits after that are new.
+      subjectsIn(`${git('merge-base', previousHead, 'HEAD')}..HEAD`)
+    : subjectsIn(`${git('describe', '--tags', '--abbrev=0', 'HEAD^')}..HEAD`)
+  writeFileSync(
+    CHANGELOG,
+    draftNotes({ notes, previous, version, date: new Date(), subjects, carriedFrom }),
+  )
 }
 
 function section(version: string | undefined): void {

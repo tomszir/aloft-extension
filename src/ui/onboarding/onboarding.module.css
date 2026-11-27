@@ -47,3 +47,14 @@
   margin: 0;
   line-height: 1.6;
 }
+
+/* After the update that moved Ctrl+T: what changed, above how to set it. */
+.moved {
+  margin: 0;
+  padding: var(--al-space-4) var(--al-space-5);
+  border: 1px solid var(--al-accent);
+  border-radius: var(--al-radius);
+  background: var(--al-accent-soft);
+  color: var(--al-text);
+  line-height: 1.6;
+}

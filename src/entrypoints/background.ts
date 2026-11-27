@@ -1,5 +1,6 @@
 import { browser } from 'wxt/browser'
 import { RELEASES } from '../core/releases'
+import { tellCtrlTUsers } from '../platform/ctrl-t-notice'
 import { openAloft } from '../platform/overlay'
 import { serveRelay } from '../platform/relay-host'
 import { currentVersion, noteUpdate } from '../platform/whats-new'
@@ -18,8 +19,10 @@ export default defineBackground(() => {
       void browser.tabs.create({ url: browser.runtime.getURL('/onboarding.html') })
     // Nothing opens on an update; Aloft mentions it quietly instead (see
     // platform/whats-new.ts).
-    if (reason === 'update' && previousVersion)
+    if (reason === 'update' && previousVersion) {
       void noteUpdate(previousVersion, currentVersion(), RELEASES, Date.now())
+      void tellCtrlTUsers(previousVersion)
+    }
   })
 
   // Tests can't press browser shortcuts, so the e2e build exposes the same

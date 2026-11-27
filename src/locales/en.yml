@@ -39,6 +39,7 @@ onboardingShortcut: Press $1 on any page to open Aloft.
 onboardingNoShortcut: Aloft has no shortcut set. Pick one to open it from any page.
 onboardingChangeShortcut: Change shortcut
 onboardingCtrlTTitle: Open with Ctrl+T
+onboardingCtrlTMoved: Aloft no longer takes over new tabs, which showed a blank tab for a moment each time. Ctrl+T now opens Aloft only once you give it to Aloft, which takes two steps below. Until then, Aloft's own shortcut still opens it.
 ctrlTBody: Ctrl+T can open Aloft over the page you're on instead of an empty tab. Browsers only let you set that yourself, in two steps.
 ctrlTStepOpen: Open your browser's shortcuts for extensions.
 ctrlTStepSet: Find "$1" under Aloft, and press Ctrl+T in its box.

@@ -1,3 +1,4 @@
+import { Show } from 'solid-js'
 import { i18n } from '#i18n'
 import type { Shortcuts } from '../../core/shortcut'
 import { Button } from '../button/button'
@@ -9,6 +10,8 @@ import styles from './onboarding.module.css'
 export interface OnboardingProps {
   shortcuts: Shortcuts
   onChangeShortcut: () => void
+  /** Opened by the update that ended the new tab replacement, for people who used it. */
+  ctrlTMoved?: boolean
 }
 
 export function Onboarding(props: OnboardingProps) {
@@ -19,6 +22,12 @@ export function Onboarding(props: OnboardingProps) {
         <h1 class={styles.title}>{i18n.t('onboardingTitle')}</h1>
       </header>
 
+      <Show when={props.ctrlTMoved}>
+        <p class={styles.moved} role="status">
+          {i18n.t('onboardingCtrlTMoved')}
+        </p>
+      </Show>
+
       <section class={`${styles.card} ${styles.shortcut}`}>
         <ShortcutSentence shortcut={props.shortcuts.main} class={styles.text} />
         <Button onClick={() => props.onChangeShortcut()}>
@@ -26,7 +35,7 @@ export function Onboarding(props: OnboardingProps) {
         </Button>
       </section>
 
-      <section class={styles.card} aria-labelledby="ctrl-t-title">
+      <section id="ctrl-t" class={styles.card} aria-labelledby="ctrl-t-title">
         <h2 id="ctrl-t-title" class={styles.heading}>
           {i18n.t('onboardingCtrlTTitle')}
         </h2>
