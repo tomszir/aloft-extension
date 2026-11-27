@@ -108,3 +108,21 @@ export function normalizeSettings(raw: unknown): Settings {
   const second = v.safeParse(SettingsSchema, merged)
   return second.success ? second.output : structuredClone(DEFAULT_SETTINGS)
 }
+
+/**
+ * `settings` written over what was stored, keeping keys this version doesn't
+ * know: another device on a newer Aloft may have saved them, and dropping
+ * them here would reset that device's choices.
+ */
+export function keepUnknown(stored: unknown, settings: Settings): Record<string, unknown> {
+  return mergeOver(stored, settings)
+}
+
+function mergeOver(stored: unknown, known: unknown): Record<string, unknown> {
+  const out: Record<string, unknown> = isPlainObject(stored) ? { ...stored } : {}
+  if (!isPlainObject(known)) return out
+  for (const [key, value] of Object.entries(known)) {
+    out[key] = isPlainObject(value) ? mergeOver(out[key], value) : value
+  }
+  return out
+}

@@ -11,7 +11,13 @@ function OnboardingPage() {
   useTheme(settings)
   const shortcuts = useShortcuts()
 
-  return <Onboarding shortcuts={shortcuts()} onChangeShortcut={openShortcutSettings} />
+  return (
+    <Onboarding
+      shortcuts={shortcuts()}
+      onChangeShortcut={openShortcutSettings}
+      ctrlTMoved={location.hash === '#ctrl-t'}
+    />
+  )
 }
 
 const root = document.getElementById('root')

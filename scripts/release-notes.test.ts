@@ -113,6 +113,25 @@ describe('draftNotes', () => {
     )
   })
 
+  it('carries rewritten notes over when the release changes version', () => {
+    const previous = draftNotes({
+      notes: NOTES,
+      version: '0.5.1',
+      date,
+      subjects: ['fix: a'],
+    }).replace('- A.', '- Rewritten by hand.')
+    const drafted = draftNotes({
+      notes: NOTES,
+      previous,
+      version: '0.6.0',
+      date,
+      subjects: ['feat: b'],
+      carriedFrom: '0.5.1',
+    })
+    expect(sectionBody(drafted, '0.6.0')).toBe('- Rewritten by hand.\n- B.')
+    expect(findSection(drafted, '0.5.1')).toBeUndefined()
+  })
+
   it('drops the placeholder once there is something to say', () => {
     const previous = draftNotes({ notes: NOTES, version: '0.5.1', date, subjects: [] })
     const drafted = draftNotes({

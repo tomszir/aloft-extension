@@ -126,9 +126,11 @@ export async function openAloft(tab: Browser.tabs.Tab | undefined): Promise<void
     await openPaletteTab()
     return
   }
-  // Already on an Aloft page: its own input has focus, nothing to do.
-  if (isOwnPage(tab.url ?? tab.pendingUrl)) return
-  if (!(await injectOverlay(tab.id))) await openPaletteTab(tab)
+  const url = tab.url ?? tab.pendingUrl
+  // Already the palette, whose input has focus: nothing to do. Aloft's other
+  // pages (settings, onboarding) can't be drawn on, so it opens beside them.
+  if (url?.startsWith(paletteTabUrl())) return
+  if (isOwnPage(url) || !(await injectOverlay(tab.id))) await openPaletteTab(tab)
 }
 
 export async function openPaletteTab(nextTo?: Browser.tabs.Tab): Promise<void> {
