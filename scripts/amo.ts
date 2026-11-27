@@ -42,25 +42,47 @@ class AmoError extends Error {
   }
 }
 
+/**
+ * How long to wait before retrying a throttled request, in milliseconds:
+ * the Retry-After header, or the wait AMO names in its message.
+ */
+export function retryDelay(retryAfter: string | null, body: string): number {
+  const seconds = Number(retryAfter ?? /available in (\d+) seconds?/.exec(body)?.[1] ?? 60)
+  return ((Number.isFinite(seconds) ? seconds : 60) + 1) * 1000
+}
+
+// AMO throttles bursts, uploading screenshots for one, so a throttled
+// request waits as long as it's told to, a few times over.
+const THROTTLED_ATTEMPTS = 8
+
 async function api<T>(method: string, path: string, body?: FormData | object): Promise<T> {
-  const headers: Record<string, string> = {
-    Authorization: `JWT ${token(env('FIREFOX_JWT_ISSUER'), env('FIREFOX_JWT_SECRET'))}`,
+  for (let attempt = 1; ; attempt++) {
+    // A new token each time: one lasts a minute, about as long as a wait.
+    const headers: Record<string, string> = {
+      Authorization: `JWT ${token(env('FIREFOX_JWT_ISSUER'), env('FIREFOX_JWT_SECRET'))}`,
+    }
+    let payload: FormData | string | undefined
+    if (body instanceof FormData) payload = body
+    else if (body !== undefined) {
+      headers['Content-Type'] = 'application/json'
+      payload = JSON.stringify(body)
+    }
+    const response = await fetch(`${API}${path}`, { method, headers, body: payload })
+    const text = await response.text()
+    if (response.status === 429 && attempt < THROTTLED_ATTEMPTS) {
+      const wait = retryDelay(response.headers.get('Retry-After'), text)
+      console.log(`throttled; retrying ${method} ${path} in ${wait / 1000}s`)
+      await new Promise((resolve) => setTimeout(resolve, wait))
+      continue
+    }
+    if (!response.ok) {
+      throw new AmoError(
+        response.status,
+        `${method} ${path}: ${response.status} ${text.slice(0, 2000)}`,
+      )
+    }
+    return (text ? JSON.parse(text) : undefined) as T
   }
-  let payload: FormData | string | undefined
-  if (body instanceof FormData) payload = body
-  else if (body !== undefined) {
-    headers['Content-Type'] = 'application/json'
-    payload = JSON.stringify(body)
-  }
-  const response = await fetch(`${API}${path}`, { method, headers, body: payload })
-  const text = await response.text()
-  if (!response.ok) {
-    throw new AmoError(
-      response.status,
-      `${method} ${path}: ${response.status} ${text.slice(0, 2000)}`,
-    )
-  }
-  return (text ? JSON.parse(text) : undefined) as T
 }
 
 const addon = () => `/addons/addon/${encodeURIComponent(env('FIREFOX_EXTENSION_ID'))}`
