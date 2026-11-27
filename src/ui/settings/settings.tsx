@@ -257,6 +257,12 @@ export function Settings(props: SettingsProps) {
           </h2>
           <p class={styles.note}>{i18n.t('settingsVersion', [props.version])}</p>
         </div>
+        <Toggle
+          label={i18n.t('settingsWhatsNewInAloft')}
+          checked={props.settings.whatsNewInAloft}
+          onChange={(on) => set('whatsNewInAloft', on)}
+          note={i18n.t('settingsWhatsNewInAloftNote')}
+        />
         <ReleaseNotes
           releases={shown()}
           fresh={new Set(fresh().map((release) => release.version))}

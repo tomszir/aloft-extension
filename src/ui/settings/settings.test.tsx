@@ -72,6 +72,12 @@ describe('Settings', () => {
       expect(visibleVersions()).toEqual(['0.6.0', '0.5.1'])
       expect(section().id).toBe('whats-new')
     })
+
+    it('can stop Aloft mentioning updates', () => {
+      const { settings } = renderSettings()
+      fireEvent.click(screen.getByRole('switch', { name: 'settingsWhatsNewInAloft' }))
+      expect(settings().whatsNewInAloft).toBe(false)
+    })
   })
 
   it('turns a source off without touching the others', () => {

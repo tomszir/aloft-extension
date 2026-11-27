@@ -15,7 +15,7 @@
 3. **Checked by CI.** A unit test fails while the newest section isn't for `package.json`'s version, so a release PR can't be merged without notes.
 4. **Published.** The GitHub release's text is the section plus a link to every commit. For addons.mozilla.org, paste the same section into the version's release notes. The Chrome Web Store has no field for them.
 
-Aloft shows the notes too. After an update whose notes say more than small fixes, the palette's footer quietly offers what's new, and the settings page lists everything since the version you had. So write them for someone reading them there.
+Aloft shows the notes too. After an update whose notes say more than small fixes, the palette's footer mentions what's new once (it can be switched off), and the settings page lists everything since the version you had. So write them for someone reading them there.
 
 `publish.yml` can also be run by hand from the Actions tab for any release tag, for example to retry after a failed upload. Its **dry run** option only checks the store credentials.
 
