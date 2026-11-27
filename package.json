@@ -18,7 +18,7 @@
     "fmt": "biome check --write .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "wxt build --mode e2e && wxt build -b firefox --mode e2e && playwright test",
+    "test:e2e": "wxt build --mode e2e && wxt build -b firefox --mode e2e && vite build -c vite.demo.config.ts && playwright test",
     "size": "node scripts/check-size.mjs",
     "screenshots": "wxt build --mode e2e && node scripts/screenshots.ts",
     "brand": "node scripts/brand.ts",
