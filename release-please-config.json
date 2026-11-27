@@ -4,6 +4,7 @@
     ".": {
       "release-type": "node",
       "package-name": "aloft",
+      "release-as": "1.0.1",
       "bump-minor-pre-major": true,
       "initial-version": "0.1.0",
       "include-component-in-tag": false,
