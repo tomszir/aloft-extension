@@ -40,7 +40,7 @@ Press <kbd>Ctrl</kbd>+<kbd>T</kbd> and, instead of a blank tab, a search bar flo
 
 ## Install
 
-Get it from the [Chrome Web Store](https://chromewebstore.google.com/detail/neddelfbiddcgalggpghgbephhnebpjh). It works in any Chromium browser, Helium included.
+Get it from the [Chrome Web Store](https://chromewebstore.google.com/detail/neddelfbiddcgalggpghgbephhnebpjh). It works in any Chromium browser, Helium included. See [what's new](CHANGELOG.md) in each version.
 
 To run a build from a release instead, download `aloft-<version>-chrome.zip` from the [latest release](https://github.com/tomszir/aloft-extension/releases/latest) and unzip it. Then:
 
@@ -70,7 +70,7 @@ The command bar is drawn inside an extension frame, so the page you're on can't 
 
 ## Browser support
 
-Aloft is built for [Helium](https://helium.computer) and is tested in Helium and Chromium. It uses no Helium-only features, so other Chromium browsers from version 121 should work too. In Helium, pinned tabs are shared across windows; elsewhere, Aloft shows the pinned tabs of the current window. Firefox support is planned.
+Aloft is built for [Helium](https://helium.computer) and is tested in Helium and Chromium. It uses no Helium-only features, so other Chromium browsers from version 121 should work too. In Helium, pinned tabs are shared across windows; elsewhere, Aloft shows the pinned tabs of the current window. Aloft also works in Firefox; what it can't do there is listed in [docs/browsers.md](docs/browsers.md).
 
 ## Development
 

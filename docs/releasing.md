@@ -1,9 +1,19 @@
 # Releasing
 
-[release-please](https://github.com/googleapis/release-please) keeps a release PR open on `main`, built from the commits since the last release. Merging it tags the version, writes the changelog and creates a GitHub release. Then `release.yml`:
+[release-please](https://github.com/googleapis/release-please) keeps a release PR open on `main`, built from the commits since the last release. Merging it tags the version and creates a GitHub release. Then `release.yml`:
 
 1. builds the Chrome zip and attaches it to the release;
-2. calls `publish.yml`, which uploads that same zip to the Chrome Web Store and submits it for review. The store publishes it once review passes.
+2. sets the release's text to that version's notes from `CHANGELOG.md`;
+3. calls `publish.yml`, which uploads that same zip to the Chrome Web Store and submits it for review. The store publishes it once review passes.
+
+## Release notes
+
+`CHANGELOG.md` holds each release's notes for the people using Aloft, newest first. They're written by hand: release-please writes no changelog (`skip-changelog`), and its list of commits only appears in the release PR.
+
+1. **Drafted on the release PR.** Whenever release-please opens or updates the release PR, `release.yml` runs `scripts/release-notes.ts draft`. It adds a section for the new version, `## 0.6.0 — 27 November 2026`, with one line per `feat`, `fix` and `perf` summary since the last release (or a PR's `BEGIN_COMMIT_OVERRIDE` lines), and pushes it to the release PR's branch. A release with none of those gets "Small fixes and improvements."
+2. **Rewritten before merging.** Edit the section on the release PR's branch: plain sentences about what someone using Aloft sees or can now do, most noticeable first, and anything that makes them redo something up front. An optional paragraph above the list can sum up a bigger release. release-please rebuilds its branch whenever `main` moves; the draft keeps the section from the branch's previous head and only adds lines for commits since, so edits survive.
+3. **Checked by CI.** A unit test fails while the newest section isn't for `package.json`'s version, so a release PR can't be merged without notes.
+4. **Published.** The GitHub release's text is the section plus a link to every commit. For addons.mozilla.org, paste the same section into the version's release notes. The Chrome Web Store has no field for them.
 
 `publish.yml` can also be run by hand from the Actions tab for any release tag, for example to retry after a failed upload. Its **dry run** option only checks the store credentials.
 
@@ -37,7 +47,7 @@ Publishing to AMO isn't automated yet, so every version is submitted by hand:
 
 1. **Once: set up the developer account.** Sign in to the [Developer Hub](https://addons.mozilla.org/developers/) with a Mozilla account, accept the distribution agreement, and set a display name for the developer profile.
 2. **Download both zips** from the GitHub release for the version.
-3. **Submit it.** For the first version, choose Submit a New Add-on; for later ones, Upload New Version on the add-on's page. Then follow [amo-listing.md](amo-listing.md): the Firefox zip, Firefox only, yes to source code with the sources zip, and the listing and notes to reviewer.
+3. **Submit it.** For the first version, choose Submit a New Add-on; for later ones, Upload New Version on the add-on's page. Then follow [amo-listing.md](amo-listing.md): the Firefox zip, Firefox only, yes to source code with the sources zip, and the listing and notes to reviewer. Paste the version's section from `CHANGELOG.md` as its release notes.
 4. **Wait for review.** Automated review signs and lists the version within minutes to hours; a human review may follow later.
 
 The add-on id, `aloft@tomszir` in `wxt.config.ts`, is permanent once the first version is on AMO.
