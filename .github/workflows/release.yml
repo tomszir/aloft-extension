@@ -119,7 +119,12 @@ jobs:
       # The sources zip is what addons.mozilla.org's reviewers rebuild the
       # Firefox package from.
       - run: pnpm zip:firefox
-      - run: gh release upload "$TAG" .output/*-chrome.zip .output/*-firefox.zip .output/*-sources.zip
+      # The web demo for the product page, which fetches it from the release
+      # and checks it against its hash (docs/demo.md).
+      - run: pnpm demo:build
+      - run: |
+          gh release upload "$TAG" .output/*-chrome.zip .output/*-firefox.zip .output/*-sources.zip \
+            ".output/demo/aloft-demo-${TAG#v}.js" ".output/demo/aloft-demo-${TAG#v}.js.sha256"
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ needs.release-please.outputs.tag }}
