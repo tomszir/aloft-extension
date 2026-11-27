@@ -7,6 +7,14 @@ const ownOrigin = () => browser.runtime.getURL('/')
 const isOwnPage = (url: string) => url.startsWith(ownOrigin())
 const isWorthListing = (url: string) => !isOwnPage(url) && !url.startsWith('about:')
 
+// Pages a result could fail to open, so they aren't offered: an extension
+// can't run bookmarklets, and Firefox won't let one open its file:, about: or
+// other privileged addresses (docs/browsers.md).
+const UNOPENABLE = import.meta.env.FIREFOX
+  ? /^(javascript|file|about|chrome|resource|data|view-source|moz-extension):/i
+  : /^javascript:/i
+const isOpenable = (url: string) => isWorthListing(url) && !UNOPENABLE.test(url)
+
 export async function loadTabs(): Promise<TabEntry[]> {
   const tabs = await browser.tabs.query({ windowType: 'normal' })
   return tabs.flatMap((t) => {
@@ -67,7 +75,7 @@ export const watchTabs = (onChange: () => void) => onTabEvent(oncePerFrame(onCha
 export async function searchHistory(text: string, maxResults = 50): Promise<HistoryEntry[]> {
   const items = await browser.history.search({ text, startTime: 0, maxResults })
   return items.flatMap((h) =>
-    h.url && isWorthListing(h.url)
+    h.url && isOpenable(h.url)
       ? [
           {
             title: h.title || h.url,
@@ -87,7 +95,9 @@ export const loadRecentHistory = () => searchHistory('', 500)
 export async function searchBookmarks(text: string): Promise<BookmarkEntry[]> {
   const nodes = await browser.bookmarks.search(text)
   // Folders match too; they have no URL to open.
-  return nodes.flatMap((b) => (b.url ? [{ id: b.id, title: b.title || b.url, url: b.url }] : []))
+  return nodes.flatMap((b) =>
+    b.url && isOpenable(b.url) ? [{ id: b.id, title: b.title || b.url, url: b.url }] : [],
+  )
 }
 
 /**
@@ -99,7 +109,8 @@ export async function loadBookmarks(): Promise<BookmarkEntry[]> {
   const walk = (nodes: readonly Browser.bookmarks.BookmarkTreeNode[]) => {
     for (const node of nodes) {
       // Folders have no URL to open.
-      if (node.url) out.push({ id: node.id, title: node.title || node.url, url: node.url })
+      if (node.url && isOpenable(node.url))
+        out.push({ id: node.id, title: node.title || node.url, url: node.url })
       if (node.children) walk(node.children)
     }
   }
@@ -113,6 +124,7 @@ export async function loadRecentlyClosed(): Promise<ClosedEntry[]> {
   // surprise.
   return sessions.flatMap((s) => {
     const tab = s.tab
+    // Restored by session, not opened by address, so any page can come back.
     if (!tab?.sessionId || !tab.url || !isWorthListing(tab.url)) return []
     return [{ sessionId: tab.sessionId, title: tab.title || tab.url, url: tab.url }]
   })

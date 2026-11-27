@@ -57,6 +57,8 @@ import { type Move, Palette } from '../../ui/palette/palette'
 
 // Long enough for the browser's searches; past it, Enter acts on what's shown.
 const SUBMIT_WAIT_MS = 1000
+// Enter pressed in the palette itself waits less: the person is watching.
+const LIVE_ENTER_WAIT_MS = 300
 
 /**
  * overlay: over a page, in a frame. tab: a tab Aloft opened because it
@@ -87,7 +89,16 @@ export function App(props: AppProps) {
   const [bookmarks, setBookmarks] = createSignal<BookmarkEntry[]>([])
   const [learned, setLearned] = createSignal(EMPTY_LEARNED)
   void props.hostTab.then(setHostTab)
-  const reloadTabs = () => void loadTabs().then(setTabs)
+  // Tab events come in bursts; only the newest read may land, or an older
+  // one could bring back a tab that was just closed.
+  let tabsRead = 0
+  const readTabs = () => {
+    const id = ++tabsRead
+    return loadTabs().then((next) => {
+      if (id === tabsRead) setTabs(next)
+    })
+  }
+  const reloadTabs = () => void readTabs()
   // Pins move, hibernate and wake while Aloft is open; keep the row truthful.
   onCleanup(watchTabs(reloadTabs))
   void loadRecentlyClosed().then(setClosed)
@@ -97,7 +108,7 @@ export function App(props: AppProps) {
   // what initials and typos are matched against.
   const [opened, setOpened] = createSignal(false)
   void Promise.allSettled([
-    loadTabs().then(setTabs),
+    readTabs(),
     loadRecentHistory().then(setRecentHistory),
     loadLearned().then(setLearned),
   ]).then(() => setOpened(true))
@@ -279,12 +290,28 @@ export function App(props: AppProps) {
     await close()
   }
 
+  // One result at a time: a second Enter while the first is still opening
+  // would open it again.
+  let acting = false
   async function activate(result: Result, shift: boolean): Promise<void> {
     if (result.kind === 'keyword') {
       setQuery(enterKeyword(result.keyword))
       return
     }
-    if (props.host === 'preview') return
+    if (props.host === 'preview' || acting) return
+    acting = true
+    setSubmitting(undefined)
+    try {
+      await open(result, shift)
+    } catch {
+      // A page the browser wouldn't open; the palette shouldn't stay stuck.
+      await close().catch(() => undefined)
+    } finally {
+      acting = false
+    }
+  }
+
+  async function open(result: Result, shift: boolean): Promise<void> {
     const host = hostTab() ?? (await props.hostTab)
     if (host === undefined) return
     if (result.kind === 'action') {
@@ -304,7 +331,7 @@ export function App(props: AppProps) {
       q.kind === 'text' &&
       (result.kind === 'tab' || result.kind === 'history' || result.kind === 'bookmark')
     // Saved alongside opening, not before it, so remembering never slows Enter.
-    await Promise.all([
+    const [, replaced] = await Promise.all([
       learnable ? savePick(q.text, { url: result.url, title: result.title }) : undefined,
       openResult(result, disposition, {
         host,
@@ -312,11 +339,9 @@ export function App(props: AppProps) {
         switchToOpenTabs: settings().switchToOpenTabs,
       }),
     ])
-    // Navigating the host tab replaces the palette anyway; everywhere else it
-    // would be left behind.
-    const navigatesHost =
-      disposition === 'current-tab' && result.kind !== 'tab' && result.kind !== 'closed'
-    if (!navigatesHost) await close()
+    // A page loading in the host tab replaces the palette; anything else
+    // (switching tabs, a new tab, the same page) would leave it behind.
+    if (!replaced) await close()
   }
 
   // Enter typed with the held text runs once the results for that text are
@@ -326,13 +351,18 @@ export function App(props: AppProps) {
   const [waitedOut, setWaitedOut] = createSignal(false)
   let submitTimer: ReturnType<typeof setTimeout> | undefined
   onCleanup(() => clearTimeout(submitTimer))
-  function submitWhenSettled(submit: Submit): void {
+  function submitWhenSettled(submit: Submit, wait = SUBMIT_WAIT_MS): void {
+    clearTimeout(submitTimer)
+    setWaitedOut(false)
     setSubmitting(submit)
-    submitTimer = setTimeout(() => setWaitedOut(true), SUBMIT_WAIT_MS)
+    submitTimer = setTimeout(() => setWaitedOut(true), wait)
   }
+  // Typing on changes what Enter was for; it waits for the next one.
+  createEffect(on(query, () => setSubmitting(undefined), { defer: true }))
+  const settledNow = () => opened() && settled() === parsed()
   createEffect(() => {
     const submit = submitting()
-    if (!submit || !((opened() && settled() === parsed()) || waitedOut())) return
+    if (!submit || !(settledNow() || waitedOut())) return
     setSubmitting(undefined)
     const top = results()[0]
     if (top) void activate(top, submit === 'shift-enter')
@@ -356,7 +386,16 @@ export function App(props: AppProps) {
       onLeaveChip={() => setQuery(leaveChip(query()))}
       onMove={move}
       onHover={setActiveId}
-      onActivate={(result, shift) => void activate(result, shift)}
+      onActivate={(result, shift) => {
+        // Enter on the top row before the searches for this text have
+        // answered waits for them, briefly, so it opens what the finished
+        // list puts first rather than whatever arrived first.
+        if (activeId() === undefined && !settledNow()) {
+          submitWhenSettled(shift ? 'shift-enter' : 'enter', LIVE_ENTER_WAIT_MS)
+          return
+        }
+        void activate(result, shift)
+      }}
       onCloseTab={props.host === 'preview' ? undefined : (result) => void closeResultTab(result)}
       hostWindowId={hostTab()?.windowId}
       onClose={() => void dismiss()}

@@ -247,14 +247,29 @@ export function ResultRow(props: ResultRowProps) {
           )}
         </Match>
         <Match when={props.active && props.onClose}>
-          <span class={styles.action}>
-            <span class={styles.choice}>
-              {action(props.result)} <Kbd selected>↵</Kbd>
+          {(close) => (
+            <span class={styles.action}>
+              <span class={styles.choice}>
+                {action(props.result)} <Kbd selected>↵</Kbd>
+              </span>
+              {/* The hint is also the mouse's way to close. Hidden from
+                  screen readers, which have Delete, and an option can't
+                  hold a control of its own. */}
+              <button
+                type="button"
+                class={`${styles.choice} ${styles.close}`}
+                tabIndex={-1}
+                aria-hidden="true"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  close()()
+                }}
+              >
+                {i18n.t('actionClose')} <Kbd selected>Del</Kbd>
+              </button>
             </span>
-            <span class={styles.choice}>
-              {i18n.t('actionClose')} <Kbd selected>Del</Kbd>
-            </span>
-          </span>
+          )}
         </Match>
         <Match when={props.active}>
           <span class={styles.action}>
@@ -262,24 +277,6 @@ export function ResultRow(props: ResultRowProps) {
           </span>
         </Match>
       </Switch>
-      <Show when={props.onClose}>
-        {(close) => (
-          // Mouse only: from the keyboard, Delete does the same.
-          <button
-            type="button"
-            class={styles.close}
-            tabIndex={-1}
-            aria-label={i18n.t('closeTabLabel', [title(props.result)])}
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={(event) => {
-              event.stopPropagation()
-              close()()
-            }}
-          >
-            <Icon name="x" />
-          </button>
-        )}
-      </Show>
     </div>
   )
 }

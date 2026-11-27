@@ -113,29 +113,19 @@
   font-size: var(--al-font-size-xs);
 }
 
-/* Shown on the row under the mouse and on the selected one. */
+/* The close hint doubles as a button for the mouse. */
 .close {
-  display: inline-grid;
-  place-items: center;
-  flex: none;
-  width: var(--al-icon-tile);
-  height: var(--al-icon-tile);
-  margin-left: calc(-1 * var(--al-space-2));
-  padding: 0;
+  margin: calc(-1 * var(--al-space-1)) calc(-1 * var(--al-space-2));
+  padding: var(--al-space-1) var(--al-space-2);
   border: 0;
   border-radius: var(--al-kbd-radius);
   background: none;
-  color: var(--al-muted);
+  color: inherit;
+  font: inherit;
   cursor: pointer;
-  opacity: 0;
-}
-
-.row:hover .close,
-.row[data-active] .close {
-  opacity: 1;
 }
 
 .close:hover {
-  background: var(--al-chip-tint);
+  background: var(--al-keycap);
   color: var(--al-text);
 }

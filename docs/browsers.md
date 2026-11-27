@@ -36,6 +36,7 @@ Ctrl+T opens Aloft only once someone gives it to Aloft's second shortcut on the 
 
 ## Decided gaps
 
+- **Firefox can't open some addresses:** it refuses to let an extension open `file:`, `about:`, `chrome:`, `data:` and similar addresses, so the Firefox build leaves those history entries and bookmarks out of results. Typed addresses with those schemes still show; opening one fails and Aloft closes. Bookmarklets (`javascript:`) are left out in every browser, since an extension can't run them.
 - **Firefox favicons:** Firefox has no local favicon cache an extension can read. A tab's `favIconUrl` is nearly always the site's own address, and loading it would be a network request, so every result gets its letter tile. Tabs whose `favIconUrl` is a `data:` URL could show it without a request, but they're rare enough that it isn't done yet.
 
 ## Firefox findings

@@ -164,6 +164,15 @@ describe('Palette', () => {
     expect(props.onActivate).toHaveBeenNthCalledWith(2, sections[1]?.results[0], true)
   })
 
+  it('leaves Esc and the arrows to an input method while it composes', () => {
+    const props = renderPalette()
+    const input = screen.getByRole('combobox')
+    fireEvent.keyDown(input, { key: 'Escape', isComposing: true })
+    fireEvent.keyDown(input, { key: 'ArrowDown', isComposing: true })
+    expect(props.onClose).not.toHaveBeenCalled()
+    expect(props.onMove).not.toHaveBeenCalled()
+  })
+
   it('ignores Enter while an IME is composing', () => {
     const props = renderPalette()
     fireEvent.keyDown(screen.getByRole('combobox'), { key: 'Enter', isComposing: true })
@@ -254,10 +263,12 @@ describe('Palette', () => {
       expect(screen.queryByRole('button', { name: 'closeTabLabel' })).toBeNull()
     })
 
-    it('has a close button on tab rows that closes without opening', () => {
+    it("closes from the selected row's Close hint, without opening it", () => {
       const onCloseTab = vi.fn()
       const props = renderPalette({ ...tabActive, onCloseTab })
-      fireEvent.click(screen.getByRole('button', { name: 'closeTabLabel' }))
+      const hint = screen.getByText('actionClose').closest('button')
+      expect(hint?.getAttribute('aria-hidden')).toBe('true')
+      fireEvent.click(hint as HTMLButtonElement)
       expect(onCloseTab).toHaveBeenCalledOnce()
       expect(props.onActivate).not.toHaveBeenCalled()
     })
@@ -361,11 +372,24 @@ describe('Palette', () => {
       expect(event.defaultPrevented).toBe(true)
     })
 
-    it('Tab moves focus as usual when there is nothing to enter', () => {
+    it('Tab with nothing to enter cycles within the palette instead of leaving it', () => {
+      renderPalette({ onTab: () => false, pins, pinShortcuts: pins })
+      const input = screen.getByRole('combobox')
+      fireEvent.keyDown(input, { key: 'Tab' })
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Mail' }))
+      fireEvent.keyDown(document.activeElement as HTMLElement, { key: 'Tab', shiftKey: true })
+      expect(document.activeElement).toBe(input)
+      fireEvent.keyDown(input, { key: 'Tab', shiftKey: true })
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Music' }))
+    })
+
+    it('stays in the input on Tab when nothing else in the palette takes focus', () => {
       renderPalette({ onTab: () => false })
+      const input = screen.getByRole('combobox')
       const event = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true })
-      screen.getByRole('combobox').dispatchEvent(event)
-      expect(event.defaultPrevented).toBe(false)
+      input.dispatchEvent(event)
+      expect(event.defaultPrevented).toBe(true)
+      expect(document.activeElement).toBe(input)
     })
 
     it('Backspace on an empty input leaves the chip', () => {
@@ -413,6 +437,12 @@ describe('Palette', () => {
       fireEvent.keyDown(screen.getByRole('combobox'), { key: '™', code: 'Digit2', altKey: true })
       expect(props.onOpenPin).toHaveBeenCalledWith(pins[1])
       expect(props.onActivate).not.toHaveBeenCalled()
+    })
+
+    it('types a symbol Option makes on a Mac layout instead of opening a pin', () => {
+      const props = renderPalette({ pins, pinShortcuts: pins })
+      fireEvent.keyDown(screen.getByRole('combobox'), { key: '[', code: 'Digit5', altKey: true })
+      expect(props.onOpenPin).not.toHaveBeenCalled()
     })
 
     it('ignores Alt+digit with no pin in that slot', () => {
