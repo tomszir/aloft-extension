@@ -73,6 +73,30 @@ export function leaveChip(state: QueryState): QueryState {
   return { chip: null, text: chipText(state.chip) + (text === '' ? '' : ` ${text}`) }
 }
 
+/**
+ * Puts `typed`, text typed before the input could take it, in front of what
+ * the input has since. It's entered a character at a time, as if typed, so a
+ * keyword followed by Space still makes its chip.
+ */
+export function replayTyped(
+  state: QueryState,
+  typed: string,
+  keywords: readonly Keyword[] = [],
+): QueryState {
+  // The input's chip, as the text that would make it again.
+  const since =
+    state.chip === null
+      ? state.text
+      : state.chip === 'actions'
+        ? ACTIONS_PREFIX + state.text
+        : `${state.chip.keyword} ${state.text}`
+  let next = EMPTY_QUERY
+  for (const char of typed + since) {
+    next = applyInput(next, next.text + char, keywords)
+  }
+  return next
+}
+
 // Only the chip enters actions mode: a ">" left in the input after leaving it
 // is searched for like any other text.
 export function parseQuery(input: string, chip: Chip | null = null): ParsedQuery {

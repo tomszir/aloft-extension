@@ -31,6 +31,21 @@ test('Ctrl+T opens Aloft over the page instead of a new tab', async ({ context, 
   await expect.poll(() => context.pages().length).toBe(tabsBefore)
 })
 
+test('Ctrl+T keeps what is typed while Aloft opens', async ({ context, background }) => {
+  const page = await context.newPage()
+  await page.goto(`${TEST_ORIGIN}/Reading`)
+  await page.locator('#field').focus()
+  await page.bringToFront()
+
+  await pressNewTab(background)
+  const frame = page.locator('iframe[title="Aloft"]')
+  await expect(frame).toBeAttached()
+  await page.keyboard.type('notes')
+
+  await expect(frame.contentFrame().getByRole('combobox')).toHaveValue('notes')
+  await expect(page.locator('#field')).toHaveValue('')
+})
+
 test('on a page Aloft cannot draw on, the new tab stays and is the palette', async ({
   context,
   background,

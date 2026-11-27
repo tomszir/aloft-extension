@@ -28,6 +28,15 @@ MV3 service workers keep no memory between wake-ups, so the previously active ta
 
 On a new tab page the browser keeps keyboard focus in the address bar, whatever the page focuses, so keys typed before Aloft is back on the previous tab are lost. The intercept switches back as soon as the page has taken its first script, and the new tab page draws nothing until the background says the tab stays, so a closing tab doesn't flash the palette. A tab that stays replaces itself once (`newtab.html?focus`), because a page that navigates itself gets focus; the address bar then shows its address.
 
+## Typing while it opens
+
+Keys sent into a frame that's still loading are lost, and keys that reach the page can set off its own shortcuts. So:
+
+- **Held from the start:** the script that hands the overlay its options (`prepareInPage` in `platform/overlay.ts`) also starts keeping keys from the page, before Ctrl+T even switches back. Typed characters are held as text, with Backspace applied. Esc, function keys and anything with Ctrl, Alt or Meta pass, since they may be the browser's (AltGr counts as typing).
+- **Focus moves in once the palette has loaded:** the overlay focuses the frame on its `load` event, and the palette focuses its input when its window gets focus. A cross-origin frame can't take focus by itself, so its own early `focus()` call does nothing.
+- **Handed over by messaging:** the palette asks the overlay for the held text (`takeTyped`, extension messaging like closing) and puts it in front of anything typed since, a character at a time, so `yt ` still makes the YouTube chip. It asks again whenever the frame gets focus back, which also covers a key that reached the page after focus left the frame.
+- **Inside the palette**, typing on a pin or in its menu moves to the search box, and with nothing focused after a click on the panel, keys act as if typed there.
+
 ## Pinned tabs
 
 Helium 0.22.2+ has persistent pins ([imputnet/helium#2931](https://github.com/imputnet/helium/pull/2931)): they're shared by every window, kept across restarts, and remember their address. Aloft keeps no list of its own. It shows the pinned tabs as a row at the top of the palette (Alt+1–9), with open, move and unpin.
