@@ -66,9 +66,12 @@ test('the preview shows either theme while Aloft follows the system', async ({
     preview(page)
       .locator('html')
       .evaluate((root) => root.dataset.scheme)
-  await page.getByRole('group', { name: 'Show' }).getByRole('radio', { name: 'Dark' }).check()
+  await page.getByRole('group', { name: 'Preview in' }).getByRole('radio', { name: 'Dark' }).check()
   await expect.poll(scheme).toBe('dark')
-  await page.getByRole('group', { name: 'Show' }).getByRole('radio', { name: 'Light' }).check()
+  await page
+    .getByRole('group', { name: 'Preview in' })
+    .getByRole('radio', { name: 'Light' })
+    .check()
   await expect.poll(scheme).toBe('light')
   // Wide enough for both columns: the settings scroll, the page doesn't.
   expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBe(900)
@@ -142,8 +145,8 @@ test('a customized theme is previewed while edited, then used by Aloft once save
   const page = await context.newPage()
   await page.setViewportSize({ width: 1440, height: 900 })
   await openSettings(page, background)
-  await page.getByRole('button', { name: 'Customize' }).first().click()
-  const form = page.getByRole('form', { name: 'Edit theme' })
+  await page.getByRole('button', { name: 'New theme' }).first().click()
+  const form = page.getByRole('form', { name: 'New theme' })
   await form.getByRole('textbox', { name: 'Name' }).fill('Ember')
   await form.getByRole('textbox', { name: 'Background', exact: true }).fill('#FFF4EC')
   await form.getByRole('textbox', { name: 'Background', exact: true }).press('Tab')
@@ -188,3 +191,29 @@ async function setSettingsAppearance(background: Worker, appearance: object): Pr
     await api.storage.sync.set({ settings: { appearance: value } })
   }, appearance)
 }
+
+test('the menu jumps to a section and marks it, as does scrolling', async ({
+  context,
+  background,
+}) => {
+  const page = await context.newPage()
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await openSettings(page, background)
+  const menu = page.getByRole('navigation', { name: 'Settings sections' })
+  await menu.getByRole('link', { name: 'Appearance' }).click()
+  await expect(menu.getByRole('link', { name: 'Appearance' })).toHaveAttribute(
+    'aria-current',
+    'true',
+  )
+  await expect
+    .poll(() =>
+      page.locator('#appearance').evaluate((el) => Math.round(el.getBoundingClientRect().top)),
+    )
+    .toBeLessThan(40)
+
+  await page.locator('#whats-new').evaluate((el) => el.scrollIntoView())
+  await expect(menu.getByRole('link', { name: "What's new" })).toHaveAttribute(
+    'aria-current',
+    'true',
+  )
+})

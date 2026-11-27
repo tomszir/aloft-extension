@@ -68,6 +68,8 @@ actionCloseOtherTabs: Close other tabs
 actionReopenClosedTab: Reopen closed tab
 actionOpenSettings: Open settings
 settingsTitle: Settings
+settingsShortcut: Keyboard shortcut
+settingsSectionsLabel: Settings sections
 settingsUpdated: Aloft was updated to $1.
 settingsSeeWhatsNew: See what's new
 settingsWhatsNew: What's new
@@ -77,8 +79,9 @@ settingsWhatsNewInAloft: Mention updates in Aloft
 settingsWhatsNewInAloftNote: After an update, a link to what's new shows once at the bottom of Aloft.
 settingsReleaseNew: New
 settingsPreview: Preview
-settingsPreviewScheme: Show
-settingsPreviewNote: Your real tabs, history and bookmarks, as Aloft will show them. Nothing opens from here.
+settingsPreviewScheme: Preview in
+settingsPreviewEditing: Previewing $1, not saved yet
+settingsPreviewNote: Your real tabs. Nothing opens from here.
 settingsOpening: Opening Aloft
 settingsResults: Results
 settingsEnterOpensIn: Enter opens a result in
@@ -90,6 +93,8 @@ settingsSources: Show results from
 settingsLearnFromPicks: Learn from what you pick
 settingsLearnFromPicksNote: A page you pick a few times for the same text moves to the top, so Enter opens it. What Aloft learns stays on this device and fades after a few weeks.
 settingsForgetPicks: Forget what Aloft learned
+settingsForgetPicksNote: Clears every page Aloft has learned on this device.
+settingsForgetPicksButton: Forget
 settingsPicksForgotten: Forgotten.
 settingsShowPinned: Show pinned tabs above the results
 settingsKeywords: Keywords
@@ -136,14 +141,36 @@ settingsDensity: Density
 settingsDensityCompact: Compact
 settingsDensityDefault: Default
 settingsDensityComfortable: Comfortable
-themeCustomize: Customize
-themeEdit: Edit theme
+themeNew: New theme
+themeEditShort: Edit
+themeEditNamed: Edit $1
 themeImport: Import theme
 themeImportTooLarge: That file is too big to be a theme (8 KB at most).
 themeImportNotJson: That file isn't a theme. Themes are JSON files exported from Aloft.
 themeImportInvalid: That theme file is missing something or has a value Aloft can't use.
 themeCopyName: $1 copy
-themeEditorLabel: Edit theme
+themeEditTitle: Edit theme
+themeNewTitle: New theme
+themeBack: Back
+themeForLight: A light theme
+themeForDark: A dark theme
+themeGroupSurfaces: Surfaces
+themeGroupText: Text
+themeGroupAccent: Accent
+themeGroupCorners: Corners
+themeColorPanelNote: Behind everything in Aloft
+themeColorSelectedNote: The highlighted row, and tiles under the mouse
+themeColorBorderNote: Edges and dividers
+themeColorTextNote: Titles and what you type
+themeColorMutedNote: Addresses, hints and labels
+themeColorAccentNote: Chips, focus rings and the selection marker
+themeContrastOk: $1:1
+themeContrastLow: $1:1, hard to read
+themeContrastHint: How readable this text is on the background and the selected row. Small text needs 4.5:1.
+themeRadiusSquare: Square
+themeRadiusSoft: Soft
+themeRadiusRound: Round
+themeRadiusRounder: Rounder
 themeName: Name
 themeColorPanel: Background
 themeColorSelected: Selected row
@@ -154,9 +181,7 @@ themeColorAccent: Accent
 themeColorPick: Pick $1
 themeRadius: Corner radius
 themeRadiusValue: $1 px
-themeContrastIssue: $1 on $2 is $3:1; small text needs 4.5:1 to stay readable.
 themeSave: Save theme
-themeCancel: Cancel
 themeExport: Export
 themeDelete: Delete theme
 themeTooMany: There's no room for another theme. Delete one you don't use.

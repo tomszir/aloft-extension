@@ -33,7 +33,7 @@ export const DEFAULT_LIGHT_THEME_ID = 'helium-light'
 export const PRESET_THEMES: readonly Theme[] = [
   {
     id: 'helium-dark',
-    name: 'Helium Dark',
+    name: 'Default Dark',
     scheme: 'dark',
     radius: 14,
     colors: {
@@ -47,7 +47,7 @@ export const PRESET_THEMES: readonly Theme[] = [
   },
   {
     id: 'helium-light',
-    name: 'Helium Light',
+    name: 'Default Light',
     scheme: 'light',
     radius: 14,
     colors: {
@@ -123,7 +123,7 @@ export interface ThemeChoice {
   darkTheme: string
 }
 
-/** Falls back to the Helium presets so a deleted custom theme never leaves Aloft unstyled. */
+/** Falls back to the default presets so a deleted custom theme never leaves Aloft unstyled. */
 export function resolveTheme(
   choice: ThemeChoice,
   systemPrefersDark: boolean,

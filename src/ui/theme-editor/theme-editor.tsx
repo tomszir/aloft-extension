@@ -1,7 +1,9 @@
 import { For, Show } from 'solid-js'
 import { i18n } from '#i18n'
-import { contrastIssues, type Theme, type ThemeColors } from '../../core/theme'
+import { contrastRatio, MIN_TEXT_CONTRAST, type Theme, type ThemeColors } from '../../core/theme'
 import { Button } from '../button/button'
+import '../icon/page-icons'
+import { SettingRow } from '../setting-row/setting-row'
 import styles from './theme-editor.module.css'
 
 export interface ThemeEditorProps {
@@ -18,119 +20,119 @@ export interface ThemeEditorProps {
   onExport: () => void
 }
 
-const COLORS: readonly { key: keyof ThemeColors; label: () => string }[] = [
-  { key: 'panel', label: () => i18n.t('themeColorPanel') },
-  { key: 'selected', label: () => i18n.t('themeColorSelected') },
-  { key: 'border', label: () => i18n.t('themeColorBorder') },
-  { key: 'text', label: () => i18n.t('themeColorText') },
-  { key: 'muted', label: () => i18n.t('themeColorMuted') },
-  { key: 'accent', label: () => i18n.t('themeColorAccent') },
+type ColorKey = keyof ThemeColors
+
+interface ColorField {
+  key: ColorKey
+  label: () => string
+  description: () => string
+  /** Text colors show how readable they are on the backgrounds they sit on. */
+  readableOn?: readonly ColorKey[]
+}
+
+// Grouped by what they color, as theme builders do, rather than one long list.
+const GROUPS: readonly { title: () => string; fields: readonly ColorField[] }[] = [
+  {
+    title: () => i18n.t('themeGroupSurfaces'),
+    fields: [
+      {
+        key: 'panel',
+        label: () => i18n.t('themeColorPanel'),
+        description: () => i18n.t('themeColorPanelNote'),
+      },
+      {
+        key: 'selected',
+        label: () => i18n.t('themeColorSelected'),
+        description: () => i18n.t('themeColorSelectedNote'),
+      },
+      {
+        key: 'border',
+        label: () => i18n.t('themeColorBorder'),
+        description: () => i18n.t('themeColorBorderNote'),
+      },
+    ],
+  },
+  {
+    title: () => i18n.t('themeGroupText'),
+    fields: [
+      {
+        key: 'text',
+        label: () => i18n.t('themeColorText'),
+        description: () => i18n.t('themeColorTextNote'),
+        readableOn: ['panel', 'selected'],
+      },
+      {
+        key: 'muted',
+        label: () => i18n.t('themeColorMuted'),
+        description: () => i18n.t('themeColorMutedNote'),
+        readableOn: ['panel', 'selected'],
+      },
+    ],
+  },
+  {
+    title: () => i18n.t('themeGroupAccent'),
+    fields: [
+      {
+        key: 'accent',
+        label: () => i18n.t('themeColorAccent'),
+        description: () => i18n.t('themeColorAccentNote'),
+      },
+    ],
+  },
 ]
 
-const LABEL = Object.fromEntries(COLORS.map((c) => [c.key, c.label])) as Record<
-  keyof ThemeColors,
-  () => string
->
+const RADIUS_PRESETS: readonly { radius: number; label: () => string }[] = [
+  { radius: 0, label: () => i18n.t('themeRadiusSquare') },
+  { radius: 8, label: () => i18n.t('themeRadiusSoft') },
+  { radius: 14, label: () => i18n.t('themeRadiusRound') },
+  { radius: 22, label: () => i18n.t('themeRadiusRounder') },
+]
 
 const HEX = /^#[0-9a-f]{6}$/i
 const MAX_RADIUS = 24
 
-/** Six colors and a corner radius; everything else in a theme is derived from them. */
+/** A focused view for one theme: six colors and a corner radius, everything else derived. */
 export function ThemeEditor(props: ThemeEditorProps) {
-  const setColor = (key: keyof ThemeColors, value: string) => {
+  const setColor = (key: ColorKey, value: string) => {
     if (!HEX.test(value)) return
     props.onChange({
       ...props.theme,
       colors: { ...props.theme.colors, [key]: value.toUpperCase() },
     })
   }
-  const issues = () => contrastIssues(props.theme.colors)
+  // The weaker of the backgrounds it sits on is what decides.
+  const contrast = (field: ColorField) =>
+    Math.min(
+      ...(field.readableOn ?? []).map((bg) =>
+        contrastRatio(props.theme.colors[field.key], props.theme.colors[bg]),
+      ),
+    )
 
   return (
     <form
       class={styles.editor}
-      aria-label={i18n.t('themeEditorLabel')}
+      aria-labelledby="al-theme-editor-title"
       onSubmit={(event) => {
         event.preventDefault()
         props.onSave()
       }}
     >
-      <label class={styles.field}>
-        {i18n.t('themeName')}
-        <input
-          class={styles.input}
-          value={props.theme.name}
-          maxLength={40}
-          required
-          onInput={(event) => props.onChange({ ...props.theme, name: event.currentTarget.value })}
-        />
-      </label>
-
-      <div class={styles.colors}>
-        <For each={COLORS}>
-          {(color) => (
-            <div class={styles.color}>
-              <input
-                class={styles.swatch}
-                type="color"
-                value={props.theme.colors[color.key].toLowerCase()}
-                aria-label={i18n.t('themeColorPick', [color.label()])}
-                onInput={(event) => setColor(color.key, event.currentTarget.value)}
-              />
-              <label class={styles.field}>
-                {color.label()}
-                <input
-                  class={`${styles.input} ${styles.hex}`}
-                  value={props.theme.colors[color.key]}
-                  maxLength={7}
-                  spellcheck={false}
-                  autocapitalize="off"
-                  onChange={(event) => {
-                    const value = event.currentTarget.value.trim()
-                    const hex = value.startsWith('#') ? value : `#${value}`
-                    if (HEX.test(hex)) setColor(color.key, hex)
-                    else event.currentTarget.value = props.theme.colors[color.key]
-                  }}
-                />
-              </label>
-            </div>
-          )}
-        </For>
-      </div>
-
-      <label class={styles.field}>
-        <span class={styles.radiusLabel}>
-          {i18n.t('themeRadius')}
-          <span>{i18n.t('themeRadiusValue', [String(props.theme.radius)])}</span>
-        </span>
-        <input
-          class={styles.range}
-          type="range"
-          min={0}
-          max={MAX_RADIUS}
-          step={1}
-          value={props.theme.radius}
-          onInput={(event) =>
-            props.onChange({ ...props.theme, radius: Number(event.currentTarget.value) })
-          }
-        />
-      </label>
-
-      <Show when={issues().length > 0}>
-        <ul class={styles.issues} aria-live="polite">
-          <For each={issues()}>
-            {(issue) => (
-              <li>
-                {i18n.t('themeContrastIssue', [
-                  LABEL[issue.foreground](),
-                  LABEL[issue.background](),
-                  issue.ratio.toFixed(1),
-                ])}
-              </li>
-            )}
-          </For>
-        </ul>
-      </Show>
+      <header class={styles.bar}>
+        <Button icon="arrow-left" onClick={() => props.onCancel()}>
+          {i18n.t('themeBack')}
+        </Button>
+        <h2 id="al-theme-editor-title" class={styles.title}>
+          {props.saved ? i18n.t('themeEditTitle') : i18n.t('themeNewTitle')}
+        </h2>
+        <Button
+          type="submit"
+          variant="primary"
+          icon="check"
+          disabled={props.theme.name.trim() === ''}
+        >
+          {i18n.t('themeSave')}
+        </Button>
+      </header>
 
       <Show when={props.error}>
         {(error) => (
@@ -140,19 +142,127 @@ export function ThemeEditor(props: ThemeEditorProps) {
         )}
       </Show>
 
-      <div class={styles.buttons}>
-        <Button type="submit" variant="primary" disabled={props.theme.name.trim() === ''}>
-          {i18n.t('themeSave')}
+      <section class={styles.group}>
+        <SettingRow
+          label={i18n.t('themeName')}
+          labelId="al-theme-name"
+          description={
+            props.theme.scheme === 'dark' ? i18n.t('themeForDark') : i18n.t('themeForLight')
+          }
+        >
+          <input
+            class={styles.input}
+            value={props.theme.name}
+            maxLength={40}
+            required
+            aria-labelledby="al-theme-name"
+            onInput={(event) => props.onChange({ ...props.theme, name: event.currentTarget.value })}
+          />
+        </SettingRow>
+      </section>
+
+      <For each={GROUPS}>
+        {(group) => (
+          <section class={styles.section}>
+            <h3 class={styles.heading}>{group.title()}</h3>
+            <div class={styles.group}>
+              <For each={group.fields}>
+                {(field) => (
+                  <SettingRow label={field.label()} description={field.description()}>
+                    <Show when={field.readableOn}>
+                      <span
+                        class={styles.badge}
+                        data-low={contrast(field) < MIN_TEXT_CONTRAST || undefined}
+                        title={i18n.t('themeContrastHint')}
+                      >
+                        {contrast(field) < MIN_TEXT_CONTRAST
+                          ? i18n.t('themeContrastLow', [contrast(field).toFixed(1)])
+                          : i18n.t('themeContrastOk', [contrast(field).toFixed(1)])}
+                      </span>
+                    </Show>
+                    <input
+                      class={styles.swatch}
+                      type="color"
+                      value={props.theme.colors[field.key].toLowerCase()}
+                      aria-label={i18n.t('themeColorPick', [field.label()])}
+                      onInput={(event) => setColor(field.key, event.currentTarget.value)}
+                    />
+                    <input
+                      class={`${styles.input} ${styles.hex}`}
+                      value={props.theme.colors[field.key]}
+                      maxLength={7}
+                      spellcheck={false}
+                      autocapitalize="off"
+                      aria-label={field.label()}
+                      onChange={(event) => {
+                        const value = event.currentTarget.value.trim()
+                        const hex = value.startsWith('#') ? value : `#${value}`
+                        if (HEX.test(hex)) setColor(field.key, hex)
+                        else event.currentTarget.value = props.theme.colors[field.key]
+                      }}
+                    />
+                  </SettingRow>
+                )}
+              </For>
+            </div>
+          </section>
+        )}
+      </For>
+
+      <section class={styles.section}>
+        <h3 class={styles.heading}>{i18n.t('themeGroupCorners')}</h3>
+        <div class={styles.group}>
+          <SettingRow
+            label={i18n.t('themeRadius')}
+            labelId="al-theme-radius"
+            description={i18n.t('themeRadiusValue', [String(props.theme.radius)])}
+            stacked
+          >
+            <input
+              class={styles.range}
+              type="range"
+              min={0}
+              max={MAX_RADIUS}
+              step={1}
+              value={props.theme.radius}
+              aria-labelledby="al-theme-radius"
+              onInput={(event) =>
+                props.onChange({ ...props.theme, radius: Number(event.currentTarget.value) })
+              }
+            />
+            <div class={styles.presets}>
+              <For each={RADIUS_PRESETS}>
+                {(preset) => (
+                  <button
+                    type="button"
+                    class={styles.preset}
+                    aria-pressed={props.theme.radius === preset.radius}
+                    onClick={() => props.onChange({ ...props.theme, radius: preset.radius })}
+                  >
+                    <span
+                      class={styles.corner}
+                      style={{ 'border-top-left-radius': `${preset.radius}px` }}
+                      aria-hidden="true"
+                    />
+                    {preset.label()}
+                  </button>
+                )}
+              </For>
+            </div>
+          </SettingRow>
+        </div>
+      </section>
+
+      <footer class={styles.footer}>
+        <Button icon="download" onClick={() => props.onExport()}>
+          {i18n.t('themeExport')}
         </Button>
-        <Button onClick={() => props.onCancel()}>{i18n.t('themeCancel')}</Button>
-        <span class={styles.spacer} />
-        <Button onClick={() => props.onExport()}>{i18n.t('themeExport')}</Button>
         <Show when={props.saved}>
-          <Button class={styles.danger} onClick={() => props.onDelete()}>
+          <Button class={styles.danger} icon="trash-2" onClick={() => props.onDelete()}>
             {i18n.t('themeDelete')}
           </Button>
         </Show>
-      </div>
+      </footer>
     </form>
   )
 }

@@ -2,6 +2,7 @@ import { Show } from 'solid-js'
 import { i18n } from '#i18n'
 import { opensWithNewTabKey, type Shortcuts } from '../../core/shortcut'
 import { Button } from '../button/button'
+import '../icon/page-icons'
 import styles from './ctrl-t-setup.module.css'
 
 export interface CtrlTSetupProps {
@@ -27,7 +28,7 @@ export function CtrlTSetup(props: CtrlTSetupProps) {
               <li>{i18n.t('ctrlTStepSet', [i18n.t('commandOpenSecond')])}</li>
             </ol>
             <div class={styles.actions}>
-              <Button variant="primary" onClick={() => props.onSetUp()}>
+              <Button variant="primary" icon="external-link" onClick={() => props.onSetUp()}>
                 {i18n.t('ctrlTButton')}
               </Button>
               <span class={styles.note}>{i18n.t('ctrlTNote')}</span>

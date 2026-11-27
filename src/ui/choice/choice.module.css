@@ -26,8 +26,10 @@
 
 .option {
   position: relative;
+  isolation: isolate;
   display: inline-flex;
   align-items: center;
+  gap: var(--al-space-2);
   height: calc(var(--al-button-height) - 2 * var(--al-space-1));
   padding: 0 var(--al-space-4);
   border-radius: calc(var(--al-button-radius) - var(--al-space-1));
@@ -35,12 +37,35 @@
   font-weight: var(--al-font-weight-medium);
   color: var(--al-muted);
   cursor: pointer;
+  transition:
+    color var(--al-duration-fast) var(--al-ease-out),
+    background-color var(--al-duration-fast) var(--al-ease-out);
+}
+
+/* The selected highlight is a layer of its own, so it can slide from the
+   option picked before (see slideHighlight). */
+.option::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--al-panel);
+  box-shadow: 0 0 0 1px var(--al-border);
+  opacity: 0;
 }
 
 .option:has(:checked) {
-  background: var(--al-panel);
   color: var(--al-text);
-  box-shadow: 0 0 0 1px var(--al-border);
+}
+
+.option:has(:checked)::before {
+  opacity: 1;
+}
+
+.option:not(:has(:checked)):hover {
+  background: color-mix(in srgb, var(--al-panel) 55%, transparent);
+  color: var(--al-text);
 }
 
 .option:has(:focus-visible) {

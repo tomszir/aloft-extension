@@ -123,14 +123,14 @@ describe('Settings', () => {
   })
 
   describe('custom themes', () => {
-    const editor = () => screen.getByRole('form', { name: 'themeEditorLabel' })
+    const editor = () => screen.getByRole('form')
     const previewSrc = () => screen.getByTitle('settingsPreview').getAttribute('src') ?? ''
 
-    it('customizes a copy of the theme in use, shows it in the preview, and saves it', async () => {
+    it('starts a new theme from the one in use, shows it in the preview, and saves it', async () => {
       const { settings, onSaveThemes } = renderSettings({
         appearance: { ...DEFAULT_SETTINGS.appearance, colorScheme: 'dark' },
       })
-      fireEvent.click(screen.getByRole('button', { name: 'themeCustomize' }))
+      fireEvent.click(screen.getByRole('button', { name: 'themeNew' }))
       expect(editor()).toBeTruthy()
       expect(previewSrc()).toContain('scheme=dark&theme=')
 
@@ -147,11 +147,11 @@ describe('Settings', () => {
       const { settings, onSaveThemes, customThemes } = renderSettings({
         appearance: { ...DEFAULT_SETTINGS.appearance, colorScheme: 'dark' },
       })
-      fireEvent.click(screen.getByRole('button', { name: 'themeCustomize' }))
+      fireEvent.click(screen.getByRole('button', { name: 'themeNew' }))
       fireEvent.click(within(editor()).getByRole('button', { name: 'themeSave' }))
       await vi.waitFor(() => expect(customThemes()).toHaveLength(1))
 
-      fireEvent.click(screen.getByRole('button', { name: 'themeEdit' }))
+      fireEvent.click(screen.getByRole('button', { name: 'themeEditNamed' }))
       fireEvent.click(within(editor()).getByRole('button', { name: 'themeDelete' }))
       await vi.waitFor(() => expect(customThemes()).toHaveLength(0))
       expect(onSaveThemes).toHaveBeenCalledTimes(2)
@@ -173,7 +173,7 @@ describe('Settings', () => {
         (within(editor()).getByRole('textbox', { name: 'themeName' }) as HTMLInputElement).value,
       ).toBe('Shared')
 
-      fireEvent.click(within(editor()).getByRole('button', { name: 'themeCancel' }))
+      fireEvent.click(within(editor()).getByRole('button', { name: 'themeBack' }))
       fireEvent.change(input, { target: { files: [file('not json')] } })
       await vi.waitFor(() =>
         expect(screen.getByRole('alert').textContent).toBe('themeImportNotJson'),
@@ -183,8 +183,9 @@ describe('Settings', () => {
 
   it('picks a font installed on the computer by name, and a density', () => {
     const { settings } = renderSettings()
-    const font = screen.getByRole('group', { name: 'settingsFont' })
-    fireEvent.click(within(font).getByRole('radio', { name: 'settingsFontCustom' }))
+    fireEvent.change(screen.getByRole('combobox', { name: 'settingsFont' }), {
+      target: { value: 'custom' },
+    })
     const name = screen.getByRole('textbox', { name: 'settingsFontName' })
     fireEvent.change(name, { target: { value: ' Atkinson Hyperlegible ' } })
     expect(settings().appearance.customFont).toBe('Atkinson Hyperlegible')
@@ -216,7 +217,7 @@ describe('Settings', () => {
     const { settings, onForgetPicks } = renderSettings()
     fireEvent.click(screen.getByRole('switch', { name: 'settingsLearnFromPicks' }))
     expect(settings().learnFromPicks).toBe(false)
-    fireEvent.click(screen.getByRole('button', { name: 'settingsForgetPicks' }))
+    fireEvent.click(screen.getByRole('button', { name: 'settingsForgetPicksButton' }))
     expect(onForgetPicks).toHaveBeenCalledOnce()
     expect(await screen.findByText('settingsPicksForgotten')).toBeTruthy()
   })

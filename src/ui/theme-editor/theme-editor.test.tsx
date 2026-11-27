@@ -22,6 +22,11 @@ function renderEditor(overrides: Partial<ThemeEditorProps> = {}) {
 
 // The test setup echoes i18n keys, so controls are found by their key.
 describe('ThemeEditor', () => {
+  it('says whether the theme is new or being edited', () => {
+    renderEditor()
+    expect(screen.getByRole('form', { name: 'themeNewTitle' })).toBeTruthy()
+  })
+
   it('changes a color from its hex field, and ignores what is not a color', () => {
     const props = renderEditor()
     const field = screen.getByRole('textbox', { name: 'themeColorAccent' }) as HTMLInputElement
@@ -34,35 +39,45 @@ describe('ThemeEditor', () => {
     expect(field.value).toBe(base.colors.accent)
   })
 
-  it('changes the corner radius', () => {
+  it('changes the corner radius by slider or preset', () => {
     const props = renderEditor()
     fireEvent.input(screen.getByRole('slider'), { target: { value: '4' } })
     expect(props.onChange).toHaveBeenCalledWith(expect.objectContaining({ radius: 4 }))
+    fireEvent.click(screen.getByRole('button', { name: 'themeRadiusSquare' }))
+    expect(props.onChange).toHaveBeenLastCalledWith(expect.objectContaining({ radius: 0 }))
   })
 
-  it('warns when small text would be hard to read', () => {
-    renderEditor({
-      theme: { ...base, colors: { ...base.colors, muted: base.colors.panel } },
-    })
-    expect(screen.getAllByText('themeContrastIssue').length).toBeGreaterThan(0)
+  it('shows how readable each text color is, and flags one that is too faint', () => {
+    renderEditor()
+    expect(screen.getAllByText('themeContrastOk')).toHaveLength(2)
+    expect(screen.queryByText('themeContrastLow')).toBeNull()
+    cleanupAndRender({ theme: { ...base, colors: { ...base.colors, muted: base.colors.panel } } })
+    expect(screen.getByText('themeContrastLow')).toBeTruthy()
   })
 
-  it('saves, cancels and exports; deletes only a saved theme', () => {
-    const props = renderEditor()
+  it('saves and goes back from the top bar; exports and deletes a saved theme at the end', () => {
+    const props = renderEditor({ saved: true })
+    expect(screen.getByRole('form', { name: 'themeEditTitle' })).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'themeSave' }))
-    fireEvent.click(screen.getByRole('button', { name: 'themeCancel' }))
+    fireEvent.click(screen.getByRole('button', { name: 'themeBack' }))
     fireEvent.click(screen.getByRole('button', { name: 'themeExport' }))
+    fireEvent.click(screen.getByRole('button', { name: 'themeDelete' }))
     expect(props.onSave).toHaveBeenCalledOnce()
     expect(props.onCancel).toHaveBeenCalledOnce()
     expect(props.onExport).toHaveBeenCalledOnce()
-    expect(screen.queryByRole('button', { name: 'themeDelete' })).toBeNull()
+    expect(props.onDelete).toHaveBeenCalledOnce()
   })
 
-  it("can't be saved without a name", () => {
-    renderEditor({ theme: { ...base, name: ' ' }, saved: true })
+  it("has nothing to delete before it's saved, and can't be saved without a name", () => {
+    renderEditor({ theme: { ...base, name: ' ' } })
+    expect(screen.queryByRole('button', { name: 'themeDelete' })).toBeNull()
     expect((screen.getByRole('button', { name: 'themeSave' }) as HTMLButtonElement).disabled).toBe(
       true,
     )
-    expect(screen.getByRole('button', { name: 'themeDelete' })).toBeTruthy()
   })
 })
+
+function cleanupAndRender(overrides: Partial<ThemeEditorProps>) {
+  document.body.innerHTML = ''
+  renderEditor(overrides)
+}

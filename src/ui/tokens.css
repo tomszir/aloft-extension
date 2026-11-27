@@ -35,6 +35,8 @@
   --al-slot-border: 1.5px;
   --al-badge-size: 16px;
   --al-button-height: 34px;
+  /* For an action beside a section title rather than in a row. */
+  --al-button-height-small: 28px;
   --al-button-radius: 8px;
   --al-page-width: 560px;
   --al-icon-size: 16px;
@@ -51,6 +53,12 @@
   --al-settings-width: 720px;
   --al-keyword-field-width: 140px;
   --al-preview-height: 460px;
+  /* The settings column's side padding, which full-width bars reach past. */
+  --al-settings-gutter: 28px;
+  /* The settings preview: rounder than the palette, lifted off the page. */
+  --al-preview-radius: 22px;
+  --al-elevation: 0 24px 60px rgba(15, 20, 25, 0.18), 0 4px 14px rgba(15, 20, 25, 0.1);
+  --al-float-elevation: 0 10px 30px rgba(15, 20, 25, 0.22), 0 2px 6px rgba(15, 20, 25, 0.12);
   /* The stand-in page behind the settings preview. System colors, so it
      follows the scheme being previewed rather than the theme. */
   --al-mock-canvas: Canvas;

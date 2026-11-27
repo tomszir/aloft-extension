@@ -3,6 +3,7 @@ import { i18n } from '#i18n'
 import type { Settings } from '../../core/settings'
 import { encodePreviewTheme, type Theme } from '../../core/theme'
 import { Choice } from '../choice/choice'
+import '../icon/page-icons'
 import styles from './settings-preview.module.css'
 
 export interface SettingsPreviewProps {
@@ -41,26 +42,7 @@ export function SettingsPreview(props: SettingsPreviewProps) {
   }
 
   return (
-    <section class={styles.preview} aria-labelledby="al-preview-title">
-      <div class={styles.header}>
-        <div class={styles.intro}>
-          <h2 id="al-preview-title" class={styles.heading}>
-            {i18n.t('settingsPreview')}
-          </h2>
-          <p class={styles.note}>{i18n.t('settingsPreviewNote')}</p>
-        </div>
-        <Show when={props.appearance.colorScheme === 'system' && !props.editing}>
-          <Choice
-            label={i18n.t('settingsPreviewScheme')}
-            options={[
-              { value: 'light', label: i18n.t('settingsSchemeLight') },
-              { value: 'dark', label: i18n.t('settingsSchemeDark') },
-            ]}
-            value={scheme()}
-            onChange={setPicked}
-          />
-        </Show>
-      </div>
+    <section class={styles.preview} aria-label={i18n.t('settingsPreview')}>
       <div class={styles.stage} data-scheme={scheme()}>
         <div class={styles.page} aria-hidden="true">
           <div class={styles.bar} />
@@ -87,6 +69,29 @@ export function SettingsPreview(props: SettingsPreviewProps) {
             'backdrop-filter': props.appearance.blur ? 'blur(4px)' : 'none',
           }}
         />
+        {/* The preview's own controls float over it, out of the settings. */}
+        <div class={styles.panel} data-scheme={props.appearance.colorScheme}>
+          <span class={styles.caption}>
+            {props.editing
+              ? i18n.t('settingsPreviewEditing', [props.editing.name.trim() || '…'])
+              : i18n.t('settingsPreviewNote')}
+          </span>
+          <Show when={props.appearance.colorScheme === 'system' && !props.editing}>
+            <span id="al-preview-scheme" class={styles.hidden}>
+              {i18n.t('settingsPreviewScheme')}
+            </span>
+            <Choice
+              label={i18n.t('settingsPreviewScheme')}
+              labelledBy="al-preview-scheme"
+              options={[
+                { value: 'light', label: i18n.t('settingsSchemeLight'), icon: 'sun' },
+                { value: 'dark', label: i18n.t('settingsSchemeDark'), icon: 'moon' },
+              ]}
+              value={scheme()}
+              onChange={setPicked}
+            />
+          </Show>
+        </div>
       </div>
     </section>
   )

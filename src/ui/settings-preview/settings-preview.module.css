@@ -1,36 +1,7 @@
 .preview {
   display: flex;
   flex: 1;
-  flex-direction: column;
-  gap: var(--al-space-4);
   min-height: 0;
-}
-
-.header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--al-space-4);
-}
-
-.intro {
-  display: flex;
-  flex-direction: column;
-  gap: var(--al-space-2);
-}
-
-.heading {
-  margin: 0;
-  font-size: var(--al-font-size-md);
-  font-weight: var(--al-font-weight-semibold);
-}
-
-.note {
-  margin: 0;
-  font-size: var(--al-font-size-sm);
-  line-height: 1.5;
-  color: var(--al-muted);
 }
 
 /* The stand-in page follows the scheme being previewed, not the settings
@@ -41,8 +12,9 @@
   min-height: var(--al-preview-height);
   overflow: hidden;
   border: 1px solid var(--al-border);
-  border-radius: var(--al-radius);
+  border-radius: var(--al-preview-radius);
   background: var(--al-mock-canvas);
+  box-shadow: var(--al-elevation);
   color: var(--al-mock-ink);
 }
 
@@ -102,4 +74,55 @@
   height: 100%;
   border: 0;
   background: transparent;
+}
+
+/* In the settings page's own colors, whatever the preview shows. */
+.panel {
+  position: absolute;
+  left: 50%;
+  bottom: var(--al-space-5);
+  display: flex;
+  align-items: center;
+  gap: var(--al-space-4);
+  max-width: calc(100% - 2 * var(--al-space-5));
+  box-sizing: border-box;
+  padding: var(--al-space-2) var(--al-space-2) var(--al-space-2) var(--al-space-5);
+  transform: translateX(-50%);
+  border: 1px solid var(--al-border);
+  /* Concentric with the switch inside: its radius plus the padding around it. */
+  border-radius: calc(var(--al-button-radius) + var(--al-space-2));
+  background: var(--al-panel);
+  box-shadow: var(--al-float-elevation);
+  color: var(--al-text);
+  color-scheme: normal;
+}
+
+.panel:not(:has(fieldset)) {
+  padding-right: var(--al-space-5);
+  min-height: var(--al-button-height);
+}
+
+.caption {
+  font-size: var(--al-font-size-sm);
+  color: var(--al-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.panel > fieldset {
+  flex: none;
+}
+
+.panel > fieldset > div {
+  flex-wrap: nowrap;
 }

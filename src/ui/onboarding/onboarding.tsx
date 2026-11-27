@@ -2,6 +2,7 @@ import { Show } from 'solid-js'
 import { i18n } from '#i18n'
 import type { Shortcuts } from '../../core/shortcut'
 import { Button } from '../button/button'
+import '../icon/page-icons'
 import { CtrlTSetup } from '../ctrl-t-setup/ctrl-t-setup'
 import { Logo } from '../logo/logo'
 import { ShortcutSentence } from '../shortcut-sentence/shortcut-sentence'
@@ -30,7 +31,7 @@ export function Onboarding(props: OnboardingProps) {
 
       <section class={`${styles.card} ${styles.shortcut}`}>
         <ShortcutSentence shortcut={props.shortcuts.main} class={styles.text} />
-        <Button onClick={() => props.onChangeShortcut()}>
+        <Button icon="pencil" onClick={() => props.onChangeShortcut()}>
           {i18n.t('onboardingChangeShortcut')}
         </Button>
       </section>
