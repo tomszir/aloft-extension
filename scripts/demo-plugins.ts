@@ -79,19 +79,21 @@ export function demoMessages(): Plugin {
     resolveId: (id) => (id === MESSAGES_ID ? resolvedId : null),
     async load(id) {
       if (id !== resolvedId) return null
-      all = {}
+      // Built apart and swapped in whole: test workers may load it at once.
+      const out: Record<string, string> = {}
       for (const file of files) {
         this.addWatchFile(file)
         // The same text the extension's messages.json gets from these files.
         const chrome = generateChromeMessages(await parseMessagesFile(file))
         for (const [key, { message }] of Object.entries(chrome)) {
-          if (key in all) throw new Error(`Aloft demo: message ${key} is defined twice`)
-          all[key] = message
+          if (key in out) throw new Error(`Aloft demo: message ${key} is defined twice`)
+          out[key] = message
         }
       }
+      all = out
       return building
         ? `export default JSON.parse(${JSON.stringify(MESSAGES_PLACEHOLDER)})`
-        : `export default ${JSON.stringify(all)}`
+        : `export default ${JSON.stringify(out)}`
     },
     async generateBundle(_options, bundle) {
       if (!building) return
