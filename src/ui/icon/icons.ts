@@ -37,6 +37,7 @@ export const PAGE_ICON_NAMES = [
   'sun',
   'trash-2',
   'upload',
+  'x',
 ] as const
 
 export const ICON_NAMES = [...PALETTE_ICON_NAMES, ...PAGE_ICON_NAMES]
