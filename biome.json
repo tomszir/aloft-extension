@@ -58,9 +58,11 @@
                       "**/platform/**",
                       "**/ui",
                       "**/ui/**",
-                      "**/entrypoints/**"
+                      "**/entrypoints/**",
+                      "**/demo",
+                      "**/demo/**"
                     ],
-                    "message": "core/ must not depend on platform/, ui/ or entrypoints."
+                    "message": "core/ must not depend on platform/, ui/, entrypoints or the web demo."
                   },
                   {
                     "group": ["solid-js", "solid-js/*"],
@@ -94,8 +96,61 @@
                   {
                     "group": ["**/ui", "**/ui/**", "**/entrypoints/**", "solid-js", "solid-js/*"],
                     "message": "platform/ adapts browser APIs only; it must not depend on UI code."
+                  },
+                  {
+                    "group": ["**/demo", "**/demo/**"],
+                    "message": "The extension never depends on the web demo; the demo swaps platform/ out instead."
                   }
                 ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/ui/**", "src/app/**", "src/entrypoints/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["**/demo", "**/demo/**"],
+                    "message": "The extension never depends on the web demo."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/demo/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["wxt", "wxt/*", "#imports", "@wxt-dev/browser"],
+                    "message": "The web demo runs on an ordinary page: no extension APIs. Fake them in src/demo/platform/."
+                  }
+                ]
+              }
+            },
+            "noRestrictedGlobals": {
+              "level": "error",
+              "options": {
+                "deniedGlobals": {
+                  "chrome": "The web demo runs on an ordinary page: no extension APIs.",
+                  "browser": "The web demo runs on an ordinary page: no extension APIs."
+                }
               }
             }
           }

@@ -10,5 +10,8 @@ export default defineConfig({
     // Driven by Puppeteer: Playwright can't load extensions into Firefox.
     // The first run downloads Firefox, which takes longer than a test.
     { name: 'firefox', testDir: 'tests/e2e-firefox' },
+    // The web demo is an ordinary page, so Playwright drives both browsers.
+    { name: 'demo-chromium', testDir: 'tests/e2e-demo', use: { browserName: 'chromium' } },
+    { name: 'demo-firefox', testDir: 'tests/e2e-demo', use: { browserName: 'firefox' } },
   ],
 })

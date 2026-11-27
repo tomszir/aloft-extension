@@ -25,6 +25,9 @@ jobs:
       - run: pnpm test
       - run: pnpm build
       - run: pnpm build:firefox
+      # The web demo for the product page (docs/demo.md), so a broken one
+      # can't reach a release.
+      - run: pnpm demo:build
       - run: pnpm size
       - run: pnpm zip
       # Also writes the sources zip addons.mozilla.org asks for, since the
@@ -35,6 +38,12 @@ jobs:
           name: aloft-chrome
           path: .output/*-chrome.zip
           # .output is a dot directory, which upload-artifact skips otherwise.
+          include-hidden-files: true
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v5
+        with:
+          name: aloft-demo
+          path: .output/demo/aloft-demo-*
           include-hidden-files: true
           if-no-files-found: error
       - uses: actions/upload-artifact@v5
@@ -57,16 +66,17 @@ jobs:
       - run: pnpm install --frozen-lockfile
       # Browsers are cached per Playwright version. No --with-deps: the runner
       # image ships Google Chrome, so Chromium's libraries are already there,
-      # and apt's mirror sometimes takes minutes.
+      # and apt's mirror sometimes takes minutes. Firefox is for the web
+      # demo's tests, which run on an ordinary page.
       - id: playwright
         run: echo "version=$(pnpm exec playwright --version | cut -d' ' -f2)" >> "$GITHUB_OUTPUT"
       - id: browsers
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}-chromium-firefox
       - if: steps.browsers.outputs.cache-hit != 'true'
-        run: pnpm exec playwright install chromium
+        run: pnpm exec playwright install chromium firefox
       # The Firefox suite downloads its pinned Firefox on first use.
       - uses: actions/cache@v4
         with:

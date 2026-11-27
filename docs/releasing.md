@@ -2,9 +2,19 @@
 
 [release-please](https://github.com/googleapis/release-please) keeps a release PR open on `main`, built from the commits since the last release. Merging it tags the version and creates a GitHub release. Then `release.yml`:
 
-1. builds the Chrome and Firefox zips and the sources zip, and attaches them to the release;
+1. builds the Chrome and Firefox zips, the sources zip and the web demo, and attaches them to the release (see [Release assets](#release-assets));
 2. sets the release's text to that version's notes from `CHANGELOG.md`;
 3. calls `publish.yml`, which uploads the same zips to the Chrome Web Store and to addons.mozilla.org (AMO) and submits them for review. Each store publishes its version once review passes.
+
+## Release assets
+
+| File                             | For                                                                                   |
+| -------------------------------- | ------------------------------------------------------------------------------------- |
+| `aloft-<version>-chrome.zip`     | the Chrome Web Store, uploaded by `publish.yml`                                       |
+| `aloft-<version>-firefox.zip`    | addons.mozilla.org, uploaded by `publish.yml`                                         |
+| `aloft-<version>-sources.zip`    | addons.mozilla.org's reviewers, who rebuild the Firefox package from it               |
+| `aloft-demo-<version>.js`        | the web demo on Aloft's product page ([demo.md](demo.md)), which fetches it from here |
+| `aloft-demo-<version>.js.sha256` | its SHA-256, which the product page's build checks the download against               |
 
 ## Release notes
 

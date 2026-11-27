@@ -1,0 +1,70 @@
+@import "../ui/tokens.css";
+
+/* The demo's page-level styles, like src/entrypoints/palette/page.css: they
+   live in its shadow root, where :root means the shadow host (the build
+   rewrites tokens.css to match). */
+
+:host {
+  /* Nothing the page sets on the host element or its ancestors is inherited,
+     except custom properties: the page's --font-mono is still read below. */
+  all: initial;
+  --al-font-mono: var(--font-mono, ui-monospace, "SF Mono", Menlo, Consolas, monospace);
+}
+
+.shell {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  color-scheme: light dark;
+  font-family: var(--al-font-family);
+  font-size: var(--al-font-size-md);
+  line-height: var(--al-line-height);
+  color: var(--al-text);
+  -webkit-font-smoothing: antialiased;
+  background: var(--al-scrim);
+  /* The overlay's blur, from src/entrypoints/overlay.content.ts. */
+  backdrop-filter: blur(4px);
+  opacity: 1;
+  transition: opacity var(--al-duration-fast) var(--al-ease-out);
+}
+
+.shell[hidden] {
+  display: none;
+}
+
+.shell[data-closing] {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell {
+    transition: none;
+  }
+}
+
+/* The palette fills what the tour leaves, and scrolls there if it must. */
+.palette {
+  position: absolute;
+  inset: 0 0 var(--al-demo-tour-height, 0px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.tour {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  padding: 0 var(--al-space-5) max(var(--al-space-5), env(safe-area-inset-bottom));
+  pointer-events: none;
+}
+
+.tour > * {
+  pointer-events: auto;
+}
+
+.tour:empty {
+  display: none;
+}

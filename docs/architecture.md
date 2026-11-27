@@ -72,11 +72,13 @@ src/
     theme/apply-theme.ts   theme colors and radii, set at runtime as CSS variables
     <component>/<component>.tsx, <component>.module.css, <component>.test.tsx
   locales/       Strings (@wxt-dev/i18n). All UI text goes through here.
+  demo/          The web demo (docs/demo.md): stand-ins for platform/, the tour, and its own build's entry. Not part of the extension.
 ```
 
 Biome enforces the boundaries (see `overrides` in `biome.json`):
 - `core/` imports neither `platform/`, `ui/`, Solid nor WXT, and never touches the `chrome`/`browser` globals.
 - `platform/` never imports UI code.
+- Nothing in the extension imports `demo/`, and `demo/` never touches the `chrome`/`browser` globals or WXT.
 
 ## Styling
 
@@ -102,4 +104,5 @@ Biome enforces the boundaries (see `overrides` in `biome.json`):
 - **Unit tests:** Vitest, run once per build target (the `chromium` and `firefox` projects), so code behind `import.meta.env.FIREFOX` is tested in both builds. `core/` is covered thoroughly. `platform/` is tested with WXT's `fakeBrowser`, and UI with `@solidjs/testing-library`.
 - **End-to-end tests:** Playwright loads the built extension.
 - **Accessibility:** WAI-ARIA combobox and listbox pattern, and Esc gives focus back to the page.
-- **Budgets:** palette JS under 42 KB gzipped (raised from 40 for themes, density and the readable-address and best-match work; keep it tight), overlay content script under 5 KB, first results in under 50 ms.
+- **Web demo:** the palette also runs on an ordinary page, over an invented browser in memory, for Aloft's product page. It's a separate build that swaps `platform/` for fakes, so the extension's packages don't change; see [demo.md](demo.md).
+- **Budgets:** palette JS under 42 KB gzipped (raised from 40 for themes, density and the readable-address and best-match work; keep it tight), overlay content script under 5 KB, the web demo under 46 KB, first results in under 50 ms.

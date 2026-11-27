@@ -55,6 +55,10 @@ From a prototype build run in Firefox 160:
 - **Manifest:** Firefox needs `browser_specific_settings.gecko` with an id, `strict_min_version` and `data_collection_permissions: { required: ["none"] }`. The Chromium-only keys (`minimum_chrome_version`, `favicon`, `use_dynamic_url`) stay out of it.
 - **Testing:** Puppeteer installs the extension with `installExtension` over WebDriver BiDi. Reaching `moz-extension://` pages needs `MOZ_REMOTE_ALLOW_SYSTEM_ACCESS=1` in Firefox's environment, and a fixed internal id comes from the `extensions.webextensions.uuids` pref.
 
+## The web demo
+
+The demo on the product page ([demo.md](demo.md)) is an ordinary web page, not the extension, so the tiers above don't apply to it. Its end-to-end tests run in Chromium and Firefox, with a keyboard and on an emulated touch screen; Safari is unchecked. On touch screens there's no Alt key, so pins are tapped.
+
 ## Adding a browser or a feature
 
 - A new feature lists, in its PR body, the browsers it was tested in.

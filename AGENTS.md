@@ -13,10 +13,11 @@ The repository is public: nothing private goes in it (personal notes, plans, lin
 | Unit tests                      | `pnpm test`                                                                                |
 | Build and size budgets          | `pnpm build && pnpm build:firefox && pnpm size`                                            |
 | End-to-end tests                | `pnpm test:e2e` (Chromium and Firefox; `ALOFT_BROWSER=/usr/bin/helium-browser` for Helium) |
+| Web demo (docs/demo.md)         | `pnpm demo:build`; `pnpm demo:dev` to try it on a stand-in page                            |
 | Store screenshots               | `pnpm screenshots`                                                                         |
 | Re-vendor icons from their lock | `mise run icons:vendor`                                                                    |
 
-Run all of the first four before opening a PR. The `pre-push` hook runs the end-to-end tests; CI runs them too but doesn't require them.
+Run all of the first four before opening a PR, and `pnpm demo:build && pnpm size` when the palette or `src/demo` changed. The `pre-push` hook runs the end-to-end tests; CI runs them too but doesn't require them.
 
 ## Git
 
@@ -42,6 +43,7 @@ Run all of the first four before opening a PR. The `pre-push` hook runs the end-
   - `platform/` is the only layer that calls `chrome.*`/`browser.*`.
   - `ui/` holds Solid components. `app/` holds Solid glue shared by entrypoints.
   - `entrypoints/` only wires things together.
+  - `demo/` is the web demo: stand-ins for `platform/` and its tour. The extension never imports it.
 - **UI**: one folder per component: `ui/<name>/<name>.tsx`, `<name>.module.css`, `<name>.test.tsx`. Files and CSS classes are kebab-case. Component CSS uses only `--al-*` tokens from `ui/tokens.css` or the theme, never raw colors or sizes.
 - **Strings** go through `src/locales/en.yml` (`i18n.t`), never literals in components.
 - **Browsers**: every feature must work in every Tier 1 browser in [docs/browsers.md](docs/browsers.md) (all Chromium browsers and Firefox), or record the gap there in the same PR. No browser sniffing: Helium reports itself as Chrome. Check that an API exists, or put Firefox differences in `platform/` behind `import.meta.env.FIREFOX`. UI text stays browser-neutral.
