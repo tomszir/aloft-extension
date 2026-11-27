@@ -69,6 +69,44 @@ test('what is typed while it opens goes into the bar, not the page', async ({
   expect(await pageKeys.evaluate((keys) => keys.length)).toBe(0)
 })
 
+test('stays invisible until the palette has loaded, so nothing flashes', async ({
+  context,
+  background,
+}) => {
+  const page = await context.newPage()
+  await page.goto(`${TEST_ORIGIN}/`)
+  // The page can see the frame element, if not inside it: record its opacity
+  // as it's added, and each time it changes, alongside the frame's load.
+  const events = await page.evaluateHandle(() => {
+    const seen: string[] = []
+    const watch = (iframe: HTMLIFrameElement) => {
+      seen.push(`added ${iframe.style.opacity}`)
+      // Captured on the way down, before the overlay's own listener runs.
+      iframe.parentElement?.addEventListener('load', () => seen.push('load'), true)
+      new MutationObserver(() => seen.push(`opacity ${iframe.style.opacity}`)).observe(iframe, {
+        attributeFilter: ['style'],
+      })
+    }
+    // The overlay adds its host and frame in one go, so the frame is already
+    // there when the host is seen.
+    new MutationObserver(() => {
+      const iframe = document.querySelector('aloft-overlay')?.shadowRoot?.querySelector('iframe')
+      if (iframe && !seen.length) watch(iframe)
+    }).observe(document.documentElement, { childList: true })
+    return seen
+  })
+
+  await pressOpenAloft(background, page)
+  await expect(
+    page.locator('iframe[title="Aloft"]').contentFrame().getByRole('combobox'),
+  ).toBeFocused()
+  const seen = await events.jsonValue()
+  expect(seen[0]).toBe('added 0')
+  const shown = seen.findIndex((event) => event.startsWith('opacity 1'))
+  expect(shown).toBeGreaterThan(seen.indexOf('load'))
+  expect(seen.indexOf('load')).toBeGreaterThan(0)
+})
+
 test('the page cannot read anything inside the palette', async ({ context, background }) => {
   const page = await context.newPage()
   await page.goto(`${TEST_ORIGIN}/`)

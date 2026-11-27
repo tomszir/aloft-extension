@@ -95,21 +95,23 @@ export default defineContentScript({
           // Blur has to be set out here: a filter inside the frame can't
           // reach the page behind it.
           backdropFilter: blur ? 'blur(4px)' : 'none',
-          opacity: reduceMotion ? '1' : '0',
+          opacity: '0',
           transition: reduceMotion ? 'none' : 'opacity 120ms ease-out',
         })
       },
       onMount(_wrapper, iframe) {
-        requestAnimationFrame(() => {
-          iframe.style.opacity = '1'
-        })
-        // Keys sent into a frame that is still loading are lost, so they stay
-        // out here, held, until the palette is there to ask for them.
         iframe.addEventListener(
           'load',
           () => {
             frame = iframe
-            if (!closing) iframe.focus()
+            if (closing) return
+            // Shown only now: until the palette has loaded, the frame holds an
+            // empty document that Chrome may paint opaque white. On Ctrl+T this
+            // runs in a background tab, where a fade can't start early anyway.
+            iframe.style.opacity = '1'
+            // Keys sent into a frame that is still loading are lost, so they
+            // stay out here, held, until the palette is there to ask for them.
+            iframe.focus()
           },
           { once: true },
         )

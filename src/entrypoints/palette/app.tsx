@@ -29,6 +29,7 @@ import {
   type TabEntry,
   tabResult,
 } from '../../core/results'
+import type { Settings } from '../../core/settings'
 import { pageFavicon } from '../../platform/favicon'
 import { loadLearned, savePick } from '../../platform/learned'
 import type { Disposition, HostTab } from '../../platform/open-result'
@@ -49,7 +50,6 @@ import {
   unpin,
   watchTabs,
 } from '../../platform/palette-api'
-import { loadSettings } from '../../platform/settings'
 import { currentVersion, takeWhatsNewOffer } from '../../platform/whats-new'
 import { type Move, Palette } from '../../ui/palette/palette'
 
@@ -63,10 +63,12 @@ export type Host = 'overlay' | 'tab' | 'newtab' | 'preview'
 export interface AppProps {
   host: Host
   hostTab: Promise<HostTab | undefined>
+  /** As read before the first render, so it's drawn in the right theme. */
+  settings: Settings
 }
 
 export function App(props: AppProps) {
-  const { settings } = useSettings()
+  const { settings } = useSettings(props.settings)
   const { keywords } = useKeywords()
   useTheme(settings)
   if (props.host === 'overlay') useZoomCorrection(props.hostTab.then((tab) => tab?.id))
@@ -100,13 +102,10 @@ export function App(props: AppProps) {
 
   // After an update, the footer mentions what's new the first time Aloft opens,
   // unless that's switched off. The preview leaves it out: it's on the very
-  // page the link goes to. Read from storage rather than the settings signal,
-  // which starts at the defaults, so a switched-off mention never flashes.
+  // page the link goes to.
   const [updated, setUpdated] = createSignal(false)
-  if (props.host !== 'preview')
-    void loadSettings().then(async ({ whatsNewInAloft }) => {
-      if (whatsNewInAloft && (await takeWhatsNewOffer(Date.now()))) setUpdated(true)
-    })
+  if (props.host !== 'preview' && props.settings.whatsNewInAloft)
+    void takeWhatsNewOffer(Date.now()).then(setUpdated)
 
   const [query, setQuery] = createSignal<QueryState>(EMPTY_QUERY)
   if (props.host === 'overlay') {

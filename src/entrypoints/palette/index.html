@@ -3,6 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Over a page, the frame must declare the same scheme as its iframe from
+         the first paint, before page.css loads, or Chrome paints an opaque
+         (often white) backdrop behind it. -->
+    <meta name="color-scheme" content="light dark" />
     <title>Aloft</title>
   </head>
   <body>

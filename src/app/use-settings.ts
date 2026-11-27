@@ -7,10 +7,11 @@ export interface SettingsHandle {
   update: (change: (current: Settings) => Settings) => Promise<void>
 }
 
-// Renders with defaults first, so a page never waits on storage to appear.
-export function useSettings(): SettingsHandle {
-  const [settings, setSettings] = createSignal<Settings>(DEFAULT_SETTINGS)
-  void loadSettings().then(setSettings)
+// Renders with `initial` first, the defaults unless the page already read
+// them, so a page never waits on storage to appear.
+export function useSettings(initial?: Settings): SettingsHandle {
+  const [settings, setSettings] = createSignal<Settings>(initial ?? DEFAULT_SETTINGS)
+  if (!initial) void loadSettings().then(setSettings)
   onCleanup(watchSettings(setSettings))
   return {
     settings,
