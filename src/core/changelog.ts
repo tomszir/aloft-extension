@@ -9,10 +9,23 @@ export interface Release {
   date: string
   /** Paragraphs before the list, if any. */
   intro: string[]
+  /** Every note, in order, whichever group it's in. */
+  notes: string[]
+  /**
+   * The notes as written: a bigger release groups them under `### ` headings.
+   * Notes before the first heading, or in a release without any, form a group
+   * with no title.
+   */
+  groups: NoteGroup[]
+}
+
+export interface NoteGroup {
+  title?: string
   notes: string[]
 }
 
 export const RELEASE_HEADING = /^## (\d+\.\d+\.\d+) — (.+)$/
+const GROUP_HEADING = /^### (.+)$/
 
 /** What a release with nothing for people to notice says. */
 export const NOTHING_TO_SAY = 'Small fixes and improvements.'
@@ -26,25 +39,47 @@ export function parseChangelog(text: string): Release[] {
     const line = raw.trim()
     const heading = RELEASE_HEADING.exec(line)
     if (heading) {
-      current = { version: heading[1] ?? '', date: heading[2] ?? '', intro: [], notes: [] }
+      current = {
+        version: heading[1] ?? '',
+        date: heading[2] ?? '',
+        intro: [],
+        notes: [],
+        groups: [],
+      }
       releases.push(current)
       last = undefined
       continue
     }
-    if (!current || line.startsWith('#')) continue
+    if (!current) continue
+    const group = GROUP_HEADING.exec(line)
+    if (group) {
+      current.groups.push({ title: group[1] ?? '', notes: [] })
+      last = undefined
+      continue
+    }
+    if (line.startsWith('#')) continue
     if (line === '') {
       last = undefined
     } else if (line.startsWith('- ')) {
-      current.notes.push(line.slice(2).trim())
+      let into = current.groups.at(-1)
+      if (!into) {
+        into = { notes: [] }
+        current.groups.push(into)
+      }
+      into.notes.push(line.slice(2).trim())
       last = 'note'
     } else if (last !== undefined) {
       // A wrapped line carries on the note or paragraph above it.
-      const list = last === 'note' ? current.notes : current.intro
+      const list = last === 'note' ? (current.groups.at(-1)?.notes ?? []) : current.intro
       list[list.length - 1] = `${list.at(-1) ?? ''} ${line}`
     } else {
       current.intro.push(line)
       last = 'intro'
     }
+  }
+  for (const release of releases) {
+    release.groups = release.groups.filter((g) => g.notes.length > 0)
+    release.notes = release.groups.flatMap((g) => g.notes)
   }
   return releases
 }

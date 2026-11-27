@@ -30,8 +30,53 @@ describe('parseChangelog', () => {
           'A settings page, with a live preview of Aloft as you change things.',
           'Bold matches.',
         ],
+        groups: [
+          {
+            notes: [
+              'A settings page, with a live preview of Aloft as you change things.',
+              'Bold matches.',
+            ],
+          },
+        ],
       },
-      { version: '0.1.0', date: '24 November 2026', intro: [], notes: ['First version.'] },
+      {
+        version: '0.1.0',
+        date: '24 November 2026',
+        intro: [],
+        notes: ['First version.'],
+        groups: [{ notes: ['First version.'] }],
+      },
+    ])
+  })
+
+  it('groups notes under ### headings, keeping every note in order too', () => {
+    const [release] = parseChangelog(`## 1.0.0 — 1 December 2026
+
+A big one.
+
+- **Breaking:** Something to redo.
+
+### Settings
+
+- A new layout,
+  with a preview.
+
+### Empty
+
+### Search
+
+- Faster.
+`)
+    expect(release?.intro).toEqual(['A big one.'])
+    expect(release?.groups).toEqual([
+      { notes: ['**Breaking:** Something to redo.'] },
+      { title: 'Settings', notes: ['A new layout, with a preview.'] },
+      { title: 'Search', notes: ['Faster.'] },
+    ])
+    expect(release?.notes).toEqual([
+      '**Breaking:** Something to redo.',
+      'A new layout, with a preview.',
+      'Faster.',
     ])
   })
 

@@ -39,6 +39,15 @@
   line-height: 1.5;
 }
 
+/* A step below the release's own heading, with room above to separate it
+   from the group before. */
+.group {
+  margin: var(--al-space-3) 0 0;
+  font-size: var(--al-font-size-sm);
+  font-weight: var(--al-font-weight-semibold);
+  color: var(--al-muted);
+}
+
 .notes {
   display: flex;
   flex-direction: column;

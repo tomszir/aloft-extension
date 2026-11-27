@@ -9,8 +9,18 @@ const releases: Release[] = [
     date: '1 December 2026',
     intro: ['A bigger release.'],
     notes: ['**Breaking:** Keywords start over.', 'Typing <b>is</b> kept.'],
+    groups: [
+      { notes: ['**Breaking:** Keywords start over.'] },
+      { title: 'Typing', notes: ['Typing <b>is</b> kept.'] },
+    ],
   },
-  { version: '0.5.0', date: '25 November 2026', intro: [], notes: ['A new name.'] },
+  {
+    version: '0.5.0',
+    date: '25 November 2026',
+    intro: [],
+    notes: ['A new name.'],
+    groups: [{ notes: ['A new name.'] }],
+  },
 ]
 
 describe('ReleaseNotes', () => {
@@ -23,6 +33,14 @@ describe('ReleaseNotes', () => {
     ])
     expect(screen.getByText('A bigger release.')).toBeTruthy()
     expect(screen.getAllByRole('listitem')).toHaveLength(3)
+  })
+
+  it('puts each group of notes under its own heading', () => {
+    render(() => <ReleaseNotes releases={releases} />)
+    expect(screen.getAllByRole('heading', { level: 4 }).map((h) => h.textContent)).toEqual([
+      'Typing',
+    ])
+    expect(screen.getAllByRole('list')).toHaveLength(3)
   })
 
   it('shows bold as bold and everything else as text, never as HTML', () => {

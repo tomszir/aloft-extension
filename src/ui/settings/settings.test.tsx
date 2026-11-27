@@ -13,6 +13,7 @@ const release = (version: string): Release => ({
   date: '1 December 2026',
   intro: [],
   notes: [`Notes for ${version}.`],
+  groups: [{ notes: [`Notes for ${version}.`] }],
 })
 const RELEASES = ['0.6.0', '0.5.1', '0.5.0', '0.4.0'].map(release)
 
