@@ -16,6 +16,10 @@ on:
         description: Only check the store credentials; upload nothing
         type: boolean
         default: false
+      screenshots:
+        description: Also replace the addons.mozilla.org screenshots with this branch's
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -52,3 +56,65 @@ jobs:
           CHROME_PUBLISHER_ID: ${{ vars.CHROME_PUBLISHER_ID }}
           CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL: ${{ vars.CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL }}
           CHROME_SERVICE_ACCOUNT_PRIVATE_KEY: ${{ secrets.CHROME_SERVICE_ACCOUNT_PRIVATE_KEY }}
+
+  # Whether the store screenshots changed since the previous release. The
+  # release PR regenerates them, so a change here is a visible one.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      screenshots: ${{ steps.diff.outputs.screenshots }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - id: diff
+        env:
+          TAG: ${{ inputs.tag }}
+          EVENT: ${{ github.event_name }}
+          FORCE: ${{ inputs.screenshots }}
+        run: |
+          if [ "$EVENT" = workflow_dispatch ]; then
+            echo "screenshots=$FORCE" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          previous=$(git describe --tags --abbrev=0 "$TAG^")
+          if git diff --quiet "$previous" "$TAG" -- docs/screenshots; then
+            echo "screenshots=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "screenshots=true" >> "$GITHUB_OUTPUT"
+            # The Chrome Web Store's API can't change a listing's images.
+            echo "::notice title=Screenshots changed::Upload docs/screenshots to the Chrome Web Store by hand; addons.mozilla.org gets them from this run."
+          fi
+
+  firefox:
+    # Skipped until the add-on's API key is set up. See docs/releasing.md.
+    if: vars.FIREFOX_EXTENSION_ID != ''
+    needs: changes
+    runs-on: ubuntu-latest
+    environment: firefox
+    steps:
+      # The workflow's own commit, not the tag: for a release they're the
+      # same, and a run by hand for an older tag still gets this script, the
+      # newest notes and the newest screenshots.
+      - uses: actions/checkout@v5
+      - uses: jdx/mise-action@v3
+      # The packages attached to the release, so the store gets the exact
+      # build people can download, and the sources it was built from.
+      - run: gh release download "$TAG" --pattern '*-firefox.zip' --pattern '*-sources.zip' --dir release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+      - env:
+          TAG: ${{ inputs.tag }}
+          ALOFT_DRY_RUN: ${{ inputs.dry_run }}
+          SCREENSHOTS: ${{ needs.changes.outputs.screenshots }}
+          FIREFOX_EXTENSION_ID: ${{ vars.FIREFOX_EXTENSION_ID }}
+          FIREFOX_JWT_ISSUER: ${{ vars.FIREFOX_JWT_ISSUER }}
+          FIREFOX_JWT_SECRET: ${{ secrets.FIREFOX_JWT_SECRET }}
+        run: |
+          if [ "$ALOFT_DRY_RUN" = true ]; then
+            node scripts/amo.ts check
+            exit 0
+          fi
+          node scripts/amo.ts publish "${TAG#v}" release/*-firefox.zip release/*-sources.zip
+          if [ "$SCREENSHOTS" = true ]; then node scripts/amo.ts screenshots; fi

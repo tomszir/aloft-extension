@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { parseChangelog } from '../src/core/changelog.ts'
 import {
+  amoNotes,
   CHANGELOG,
   draftNotes,
   findSection,
@@ -153,5 +154,37 @@ describe('sectionBody', () => {
   it('gives a release its notes without the heading', () => {
     expect(sectionBody(NOTES, '0.5.0')).toBe('- Aloft has a new name in the store.')
     expect(findSection(NOTES, '0.4.0')).toBeUndefined()
+  })
+})
+
+describe('amoNotes', () => {
+  it('keeps a summary, headings and lists in the HTML addons.mozilla.org takes', () => {
+    const markdown = [
+      'A bigger release & more.',
+      '',
+      '- **Breaking:** no new tab.',
+      '',
+      '### Opening Aloft',
+      '',
+      '- Keeps `Enter` and <typing>.',
+      '- See [the docs](https://example.com/a).',
+    ].join('\n')
+    expect(amoNotes(markdown)).toBe(
+      [
+        'A bigger release &amp; more.',
+        '<ul><li><strong>Breaking:</strong> no new tab.</li></ul>',
+        '',
+        '<b>Opening Aloft</b>',
+        '<ul><li>Keeps <code>Enter</code> and &lt;typing&gt;.</li><li>See <a href="https://example.com/a">the docs</a>.</li></ul>',
+      ].join('\n'),
+    )
+  })
+
+  it('works on every release in the changelog', () => {
+    for (const { version } of parseChangelog(readFileSync(CHANGELOG, 'utf8'))) {
+      const html = amoNotes(sectionBody(readFileSync(CHANGELOG, 'utf8'), version) ?? '')
+      expect(html).not.toMatch(/^[-#]/m)
+      expect(html.replace(/<\/?(b|strong|code|ul|li|a( href="[^"]+")?)>/g, '')).not.toMatch(/[<>]/)
+    }
   })
 })
