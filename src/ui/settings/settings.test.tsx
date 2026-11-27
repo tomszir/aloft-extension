@@ -1,13 +1,26 @@
 import { fireEvent, render, screen } from '@solidjs/testing-library'
 import { createSignal } from 'solid-js'
 import { describe, expect, it, vi } from 'vitest'
+import type { Release } from '../../core/changelog'
 import { BUILT_IN_KEYWORDS } from '../../core/keywords'
 import { DEFAULT_SETTINGS, type Settings as SettingsValue } from '../../core/settings'
 import type { AccessState } from '../onboarding/onboarding'
 import { Settings } from './settings'
 
+const release = (version: string): Release => ({
+  version,
+  date: '1 December 2026',
+  intro: [],
+  notes: [`Notes for ${version}.`],
+})
+const RELEASES = ['0.6.0', '0.5.1', '0.5.0', '0.4.0'].map(release)
+
 // The test setup echoes i18n keys, so controls are found by their key.
-function renderSettings(initial: Partial<SettingsValue> = {}, access: AccessState = 'granted') {
+function renderSettings(
+  initial: Partial<SettingsValue> = {},
+  access: AccessState = 'granted',
+  updatedFrom?: string,
+) {
   const [settings, setSettings] = createSignal<SettingsValue>({ ...DEFAULT_SETTINGS, ...initial })
   const onChange = vi.fn((change: (current: SettingsValue) => SettingsValue) =>
     setSettings(change(settings())),
@@ -27,12 +40,46 @@ function renderSettings(initial: Partial<SettingsValue> = {}, access: AccessStat
       onKeywordsChange={async () => true}
       favicon={async () => null}
       onForgetPicks={onForgetPicks}
+      version="0.6.0"
+      releases={RELEASES}
+      updatedFrom={updatedFrom}
     />
   ))
   return { settings, onChange, onAllow, onForgetPicks }
 }
 
 describe('Settings', () => {
+  describe("what's new", () => {
+    const section = () => screen.getByRole('region', { name: 'settingsWhatsNew' })
+    const visibleVersions = () =>
+      [...section().querySelectorAll('h3')]
+        .filter((h) => !h.closest('details'))
+        .map((h) => h.id.replace('al-release-', ''))
+
+    it('shows the latest release, with older ones behind a disclosure', () => {
+      renderSettings()
+      expect(visibleVersions()).toEqual(['0.6.0'])
+      expect(section().querySelectorAll('details h3')).toHaveLength(3)
+      expect(screen.queryByText('settingsUpdated')).toBeNull()
+    })
+
+    it('after an update, says so and shows everything since the version you had', () => {
+      renderSettings({}, 'granted', '0.5.0')
+      expect(screen.getByText('settingsUpdated', { exact: false })).toBeTruthy()
+      expect(screen.getByRole('link', { name: 'settingsSeeWhatsNew' }).getAttribute('href')).toBe(
+        '#whats-new',
+      )
+      expect(visibleVersions()).toEqual(['0.6.0', '0.5.1'])
+      expect(section().id).toBe('whats-new')
+    })
+
+    it('can stop Aloft mentioning updates', () => {
+      const { settings } = renderSettings()
+      fireEvent.click(screen.getByRole('switch', { name: 'settingsWhatsNewInAloft' }))
+      expect(settings().whatsNewInAloft).toBe(false)
+    })
+  })
+
   it('turns a source off without touching the others', () => {
     const { settings } = renderSettings()
     fireEvent.click(screen.getByRole('switch', { name: 'sectionHistory' }))

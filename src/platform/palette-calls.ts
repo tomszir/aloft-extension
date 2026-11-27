@@ -36,6 +36,15 @@ async function takeTyped(tabId: number): Promise<string> {
   return typeof reply === 'string' ? reply : ''
 }
 
+/** Opens the settings page at what's new, next to the tab the palette is on. */
+async function openWhatsNew(host: HostTab): Promise<void> {
+  await browser.tabs.create({
+    url: browser.runtime.getURL('/options.html#whats-new'),
+    windowId: host.windowId,
+    index: host.index + 1,
+  })
+}
+
 // window.close() is ignored for tabs the user opened, like Ctrl+T's.
 async function closeTab(tabId: number): Promise<void> {
   await browser.tabs.remove(tabId)
@@ -62,6 +71,7 @@ export function paletteCalls(tab: () => Promise<Browser.tabs.Tab | undefined>) {
     zoomCorrection,
     closeOverlay,
     takeTyped,
+    openWhatsNew,
     closeTab,
   }
 }

@@ -41,6 +41,7 @@ import {
   loadTabs,
   movePinned,
   openResult,
+  openWhatsNew,
   runAction,
   searchBookmarks,
   searchHistory,
@@ -48,6 +49,8 @@ import {
   unpin,
   watchTabs,
 } from '../../platform/palette-api'
+import { loadSettings } from '../../platform/settings'
+import { currentVersion, takeWhatsNewOffer } from '../../platform/whats-new'
 import { type Move, Palette } from '../../ui/palette/palette'
 
 /**
@@ -94,6 +97,16 @@ export function App(props: AppProps) {
     if (settings().sources.bookmarks) void loadBookmarks().then(setAllBookmarks)
   }, 150)
   onCleanup(() => clearTimeout(bookmarksTimer))
+
+  // After an update, the footer mentions what's new the first time Aloft opens,
+  // unless that's switched off. The preview leaves it out: it's on the very
+  // page the link goes to. Read from storage rather than the settings signal,
+  // which starts at the defaults, so a switched-off mention never flashes.
+  const [updated, setUpdated] = createSignal(false)
+  if (props.host !== 'preview')
+    void loadSettings().then(async ({ whatsNewInAloft }) => {
+      if (whatsNewInAloft && (await takeWhatsNewOffer(Date.now()))) setUpdated(true)
+    })
 
   const [query, setQuery] = createSignal<QueryState>(EMPTY_QUERY)
   if (props.host === 'overlay') {
@@ -229,6 +242,13 @@ export function App(props: AppProps) {
     else await close()
   }
 
+  async function showWhatsNew(): Promise<void> {
+    const host = hostTab() ?? (await props.hostTab)
+    if (host === undefined) return
+    await openWhatsNew(host)
+    await close()
+  }
+
   async function activate(result: Result, shift: boolean): Promise<void> {
     if (result.kind === 'keyword') {
       setQuery(enterKeyword(result.keyword))
@@ -313,6 +333,8 @@ export function App(props: AppProps) {
       onUnpin={(pin) => {
         if (props.host !== 'preview') void unpin(pin.tabId)
       }}
+      whatsNew={updated() ? currentVersion() : undefined}
+      onWhatsNew={() => void showWhatsNew()}
     />
   )
 }

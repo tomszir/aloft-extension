@@ -1,5 +1,6 @@
 import { createSignal, Show } from 'solid-js'
 import { i18n } from '#i18n'
+import { type Release, releasesBetween } from '../../core/changelog'
 import type { Keyword } from '../../core/keywords'
 import type { Settings as SettingsValue } from '../../core/settings'
 import { PRESET_THEMES } from '../../core/theme'
@@ -9,6 +10,7 @@ import type { FaviconLoader } from '../favicon/favicon'
 import { KeywordSettings } from '../keyword-settings/keyword-settings'
 import { Logo } from '../logo/logo'
 import type { AccessState } from '../onboarding/onboarding'
+import { ReleaseNotes } from '../release-notes/release-notes'
 import { ShortcutSentence } from '../shortcut-sentence/shortcut-sentence'
 import { ThemePicker } from '../theme-picker/theme-picker'
 import { Toggle } from '../toggle/toggle'
@@ -29,6 +31,11 @@ export interface SettingsProps {
   favicon: FaviconLoader
   /** Clears every learned pick on this device. */
   onForgetPicks: () => Promise<void>
+  /** The installed version and every release's notes, newest first. */
+  version: string
+  releases: readonly Release[]
+  /** The version Aloft was updated from, when that's news to this person. */
+  updatedFrom?: string | undefined
 }
 
 type Sources = SettingsValue['sources']
@@ -60,12 +67,30 @@ export function Settings(props: SettingsProps) {
     setForgotten(true)
   }
 
+  // What changed since the version this person had, or else the latest
+  // release; everything older waits behind a disclosure.
+  const fresh = () =>
+    props.updatedFrom === undefined
+      ? []
+      : releasesBetween(props.releases, props.updatedFrom, props.version)
+  const shown = () => {
+    const releases = fresh()
+    return releases.length > 0 ? releases : props.releases.slice(0, 1)
+  }
+  const earlier = () => props.releases.filter((r) => !shown().includes(r))
+
   return (
     <main class={styles.page}>
       <header class={styles.header}>
         <Logo label={i18n.t('extShortName')} />
         <h1 class={styles.title}>{i18n.t('settingsTitle')}</h1>
       </header>
+      <Show when={fresh().length > 0}>
+        <p class={styles.updated}>
+          {i18n.t('settingsUpdated', [props.version])}{' '}
+          <a href="#whats-new">{i18n.t('settingsSeeWhatsNew')}</a>
+        </p>
+      </Show>
 
       <section class={styles.preview} aria-labelledby="al-preview-title">
         <h2 id="al-preview-title" class={styles.heading}>
@@ -223,6 +248,31 @@ export function Settings(props: SettingsProps) {
           checked={props.settings.appearance.blur}
           onChange={(on) => setAppearance('blur', on)}
         />
+      </section>
+
+      <section id="whats-new" class={styles.card} aria-labelledby="al-whats-new-title">
+        <div class={styles.intro}>
+          <h2 id="al-whats-new-title" class={styles.heading}>
+            {i18n.t('settingsWhatsNew')}
+          </h2>
+          <p class={styles.note}>{i18n.t('settingsVersion', [props.version])}</p>
+        </div>
+        <Toggle
+          label={i18n.t('settingsWhatsNewInAloft')}
+          checked={props.settings.whatsNewInAloft}
+          onChange={(on) => set('whatsNewInAloft', on)}
+          note={i18n.t('settingsWhatsNewInAloftNote')}
+        />
+        <ReleaseNotes
+          releases={shown()}
+          fresh={new Set(fresh().map((release) => release.version))}
+        />
+        <Show when={earlier().length > 0}>
+          <details class={styles.earlier}>
+            <summary>{i18n.t('settingsEarlierVersions')}</summary>
+            <ReleaseNotes releases={earlier()} />
+          </details>
+        </Show>
       </section>
     </main>
   )

@@ -105,3 +105,24 @@
   align-items: center;
   gap: var(--al-space-3);
 }
+
+.updated {
+  margin: 0;
+  font-size: var(--al-font-size-sm);
+  color: var(--al-muted);
+}
+
+.updated a {
+  color: var(--al-text);
+}
+
+.earlier > summary {
+  margin-bottom: var(--al-space-5);
+  font-size: var(--al-font-size-sm);
+  color: var(--al-muted);
+  cursor: pointer;
+}
+
+.earlier:not([open]) > summary {
+  margin-bottom: 0;
+}

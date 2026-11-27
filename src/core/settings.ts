@@ -15,6 +15,8 @@ export const SettingsSchema = v.object({
   switchToOpenTabs: v.boolean(),
   /** Puts the page picked most often for the same text at the top. */
   learnFromPicks: v.boolean(),
+  /** After an update, a "What's new" link in the palette's footer, once. */
+  whatsNewInAloft: v.boolean(),
   sources: v.object({
     tabs: v.boolean(),
     history: v.boolean(),
@@ -43,6 +45,7 @@ export const DEFAULT_SETTINGS: Settings = {
   enterOpensIn: 'new-tab',
   switchToOpenTabs: true,
   learnFromPicks: true,
+  whatsNewInAloft: true,
   sources: { tabs: true, history: true, bookmarks: true, recentlyClosed: true },
   pinned: { showInAloft: true },
   appearance: {
