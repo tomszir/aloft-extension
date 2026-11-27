@@ -53,6 +53,21 @@ test('Shift+Enter opens in the current tab instead', async ({ context, backgroun
   await expect(page).toHaveURL(`${TEST_ORIGIN}/Here`)
 })
 
+test("a typed helium:// page opens in the current tab, as the browser's own page", async ({
+  context,
+  background,
+}) => {
+  const page = await context.newPage()
+  await page.goto(`${TEST_ORIGIN}/Start`)
+  await pressOpenAloft(background, page)
+
+  await palette(page).getByRole('combobox').fill('helium://settings')
+  await expect(palette(page).getByRole('option').first()).toContainText('Go to address')
+  await sendPaletteKey(page, { key: 'Enter', shiftKey: true })
+
+  await expect(page).toHaveURL('chrome://settings/')
+})
+
 test('typed script URLs are searched for, never opened', async ({ context, background }) => {
   const page = await context.newPage()
   await page.goto(`${TEST_ORIGIN}/Start`)

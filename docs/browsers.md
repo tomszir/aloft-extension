@@ -40,6 +40,10 @@ Ctrl+T opens Aloft only once someone gives it to Aloft's second shortcut on the 
 - **Private windows:** not checked yet in any browser. Aloft has no `incognito` key, so it runs as each browser's default (spanning in Chromium when allowed in private windows).
 - **Firefox favicons:** Firefox has no local favicon cache an extension can read. A tab's `favIconUrl` is nearly always the site's own address, and loading it would be a network request, so every result gets its letter tile. Tabs whose `favIconUrl` is a `data:` URL could show it without a request, but they're rare enough that it isn't done yet.
 
+## Chromium findings
+
+- **Helium's `helium://` pages** open in a new tab, but an existing tab sent there asks for an outside app. Aloft opens them as `chrome://`, which Helium shows as the same page.
+
 ## Firefox findings
 
 From a prototype build run in Firefox 160:
