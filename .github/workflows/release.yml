@@ -15,12 +15,59 @@ jobs:
       created: ${{ steps.release.outputs.release_created }}
       tag: ${{ steps.release.outputs.tag_name }}
     steps:
+      # No token is left in .git/config: only the step that pushes the drafted
+      # notes is given one.
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      # Where the release PR stood before release-please rebuilds its branch,
+      # so the notes rewritten there carry over.
+      - id: before
+        run: |
+          head=$(git for-each-ref --count=1 --format='%(objectname)' \
+            'refs/remotes/origin/release-please--branches--main*')
+          echo "head=$head" >> "$GITHUB_OUTPUT"
       - id: release
         uses: googleapis/release-please-action@v4
         with:
           # A personal token, so the release PR triggers CI like any other PR;
           # PRs opened with GITHUB_TOKEN don't. Falls back until one is set.
           token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
+      # Drafts the version's notes in CHANGELOG.md on the release PR, for the
+      # maintainer to rewrite before merging (docs/releasing.md).
+      - if: ${{ steps.release.outputs.pr }}
+        uses: jdx/mise-action@v3
+      - if: ${{ steps.release.outputs.pr }}
+        id: notes
+        # GitHub reads env before if, so the PR's JSON is parsed here: fromJSON
+        # would fail on the empty output of a run that left the PR alone.
+        env:
+          PR: ${{ steps.release.outputs.pr }}
+          PREVIOUS: ${{ steps.before.outputs.head }}
+          # Reads PR bodies for their commit overrides.
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          BRANCH=$(jq -r .headBranchName <<<"$PR")
+          git fetch --tags origin "$BRANCH"
+          git checkout -B "$BRANCH" "origin/$BRANCH"
+          node scripts/release-notes.ts draft "$PREVIOUS"
+          if git diff --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -qam 'docs: draft the release notes'
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+      # The same personal token, so the push runs CI on the release PR. It's
+      # handed to this one push and nothing else.
+      - if: ${{ steps.notes.outputs.branch }}
+        env:
+          TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          BRANCH: ${{ steps.notes.outputs.branch }}
+        run: |
+          auth=$(printf 'x-access-token:%s' "$TOKEN" | base64 -w0)
+          echo "::add-mask::$auth"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $auth" \
+            push origin "HEAD:$BRANCH"
 
   upload:
     needs: release-please
@@ -28,6 +75,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          # The previous tag, for the release's compare link.
+          fetch-depth: 0
       - uses: jdx/mise-action@v3
       - run: pnpm install --frozen-lockfile
       - run: pnpm zip
@@ -35,6 +85,18 @@ jobs:
       # Firefox package from.
       - run: pnpm zip:firefox
       - run: gh release upload "$TAG" .output/*-chrome.zip .output/*-firefox.zip .output/*-sources.zip
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.release-please.outputs.tag }}
+      # The release's text is its hand-written notes from CHANGELOG.md, not
+      # release-please's list of commits, which the compare link still covers.
+      - run: |
+          previous=$(git describe --tags --abbrev=0 "$TAG^")
+          {
+            node scripts/release-notes.ts section "${TAG#v}"
+            printf '\n**All changes:** %s/compare/%s...%s\n' "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" "$previous" "$TAG"
+          } > notes.md
+          gh release edit "$TAG" --notes-file notes.md
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ needs.release-please.outputs.tag }}

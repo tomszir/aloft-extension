@@ -23,7 +23,7 @@ Run all of the first four before opening a PR. The `pre-push` hook runs the end-
 - **Commits** follow [Conventional Commits](https://www.conventionalcommits.org): `type(scope): summary`.
   - Types: `feat` `fix` `perf` `refactor` `docs` `test` `build` `ci` `chore` `revert`.
   - The summary is imperative, lowercase, at most 72 characters, no trailing period.
-  - `feat`, `fix` and `perf` summaries become changelog lines, so describe what a user sees or can now do, not the implementation: `fix: stop the list jumping while a page loads`, not `fix: debounce onUpdated listener`. If a PR title can't say it that way, put the changelog wording in a `BEGIN_COMMIT_OVERRIDE` … `END_COMMIT_OVERRIDE` block in the PR body.
+  - `feat`, `fix` and `perf` summaries become the first draft of the release notes, so describe what a user sees or can now do, not the implementation: `fix: stop the list jumping while a page loads`, not `fix: debounce onUpdated listener`. If a PR title can't say it that way, put the wording in a `BEGIN_COMMIT_OVERRIDE` … `END_COMMIT_OVERRIDE` block in the PR body; the draft reads it from there.
   - Scope `feat`, `fix` and `perf` by the part of Aloft a user would name: `search`, `actions`, `pinned`, `overlay`, `newtab`, `onboarding`, `settings`, `theme`. Leave the scope out when none fits or the change spans several. Other types don't need one.
   - Add a body only when the why isn't obvious: a few short lines, no list of changed files.
   - Breaking changes: `type!:` or a `BREAKING CHANGE:` footer. That covers anything that makes a user redo something: settings that don't carry over, a changed or removed shortcut or keyword, or an imported theme that stops loading. Mark these before 1.0 too, even though they only bump the minor version.
@@ -32,7 +32,8 @@ Run all of the first four before opening a PR. The `pre-push` hook runs the end-
   - The title is a conventional commit; PRs are squash-merged, so it becomes the commit on main.
   - The body is 1–3 lines: what changed and why, and how it was tested. No checklists.
 - **Merging**: agents may squash-merge `docs`, `build`, `ci`, `chore` and `test` PRs once CI is green. `feat`, `fix`, `perf`, `refactor`, `revert` and release PRs wait for the maintainer. Never push to `main` directly or use the admin bypass.
-- **Releases** are cut by release-please from the commits on `main`, then published to the Chrome Web Store ([docs/releasing.md](docs/releasing.md)); never edit `CHANGELOG.md` or the version by hand.
+- **Releases** are cut by release-please from the commits on `main`, then published to the Chrome Web Store ([docs/releasing.md](docs/releasing.md)). Never edit the version by hand.
+- **Release notes** live in `CHANGELOG.md`, written for the people using Aloft: plain sentences, "you", no scopes, PR numbers or browser names. The release PR gets a drafted section for its version; it's rewritten there before merging, and never changed for a version already released.
 
 ## Code
 
