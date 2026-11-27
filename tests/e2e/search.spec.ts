@@ -175,7 +175,10 @@ test('switching to a page already open closes Aloft, even as a tab of its own', 
   const input = paletteTab.getByRole('combobox')
   await input.fill('aloft.test/Reading')
   await expect(paletteTab.getByRole('option').first()).toContainText('aloft.test/Reading')
-  await input.press('Enter')
+  // Enter closes this tab, which can happen before the key press returns.
+  await input.press('Enter').catch((error: unknown) => {
+    if (!paletteTab.isClosed()) throw error
+  })
 
   await expect.poll(() => activeTabUrl(background)).toBe(`${TEST_ORIGIN}/Reading`)
   await expect.poll(() => paletteTab.isClosed()).toBe(true)
