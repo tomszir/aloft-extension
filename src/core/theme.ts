@@ -342,3 +342,46 @@ export function makeThemeId(name: string, taken: ReadonlySet<string>): string {
   for (let n = 2; taken.has(id); n++) id = `custom-${base}-${n}`.slice(0, 40)
   return id
 }
+
+/** Custom themes live in one sync item, which holds 8 KB; these fit with room. */
+export const MAX_CUSTOM_THEMES = 16
+const SYNC_ITEM_BYTES = 8192
+const PRESET_IDS = new Set(PRESET_THEMES.map((t) => t.id))
+
+/**
+ * Stored custom themes, keeping each valid one: they sync from other devices
+ * and may come from other versions, so nothing is trusted.
+ */
+export function normalizeCustomThemes(raw: unknown): Theme[] {
+  if (!Array.isArray(raw)) return []
+  const seen = new Set<string>()
+  const themes: Theme[] = []
+  for (const item of raw) {
+    const parsed = v.safeParse(ThemeSchema, item)
+    if (!parsed.success) continue
+    const theme = parsed.output
+    if (PRESET_IDS.has(theme.id) || seen.has(theme.id)) continue
+    seen.add(theme.id)
+    themes.push(theme)
+  }
+  return themes.slice(0, MAX_CUSTOM_THEMES)
+}
+
+export function customThemesFitSync(themes: readonly Theme[]): boolean {
+  const bytes = new TextEncoder().encode(`themes${JSON.stringify(themes)}`).length
+  return themes.length <= MAX_CUSTOM_THEMES && bytes <= SYNC_ITEM_BYTES
+}
+
+/** A theme being edited, for the settings preview's address. */
+export function encodePreviewTheme(theme: Theme): string {
+  return encodeURIComponent(JSON.stringify(theme))
+}
+
+export function decodePreviewTheme(text: string): Theme | undefined {
+  try {
+    const parsed = v.safeParse(ThemeSchema, JSON.parse(decodeURIComponent(text)))
+    return parsed.success ? parsed.output : undefined
+  } catch {
+    return undefined
+  }
+}

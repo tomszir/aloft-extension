@@ -3,6 +3,7 @@
    can edit them. Components use only these variables, never raw values. */
 :root {
   --al-font-family: system-ui, sans-serif;
+  --al-font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --al-font-size-xs: 11px;
   --al-font-size-sm: 12px;
   --al-font-size-md: 14px;

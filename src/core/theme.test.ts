@@ -3,13 +3,18 @@ import { describe, expect, it } from 'vitest'
 import {
   contrastIssues,
   contrastRatio,
+  customThemesFitSync,
   DEFAULT_DARK_THEME_ID,
   DEFAULT_LIGHT_THEME_ID,
+  decodePreviewTheme,
   deriveTokens,
+  encodePreviewTheme,
   exportTheme,
   importTheme,
+  MAX_CUSTOM_THEMES,
   makeThemeId,
   mix,
+  normalizeCustomThemes,
   PRESET_THEMES,
   resolveTheme,
   ThemeSchema,
@@ -144,5 +149,49 @@ describe('makeThemeId', () => {
   it('always produces a valid id', () => {
     const id = makeThemeId('x'.repeat(100), new Set())
     expect(v.safeParse(ThemeSchema.entries.id, id).success).toBe(true)
+  })
+})
+
+describe('custom themes', () => {
+  const custom = (id: string, name = 'Mine') => ({
+    id,
+    name,
+    scheme: 'dark' as const,
+    radius: 10,
+    colors: {
+      panel: '#101010',
+      selected: '#202020',
+      border: '#303030',
+      text: '#F0F0F0',
+      muted: '#B0B0B0',
+      accent: '#80C0FF',
+    },
+  })
+
+  it('keeps each valid stored theme, dropping broken ones, duplicates and preset ids', () => {
+    const stored = [
+      custom('custom-a'),
+      { ...custom('custom-b'), radius: 99 },
+      custom('custom-a', 'Again'),
+      custom('helium-dark'),
+      'nonsense',
+    ]
+    expect(normalizeCustomThemes(stored).map((t) => t.id)).toEqual(['custom-a'])
+    expect(normalizeCustomThemes(undefined)).toEqual([])
+  })
+
+  it('fits as many themes as allowed in one sync item', () => {
+    const many = Array.from({ length: MAX_CUSTOM_THEMES }, (_, i) =>
+      custom(`custom-theme-number-${i}`, 'A theme with a long name'),
+    )
+    expect(customThemesFitSync(many)).toBe(true)
+    expect(customThemesFitSync([...many, custom('custom-one-more')])).toBe(false)
+  })
+
+  it('round-trips a theme being edited through the preview address, and rejects anything else', () => {
+    const theme = custom('custom-a')
+    expect(decodePreviewTheme(encodePreviewTheme(theme))).toEqual(theme)
+    expect(decodePreviewTheme('%7Bnot')).toBeUndefined()
+    expect(decodePreviewTheme(encodeURIComponent('{"id":"x"}'))).toBeUndefined()
   })
 })

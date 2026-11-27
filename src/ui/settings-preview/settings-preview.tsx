@@ -1,6 +1,7 @@
 import { createSignal, onCleanup, Show } from 'solid-js'
 import { i18n } from '#i18n'
 import type { Settings } from '../../core/settings'
+import { encodePreviewTheme, type Theme } from '../../core/theme'
 import { Choice } from '../choice/choice'
 import styles from './settings-preview.module.css'
 
@@ -8,6 +9,13 @@ export interface SettingsPreviewProps {
   /** The palette in preview mode, which shows real results but never acts on them. */
   src: string
   appearance: Settings['appearance']
+  /** A theme being edited, shown before it's saved, in its own scheme. */
+  editing?: Theme | undefined
+}
+
+function previewHash(scheme: 'light' | 'dark', editing: Theme | undefined): string {
+  const params = `scheme=${editing?.scheme ?? scheme}`
+  return editing ? `${params}&theme=${encodePreviewTheme(editing)}` : params
 }
 
 type Scheme = 'light' | 'dark'
@@ -27,6 +35,7 @@ export function SettingsPreview(props: SettingsPreviewProps) {
   // the preview shows without changing the setting.
   const [picked, setPicked] = createSignal<Scheme>()
   const scheme = (): Scheme => {
+    if (props.editing) return props.editing.scheme
     const setting = props.appearance.colorScheme
     return setting === 'system' ? (picked() ?? systemScheme()) : setting
   }
@@ -40,7 +49,7 @@ export function SettingsPreview(props: SettingsPreviewProps) {
           </h2>
           <p class={styles.note}>{i18n.t('settingsPreviewNote')}</p>
         </div>
-        <Show when={props.appearance.colorScheme === 'system'}>
+        <Show when={props.appearance.colorScheme === 'system' && !props.editing}>
           <Choice
             label={i18n.t('settingsPreviewScheme')}
             options={[
@@ -71,7 +80,7 @@ export function SettingsPreview(props: SettingsPreviewProps) {
             theme without reloading it. */}
         <iframe
           class={styles.frame}
-          src={`${props.src}#${scheme()}`}
+          src={`${props.src}#${previewHash(scheme(), props.editing)}`}
           title={i18n.t('settingsPreview')}
           style={{
             'color-scheme': 'light dark',

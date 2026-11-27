@@ -1,4 +1,6 @@
+import type { Settings } from '../../core/settings'
 import { deriveTokens, type Theme, tokensToCssVars } from '../../core/theme'
+import { densityTokens, fontFamily } from '../../core/typography'
 
 const SCHEME_EXTRAS = {
   dark: {
@@ -22,4 +24,21 @@ export function applyTheme(root: HTMLElement, theme: Theme): void {
   const vars = { ...tokensToCssVars(tokens), ...SCHEME_EXTRAS[tokens.scheme] }
   for (const [name, value] of Object.entries(vars)) root.style.setProperty(name, value)
   root.dataset.scheme = tokens.scheme
+}
+
+const DENSITY_NAMES = Object.keys(densityTokens('compact'))
+
+/** The font everywhere, and the density only where `density` says (the palette). */
+export function applyTypography(
+  root: HTMLElement,
+  appearance: Settings['appearance'],
+  density: boolean,
+): void {
+  root.style.setProperty('--al-font-family', fontFamily(appearance.font, appearance.customFont))
+  // Cleared first, so going back to the default leaves tokens.css in charge.
+  for (const name of DENSITY_NAMES) root.style.removeProperty(name)
+  if (!density) return
+  for (const [name, value] of Object.entries(densityTokens(appearance.density))) {
+    root.style.setProperty(name, value)
+  }
 }

@@ -1,8 +1,9 @@
 import { createEffect, createMemo, createSignal, on, onCleanup } from 'solid-js'
 import { actionEntries } from '../../app/action-entries'
+import { useCustomThemes } from '../../app/use-custom-themes'
 import { useKeywords } from '../../app/use-keywords'
 import { useSettings } from '../../app/use-settings'
-import { useTheme } from '../../app/use-theme'
+import { type PreviewOverride, useTheme } from '../../app/use-theme'
 import { useZoomCorrection } from '../../app/use-zoom-correction'
 import { availableActions } from '../../core/actions'
 import { keywordHost } from '../../core/keywords'
@@ -31,6 +32,7 @@ import {
   tabResult,
 } from '../../core/results'
 import type { Settings } from '../../core/settings'
+import { decodePreviewTheme, type Theme } from '../../core/theme'
 import { pageFavicon } from '../../platform/favicon'
 import { loadLearned, savePick } from '../../platform/learned'
 import type { HeldTyping, Submit } from '../../platform/messages'
@@ -60,8 +62,15 @@ const SUBMIT_WAIT_MS = 1000
 // Enter pressed in the palette itself waits less: the person is watching.
 const LIVE_ENTER_WAIT_MS = 300
 
-function hashScheme(): 'light' | 'dark' | undefined {
-  return location.hash === '#light' ? 'light' : location.hash === '#dark' ? 'dark' : undefined
+/** What the settings page asks its preview to show: `#scheme=dark&theme=…`. */
+function previewFromHash(): PreviewOverride {
+  const params = new URLSearchParams(location.hash.slice(1))
+  const scheme = params.get('scheme')
+  const theme = params.get('theme')
+  return {
+    scheme: scheme === 'light' || scheme === 'dark' ? scheme : undefined,
+    theme: theme ? decodePreviewTheme(theme) : undefined,
+  }
 }
 
 /**
@@ -77,21 +86,24 @@ export interface AppProps {
   hostTab: Promise<HostTab | undefined>
   /** As read before the first render, so it's drawn in the right theme. */
   settings: Settings
+  customThemes: readonly Theme[]
 }
 
 export function App(props: AppProps) {
   const { settings } = useSettings(props.settings)
   const { keywords, ready: keywordsReady } = useKeywords()
-  // The settings page shows the preview in light or dark through the hash.
-  const [previewScheme, setPreviewScheme] = createSignal(hashScheme())
+  const { themes: customThemes } = useCustomThemes(props.customThemes)
+  // The settings page shows its preview in light or dark, or in a theme being
+  // edited, through the hash: changing it doesn't reload the frame.
+  const [preview, setPreview] = createSignal<PreviewOverride>(
+    props.host === 'preview' ? previewFromHash() : {},
+  )
   if (props.host === 'preview') {
-    const onHash = () => setPreviewScheme(hashScheme())
+    const onHash = () => setPreview(previewFromHash())
     window.addEventListener('hashchange', onHash)
     onCleanup(() => window.removeEventListener('hashchange', onHash))
   }
-  useTheme(settings, document.documentElement, () =>
-    props.host === 'preview' ? previewScheme() : undefined,
-  )
+  useTheme(settings, { customThemes, preview, density: true })
   if (props.host === 'overlay') useZoomCorrection(props.hostTab.then((tab) => tab?.id))
 
   const [hostTab, setHostTab] = createSignal<HostTab>()

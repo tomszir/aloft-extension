@@ -123,4 +123,41 @@ settingsDarkTheme: Dark theme
 settingsPosition: Position
 settingsPositionUpperThird: Upper third
 settingsPositionCenter: Center
+settingsFont: Font
+settingsFontNote: Only fonts already on this computer; Aloft downloads nothing.
+settingsFontSystem: System
+settingsFontSans: Sans
+settingsFontSerif: Serif
+settingsFontRounded: Rounded
+settingsFontMono: Mono
+settingsFontCustom: Other
+settingsFontName: Font name
+settingsDensity: Density
+settingsDensityCompact: Compact
+settingsDensityDefault: Default
+settingsDensityComfortable: Comfortable
+themeCustomize: Customize
+themeEdit: Edit theme
+themeImport: Import theme
+themeImportTooLarge: That file is too big to be a theme (8 KB at most).
+themeImportNotJson: That file isn't a theme. Themes are JSON files exported from Aloft.
+themeImportInvalid: That theme file is missing something or has a value Aloft can't use.
+themeCopyName: $1 copy
+themeEditorLabel: Edit theme
+themeName: Name
+themeColorPanel: Background
+themeColorSelected: Selected row
+themeColorBorder: Border
+themeColorText: Text
+themeColorMuted: Secondary text
+themeColorAccent: Accent
+themeColorPick: Pick $1
+themeRadius: Corner radius
+themeRadiusValue: $1 px
+themeContrastIssue: $1 on $2 is $3:1; small text needs 4.5:1 to stay readable.
+themeSave: Save theme
+themeCancel: Cancel
+themeExport: Export
+themeDelete: Delete theme
+themeTooMany: There's no room for another theme. Delete one you don't use.
 settingsBlur: Blur the page behind Aloft

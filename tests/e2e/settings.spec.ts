@@ -134,3 +134,57 @@ test('saving a setting keeps ones a newer Aloft stored', async ({ context, backg
     .poll(() => storedSettings(background))
     .toMatchObject({ fromTheFuture: 1, learnFromPicks: false })
 })
+
+test('a customized theme is previewed while edited, then used by Aloft once saved', async ({
+  context,
+  background,
+}) => {
+  const page = await context.newPage()
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await openSettings(page, background)
+  await page.getByRole('button', { name: 'Customize' }).first().click()
+  const form = page.getByRole('form', { name: 'Edit theme' })
+  await form.getByRole('textbox', { name: 'Name' }).fill('Ember')
+  await form.getByRole('textbox', { name: 'Background', exact: true }).fill('#FFF4EC')
+  await form.getByRole('textbox', { name: 'Background', exact: true }).press('Tab')
+  await form.getByRole('slider').fill('6')
+
+  const panel = (root: Page | ReturnType<typeof preview>) =>
+    root.locator('html').evaluate((html) => html.style.getPropertyValue('--al-panel'))
+  await expect.poll(() => panel(preview(page))).toBe('#FFF4EC')
+
+  await form.getByRole('button', { name: 'Save theme' }).click()
+  await expect(page.getByRole('radio', { name: 'Ember' })).toBeChecked()
+
+  const host = await context.newPage()
+  await host.goto(`${TEST_ORIGIN}/Host`)
+  await pressOpenAloft(background, host)
+  const radius = () =>
+    palette(host)
+      .locator('html')
+      .evaluate((html) => html.style.getPropertyValue('--al-radius'))
+  await expect.poll(() => panel(palette(host))).toBe('#FFF4EC')
+  await expect.poll(radius).toBe('6px')
+})
+
+test('font and density reach the palette', async ({ context, background }) => {
+  await setSettingsAppearance(background, { font: 'mono', density: 'compact' })
+  const host = await context.newPage()
+  await host.goto(`${TEST_ORIGIN}/Host`)
+  await pressOpenAloft(background, host)
+  const css = (name: string) =>
+    palette(host)
+      .locator('html')
+      .evaluate((html, prop) => html.style.getPropertyValue(prop), name)
+  await expect.poll(() => css('--al-font-family')).toMatch(/monospace$/)
+  await expect.poll(() => css('--al-row-height')).toBe('36px')
+})
+
+async function setSettingsAppearance(background: Worker, appearance: object): Promise<void> {
+  await background.evaluate(async (value) => {
+    const api = Reflect.get(globalThis, 'chrome') as {
+      storage: { sync: { set: (items: object) => Promise<void> } }
+    }
+    await api.storage.sync.set({ settings: { appearance: value } })
+  }, appearance)
+}

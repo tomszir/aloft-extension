@@ -158,3 +158,45 @@
 .earlier:not([open]) > summary {
   margin-bottom: 0;
 }
+
+.theme-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--al-space-3);
+}
+
+.hidden-input {
+  display: none;
+}
+
+.import-error {
+  font-size: var(--al-font-size-sm);
+  color: var(--al-danger);
+}
+
+.font-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--al-space-2);
+  font-size: var(--al-font-size-sm);
+  color: var(--al-muted);
+}
+
+.font-input {
+  box-sizing: border-box;
+  width: min(var(--al-page-width), 100%);
+  height: var(--al-button-height);
+  padding: 0 var(--al-space-3);
+  border: 1px solid var(--al-border);
+  border-radius: var(--al-button-radius);
+  background: var(--al-page);
+  color: var(--al-text);
+  font: inherit;
+  font-size: var(--al-font-size-md);
+}
+
+.font-input:focus-visible {
+  outline: 2px solid var(--al-accent);
+  outline-offset: -1px;
+}

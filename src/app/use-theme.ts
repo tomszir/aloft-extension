@@ -1,14 +1,25 @@
 import { type Accessor, createEffect, createSignal, onCleanup } from 'solid-js'
 import type { Settings } from '../core/settings'
-import { resolveTheme } from '../core/theme'
-import { applyTheme } from '../ui/theme/apply-theme'
+import { PRESET_THEMES, resolveTheme, type Theme } from '../core/theme'
+import { applyTheme, applyTypography } from '../ui/theme/apply-theme'
 
-/** `scheme`, when it gives one, wins over the setting and the system: the settings preview. */
-export function useTheme(
-  settings: Accessor<Settings>,
-  root = document.documentElement,
-  scheme: Accessor<'light' | 'dark' | undefined> = () => undefined,
-): void {
+/** What the settings preview is asked to show, from its address. */
+export interface PreviewOverride {
+  scheme?: 'light' | 'dark' | undefined
+  /** A theme being edited, shown before it's saved. */
+  theme?: Theme | undefined
+}
+
+export interface ThemeOptions {
+  root?: HTMLElement
+  customThemes?: Accessor<readonly Theme[]>
+  preview?: Accessor<PreviewOverride>
+  /** Only the palette takes the density; settings pages keep their sizes. */
+  density?: boolean
+}
+
+export function useTheme(settings: Accessor<Settings>, options: ThemeOptions = {}): void {
+  const root = options.root ?? document.documentElement
   const query = matchMedia('(prefers-color-scheme: dark)')
   const [prefersDark, setPrefersDark] = createSignal(query.matches)
   const onChange = (event: MediaQueryListEvent) => setPrefersDark(event.matches)
@@ -16,10 +27,16 @@ export function useTheme(
   onCleanup(() => query.removeEventListener('change', onChange))
   createEffect(() => {
     const { appearance } = settings()
-    const forced = scheme()
-    applyTheme(
-      root,
-      resolveTheme(forced ? { ...appearance, colorScheme: forced } : appearance, prefersDark()),
-    )
+    const preview = options.preview?.() ?? {}
+    const themes = [...PRESET_THEMES, ...(options.customThemes?.() ?? [])]
+    const theme =
+      preview.theme ??
+      resolveTheme(
+        preview.scheme ? { ...appearance, colorScheme: preview.scheme } : appearance,
+        prefersDark(),
+        themes,
+      )
+    applyTheme(root, theme)
+    applyTypography(root, appearance, options.density ?? false)
   })
 }
