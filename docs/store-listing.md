@@ -20,11 +20,11 @@ The text and answers for the Web Store developer dashboard, kept here so they ch
 > PINNED TABS, ONE KEY AWAY
 > Your pinned tabs sit at the top of the bar. Alt+1 to Alt+9 opens them.
 >
-> TAB ACTIONS
-> Type > to pin or duplicate the tab, move it to a new window, close other tabs, reopen a closed one or open settings, all without the mouse.
+> ACTIONS
+> Type > to pin or duplicate the tab, move it to a new window, close other tabs or reopen a closed one. Or jump to your browser's history, downloads, bookmarks, passwords, extensions or settings, all without the mouse.
 >
-> LOOKS LIKE YOUR BROWSER
-> Light and dark follow your system, with six built-in themes. The settings page shows a live preview of every change.
+> LOOKS LIKE YOUR BROWSER, OR LIKE YOU WANT
+> Light and dark follow your system, with built-in themes, or make your own: colors, corners, font and density, shared as a file if you like. The settings page shows a live preview of every change.
 >
 > PRIVATE BY DESIGN
 > Aloft makes no network requests and collects nothing. Your tabs, history and bookmarks are only read on your device, while the bar is open, and the bar runs in a frame that web pages can't read.

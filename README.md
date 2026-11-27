@@ -23,14 +23,14 @@ Press <kbd>Alt</kbd>+<kbd>Q</kbd>, or <kbd>Ctrl</kbd>+<kbd>T</kbd> if you give i
 - **One search for everything:** open tabs in every window, history, bookmarks and recently closed tabs, ranked together, matched by initials and through typos, and learning which page you pick for what you type. Type an address to go straight to it, or anything else to search the web with your default engine.
 - **Keywords:** type `yt`, `gh`, `cl` or `gpt` and Space to search YouTube or GitHub, or ask Claude or ChatGPT, right from the bar.
 - **Pinned tabs, one key away:** your pinned tabs sit at the top. <kbd>Alt</kbd>+<kbd>1</kbd> to <kbd>9</kbd> opens them.
-- **Tab actions:** type <kbd>&gt;</kbd> to pin, duplicate, move to a new window, close other tabs or reopen a closed one.
+- **Actions:** type <kbd>&gt;</kbd> to pin, duplicate, move to a new window, close other tabs or reopen a closed one, or to open your browser's history, downloads, bookmarks, passwords, extensions or settings.
 - **Stays out of the way:** the page dims behind the bar instead of being replaced, and <kbd>Esc</kbd> puts you back exactly where you were.
 - **Looks like your browser, or like you want:** light and dark follow the browser, with built-in themes, or make your own (colors, corners, font and density) and share it as a file.
 
 <table>
     <tr>
         <td><img src="docs/screenshots/2-search.png" alt="Searching history and bookmarks" /></td>
-        <td><img src="docs/screenshots/3-actions.png" alt="Tab actions after typing >" /></td>
+        <td><img src="docs/screenshots/3-actions.png" alt="Actions after typing >" /></td>
     </tr>
     <tr>
         <td><img src="docs/screenshots/4-light.png" alt="Aloft in light mode" /></td>
@@ -62,7 +62,7 @@ To open it with <kbd>Ctrl</kbd>+<kbd>T</kbd> instead of a blank tab, give it tha
 | <kbd>Enter</kbd> / <kbd>Shift</kbd>+<kbd>Enter</kbd> | Open in a new tab / in the current tab                                           |
 | <kbd>Alt</kbd>+<kbd>1</kbd>–<kbd>9</kbd>             | Open a pinned tab                                                                |
 | <kbd>Del</kbd>                                       | Close the selected open tab                                                      |
-| <kbd>&gt;</kbd>                                      | Tab actions                                                                      |
+| <kbd>&gt;</kbd>                                      | Actions, and your browser's own pages                                            |
 | <kbd>Esc</kbd>                                       | Close Aloft                                                                      |
 
 ## Privacy
