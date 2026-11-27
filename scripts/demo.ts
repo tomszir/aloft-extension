@@ -1,11 +1,13 @@
 // The demo browser behind the store screenshots and the marquee tile: the real
-// extension, with invented sites served on a fake domain, so there are no real
-// brands and nothing leaves the machine. Needs the e2e build (`wxt build
-// --mode e2e`), which has the site access the overlay needs.
+// extension, with the invented sites from src/demo/sites.ts served on a fake
+// domain, so there are no real brands and nothing leaves the machine. Needs
+// the e2e build (`wxt build --mode e2e`), which has the site access the
+// overlay needs.
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { type BrowserContext, chromium, type Page, type Worker } from '@playwright/test'
+import { BOOKMARK, CLOSED, PINS, type Site, siteUrl, TABS } from '../src/demo/sites.ts'
 
 const EXTENSION = resolve('.output/chrome-mv3-e2e')
 // The size the Chrome Web Store asks for. Pages are captured at twice that
@@ -13,37 +15,7 @@ const EXTENSION = resolve('.output/chrome-mv3-e2e')
 export const VIEWPORT = { width: 1280, height: 800 }
 export const executablePath = process.env.ALOFT_BROWSER || undefined
 
-interface Site {
-  host: string
-  title: string
-  color: string
-  letter: string
-}
-
-const SITE = (host: string, title: string, color: string): Site => ({
-  host,
-  title,
-  color,
-  letter: title.charAt(0),
-})
-
-const PINS = [
-  SITE('mail', 'Inbox — Postbox', '#3B82F6'),
-  SITE('calendar', 'Week 48 — Daybook', '#10B981'),
-  SITE('chat', 'Team chat — Murmur', '#8B5CF6'),
-  SITE('music', 'Focus mix — Tones', '#F59E0B'),
-]
-const TABS = [
-  // The page behind the palette; its accent shows around every crop, so it
-  // stays in the brand's blues instead of clashing with them.
-  SITE('notes', 'Keyboard-first browsing — Field Notes', '#6366F1'),
-  SITE('docs', 'Release checklist — Handbook', '#0EA5E9'),
-  SITE('maps', 'Weekend trip — Waypoint', '#22C55E'),
-]
-const CLOSED = SITE('recipes', 'Sourdough, step by step — Crumb', '#D97706')
-const BOOKMARK = SITE('keys', 'Keyboard shortcuts reference — Handbook', '#0EA5E9')
-
-const url = (site: Site) => `https://${site.host}.aloft.test/`
+const url = (site: Site) => siteUrl(site)
 
 function favicon(site: Site): string {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="${site.color}"/><text x="16" y="22" font-family="system-ui,sans-serif" font-size="18" font-weight="700" fill="#fff" text-anchor="middle">${site.letter}</text></svg>`
