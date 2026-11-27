@@ -2,18 +2,17 @@
 
 Every permission Aloft asks for and what it's used for. This list also goes into the Chrome Web Store's privacy form and the addons.mozilla.org listing; keep it in sync with `wxt.config.ts`.
 
-| Permission              | Why                                                                                                                                  |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `tabs`                  | Read tab titles and addresses to search open tabs and show pinned tabs.                                                              |
-| `history`               | Search your history.                                                                                                                 |
-| `bookmarks`             | Search your bookmarks.                                                                                                               |
-| `sessions`              | List and reopen recently closed tabs.                                                                                                |
-| `search`                | Send what you typed to your default search engine when you choose "Search the web".                                                  |
-| `storage`               | Save your settings and themes.                                                                                                       |
-| `scripting`             | Add the frame that shows the command bar to the page you're on.                                                                      |
-| `activeTab`             | Lets the keyboard shortcut (Alt+Q) open Aloft without access to all sites.                                                           |
-| `favicon`               | Show site icons from the browser's own icon cache, so no icon is ever fetched from a site. Chromium only: Firefox has no such cache. |
-| `<all_urls>` (optional) | Asked for on the first-run page, only if you want Ctrl+T to open Aloft over the current page.                                        |
+| Permission  | Why                                                                                                                                  |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `tabs`      | Read tab titles and addresses to search open tabs and show pinned tabs.                                                              |
+| `history`   | Search your history.                                                                                                                 |
+| `bookmarks` | Search your bookmarks.                                                                                                               |
+| `sessions`  | List and reopen recently closed tabs.                                                                                                |
+| `search`    | Send what you typed to your default search engine when you choose "Search the web".                                                  |
+| `storage`   | Save your settings and themes.                                                                                                       |
+| `scripting` | Add the frame that shows the command bar to the page you're on.                                                                      |
+| `activeTab` | Lets Aloft's keyboard shortcuts open it over the page you're on, without access to any site.                                         |
+| `favicon`   | Show site icons from the browser's own icon cache, so no icon is ever fetched from a site. Chromium only: Firefox has no such cache. |
 
 ## What Aloft doesn't do
 

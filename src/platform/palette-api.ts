@@ -5,7 +5,7 @@ import { oncePerFrame, watchTabs as watchTabsHere } from './sources'
 import { watchZoom as watchZoomHere } from './zoom'
 
 // Firefox gives a palette framed inside a website no tabs API (see relay.ts).
-// Its new tab page and the settings preview aren't framed by a website, so
+// Its own tab and the settings preview aren't framed by a website, so
 // they still call the browser directly. Chromium builds drop the relay.
 const viaRelay = import.meta.env.FIREFOX && browser.tabs === undefined
 

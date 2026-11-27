@@ -45,7 +45,7 @@ async function openWhatsNew(host: HostTab): Promise<void> {
   })
 }
 
-// window.close() is ignored for tabs the user opened, like Ctrl+T's.
+// window.close() is ignored for tabs the script didn't open itself.
 async function closeTab(tabId: number): Promise<void> {
   await browser.tabs.remove(tabId)
 }

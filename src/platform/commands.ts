@@ -1,9 +1,11 @@
 import { browser } from 'wxt/browser'
+import type { Shortcuts } from '../core/shortcut'
 
-/** Empty when the user cleared the shortcut or another extension took it. */
-export async function openShortcut(): Promise<string> {
+/** Each is empty when unset, or when another extension took the key. */
+export async function openShortcuts(): Promise<Shortcuts> {
   const all = await browser.commands.getAll()
-  return all.find((c) => c.name === 'open-aloft')?.shortcut ?? ''
+  const key = (name: string) => all.find((c) => c.name === name)?.shortcut ?? ''
+  return { main: key('open-aloft'), second: key('open-aloft-second') }
 }
 
 // Firefox doesn't let extensions open its add-ons pages, and has this call

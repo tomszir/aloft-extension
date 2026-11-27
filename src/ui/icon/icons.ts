@@ -12,6 +12,7 @@ export const ICON_NAMES = [
   'globe',
   'pin',
   'pin-off',
+  'plus',
   'search',
   'settings',
   'square-arrow-out-up-right',

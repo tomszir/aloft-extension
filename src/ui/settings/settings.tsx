@@ -3,13 +3,14 @@ import { i18n } from '#i18n'
 import { type Release, releasesBetween } from '../../core/changelog'
 import type { Keyword } from '../../core/keywords'
 import type { Settings as SettingsValue } from '../../core/settings'
+import type { Shortcuts } from '../../core/shortcut'
 import { PRESET_THEMES } from '../../core/theme'
 import { Button } from '../button/button'
 import { Choice } from '../choice/choice'
+import { CtrlTSetup } from '../ctrl-t-setup/ctrl-t-setup'
 import type { FaviconLoader } from '../favicon/favicon'
 import { KeywordSettings } from '../keyword-settings/keyword-settings'
 import { Logo } from '../logo/logo'
-import type { AccessState } from '../onboarding/onboarding'
 import { ReleaseNotes } from '../release-notes/release-notes'
 import { ShortcutSentence } from '../shortcut-sentence/shortcut-sentence'
 import { ThemePicker } from '../theme-picker/theme-picker'
@@ -19,11 +20,8 @@ import styles from './settings.module.css'
 export interface SettingsProps {
   settings: SettingsValue
   onChange: (change: (current: SettingsValue) => SettingsValue) => void
-  /** Empty when the user cleared the shortcut or another extension took it. */
-  shortcut: string
+  shortcuts: Shortcuts
   onChangeShortcut: () => void
-  access: AccessState
-  onAllow: () => void
   /** The palette itself, in preview mode, so it shows exactly what Aloft will. */
   previewSrc: string
   keywords: readonly Keyword[]
@@ -105,37 +103,12 @@ export function Settings(props: SettingsProps) {
           {i18n.t('settingsOpening')}
         </h2>
         <div class={styles.shortcut}>
-          <ShortcutSentence shortcut={props.shortcut} class={styles.text} />
+          <ShortcutSentence shortcut={props.shortcuts.main} class={styles.text} />
           <Button onClick={() => props.onChangeShortcut()}>
             {i18n.t('onboardingChangeShortcut')}
           </Button>
         </div>
-        <Toggle
-          label={i18n.t('settingsCtrlT')}
-          checked={props.settings.replaceNewTab}
-          onChange={(on) => set('replaceNewTab', on)}
-          note={
-            <Show
-              when={props.settings.replaceNewTab && props.access !== 'granted'}
-              fallback={i18n.t('settingsCtrlTNote')}
-            >
-              <div class={styles.noteBody} aria-live="polite">
-                <span>
-                  {props.access === 'denied'
-                    ? i18n.t('onboardingDenied')
-                    : i18n.t('settingsCtrlTNeedsAccess')}
-                </span>
-                <Show when={props.access !== 'unknown'}>
-                  <div>
-                    <Button variant="primary" onClick={() => props.onAllow()}>
-                      {i18n.t('onboardingAllow')}
-                    </Button>
-                  </div>
-                </Show>
-              </div>
-            </Show>
-          }
-        />
+        <CtrlTSetup shortcuts={props.shortcuts} onSetUp={props.onChangeShortcut} />
       </section>
 
       <section class={styles.card} aria-labelledby="al-results-title">

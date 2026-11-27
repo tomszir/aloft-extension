@@ -1,20 +1,18 @@
 import { browser } from 'wxt/browser'
 import { RELEASES } from '../core/releases'
-import { watchNewTabs } from '../platform/newtab-intercept'
 import { openAloft } from '../platform/overlay'
 import { serveRelay } from '../platform/relay-host'
 import { currentVersion, noteUpdate } from '../platform/whats-new'
 
 export default defineBackground(() => {
   browser.commands.onCommand.addListener((command, tab) => {
-    if (command === 'open-aloft') void openAloft(tab)
+    if (command === 'open-aloft' || command === 'open-aloft-second') void openAloft(tab)
   })
 
-  watchNewTabs()
   if (import.meta.env.FIREFOX) serveRelay()
 
-  // Ctrl+T needs site access, and that can only be asked for from a click, so
-  // a first-run page explains it rather than Ctrl+T silently not working.
+  // A first-run page shows the shortcut, and how to make Ctrl+T open Aloft:
+  // only the person can assign that, on the browser's shortcuts page.
   browser.runtime.onInstalled.addListener(({ reason, previousVersion }) => {
     if (reason === 'install')
       void browser.tabs.create({ url: browser.runtime.getURL('/onboarding.html') })

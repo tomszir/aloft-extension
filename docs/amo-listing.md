@@ -16,7 +16,7 @@ The text and answers for Aloft's [addons.mozilla.org](https://addons.mozilla.org
 
 **Summary** (at most 250 characters):
 
-> Press Ctrl+T and a search bar floats over the page you're on: open tabs, history, bookmarks and recently closed tabs, ranked together. No network requests, nothing collected.
+> Press Alt+Q and a search bar floats over the page you're on: open tabs, history, bookmarks and recently closed tabs, ranked together. No network requests, nothing collected.
 
 **Description:** the Chrome Web Store description from [store-listing.md](store-listing.md), with its last paragraph replaced by:
 
@@ -45,8 +45,8 @@ The text and answers for Aloft's [addons.mozilla.org](https://addons.mozilla.org
 >
 > The package is written to .output/aloft-<version>-firefox.zip and matches the uploaded one file for file.
 >
-> What it does: a command bar that opens over the current page (Alt+Q, or Ctrl+T once site access is granted on the first-run page). It searches open tabs, history, bookmarks and recently closed tabs locally and makes no network requests.
+> What it does: a command bar that opens over the current page with its keyboard shortcut (Alt+Q, plus an optional second one the user sets, such as Ctrl+T). It searches open tabs, history, bookmarks and recently closed tabs locally and makes no network requests.
 >
 > How it's built: the bar is an extension page (palette.html) in an iframe the content script adds, so pages can't read it. Firefox gives that framed page only content-script APIs, so it asks the background page for tabs, history and bookmarks over runtime messaging (src/platform/relay.ts and relay-host.ts); the background only answers Aloft's own palette page. The two innerHTML warnings are Solid's compiled templates.
 >
-> To try it: install, then on the first-run page allow access to all sites if you want Ctrl+T to open the bar over the page. Without it, Alt+Q works on any page and Ctrl+T shows the bar as the new tab page.
+> To try it: install, then press Alt+Q on any page.

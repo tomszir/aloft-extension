@@ -20,8 +20,8 @@ describe('normalizeSettings', () => {
 
   it('fills in fields that an older version did not have', () => {
     const { pinned: _dropped, ...old } = DEFAULT_SETTINGS
-    const result = normalizeSettings({ ...old, replaceNewTab: false })
-    expect(result.replaceNewTab).toBe(false)
+    const result = normalizeSettings({ ...old, learnFromPicks: false })
+    expect(result.learnFromPicks).toBe(false)
     expect(result.pinned).toEqual(DEFAULT_SETTINGS.pinned)
   })
 
@@ -30,14 +30,19 @@ describe('normalizeSettings', () => {
     expect(result).not.toHaveProperty('telemetry')
   })
 
+  it('drops settings older versions had, like replacing the new tab page', () => {
+    const result = normalizeSettings({ ...DEFAULT_SETTINGS, replaceNewTab: true })
+    expect(result).not.toHaveProperty('replaceNewTab')
+  })
+
   it('resets only the fields that are invalid', () => {
     const result = normalizeSettings({
       ...DEFAULT_SETTINGS,
-      replaceNewTab: false,
+      learnFromPicks: false,
       enterOpensIn: 'sideways',
       appearance: { ...DEFAULT_SETTINGS.appearance, darkTheme: '../etc', blur: 'yes' },
     })
-    expect(result.replaceNewTab).toBe(false)
+    expect(result.learnFromPicks).toBe(false)
     expect(result.enterOpensIn).toBe(DEFAULT_SETTINGS.enterOpensIn)
     expect(result.appearance.darkTheme).toBe(DEFAULT_SETTINGS.appearance.darkTheme)
     expect(result.appearance.blur).toBe(DEFAULT_SETTINGS.appearance.blur)

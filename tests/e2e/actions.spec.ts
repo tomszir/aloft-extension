@@ -33,6 +33,17 @@ test('pins the tab Aloft is open over', async ({ context, background }) => {
   await expect(page.locator('iframe[title="Aloft"]')).toHaveCount(0)
 })
 
+test('opens an empty tab next to this one', async ({ context, background }) => {
+  const page = await context.newPage()
+  await page.goto(`${TEST_ORIGIN}/Host`)
+  await pressOpenAloft(background, page)
+  const opened = context.waitForEvent('page')
+  await runAction(page, '> new tab', 'New tab')
+
+  await expect(await opened).toHaveURL(/^chrome:\/\/new-?tab|^about:blank/)
+  await expect(page.locator('iframe[title="Aloft"]')).toHaveCount(0)
+})
+
 test('duplicates the tab', async ({ context, background }) => {
   const page = await context.newPage()
   await page.goto(`${TEST_ORIGIN}/Host`)

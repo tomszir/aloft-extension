@@ -18,7 +18,7 @@ Before opening a PR, run `mise run check`, `pnpm test`, `pnpm build && pnpm size
 - **Conventional Commits:** `type(scope): summary`, for example `fix(actions): keep focus after closing the menu`.
   - Types: `feat` `fix` `perf` `refactor` `docs` `test` `build` `ci` `chore` `revert`.
   - The summary is imperative, lowercase, at most 72 characters, with no trailing period.
-  - `feat`, `fix` and `perf` commits go into the changelog, so write them for users: what they'll notice, not how it was done. Scope them by area (`search`, `actions`, `pinned`, `overlay`, `newtab`, `onboarding`, `settings`, `theme`) when one fits.
+  - `feat`, `fix` and `perf` commits go into the changelog, so write them for users: what they'll notice, not how it was done. Scope them by area (`search`, `actions`, `pinned`, `overlay`, `onboarding`, `settings`, `theme`) when one fits.
   - Mark breaking changes with `type!:` or a `BREAKING CHANGE:` footer, including anything that makes a user redo something: settings that don't carry over, a changed shortcut or keyword, or a theme that stops loading.
 - **Lean messages:** add a body only when the reason isn't obvious from the summary.
 - **One topic per PR.** PRs are squash-merged, so the **PR title becomes the commit**: make it a conventional commit. Keep the description to a line or two on what and why, plus how you tested it.

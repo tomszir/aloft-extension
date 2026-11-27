@@ -53,8 +53,7 @@ export const test = base.extend<{
     })
     // A fresh profile opens the onboarding tab once the install finishes, at
     // a moment no test can predict. Waiting for it here keeps it from being
-    // taken for the tab a test is waiting on, or becoming the tab Ctrl+T
-    // returns to.
+    // taken for the tab a test is waiting on.
     const isOnboarding = (p: Page) => p.url().endsWith('/onboarding.html')
     await base.expect.poll(() => context.pages().some(isOnboarding)).toBe(true)
     // Some failures only happen on CI's slower runners, so keep a trace of
@@ -145,7 +144,6 @@ export async function isPinned(background: Worker, url: string): Promise<boolean
   }, url)
 }
 
-/** What Ctrl+T does: an active tab on the browser's new tab page. */
 /** The pinned tabs' URLs in tab-strip order. */
 export async function pinnedUrls(background: Worker): Promise<string[]> {
   return background.evaluate(async () => {
@@ -154,15 +152,6 @@ export async function pinnedUrls(background: Worker): Promise<string[]> {
     }
     const pins = await api.tabs.query({ pinned: true })
     return pins.sort((a, b) => a.index - b.index).map((t) => t.url ?? '')
-  })
-}
-
-export async function pressNewTab(background: Worker): Promise<void> {
-  await background.evaluate(async () => {
-    const api = Reflect.get(globalThis, 'chrome') as {
-      tabs: { create: (props: object) => Promise<unknown> }
-    }
-    await api.tabs.create({})
   })
 }
 
