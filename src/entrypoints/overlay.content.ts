@@ -13,6 +13,8 @@ import {
 
 // Each injection runs main() again, so pressing the shortcut twice closes.
 const OPEN = Symbol.for('aloft.overlay')
+// Long past when any palette asks for the keys it was held.
+const FOCUS_FALLBACK_MS = 1000
 type Scope = typeof globalThis & { [OPEN]?: () => void }
 
 // The dialog only lifts the frame into the top layer; the palette draws its own
@@ -95,34 +97,42 @@ export default defineContentScript({
           // Blur has to be set out here: a filter inside the frame can't
           // reach the page behind it.
           backdropFilter: blur ? 'blur(4px)' : 'none',
-          opacity: reduceMotion ? '1' : '0',
+          opacity: '0',
           transition: reduceMotion ? 'none' : 'opacity 120ms ease-out',
         })
       },
       onMount(_wrapper, iframe) {
-        requestAnimationFrame(() => {
-          iframe.style.opacity = '1'
-        })
-        // Keys sent into a frame that is still loading are lost, so they stay
-        // out here, held, until the palette is there to ask for them.
         iframe.addEventListener(
           'load',
           () => {
-            frame = iframe
-            if (!closing) iframe.focus()
+            if (closing) return
+            // Shown only now: until the palette has loaded, the frame holds an
+            // empty document that Chrome may paint opaque white. On Ctrl+T this
+            // runs in a background tab, where a fade can't start early anyway.
+            iframe.style.opacity = '1'
+            // The palette asks for the held keys once its search box exists,
+            // which is when focus moves in; this only covers a palette that
+            // never asks.
+            setTimeout(() => focusFrame(iframe), FOCUS_FALLBACK_MS)
           },
           { once: true },
         )
       },
     })
 
-    // Set once the palette has loaded. A key that reaches the page after that
-    // means focus left the frame: it's held, and the palette asks for it as
-    // focus comes back.
+    // Keys sent into the frame before the palette has drawn its search box are
+    // lost, even after the frame has loaded (it reads settings first), so they
+    // stay out here, held, until it asks for them. A key that reaches the
+    // page after that means focus left the frame: it's held too, and the
+    // palette asks for it as focus comes back.
     let frame: HTMLIFrameElement | undefined
+    function focusFrame(iframe: HTMLIFrameElement) {
+      frame = iframe
+      if (!closing) iframe.focus()
+    }
     if (held)
       held.onKey = () => {
-        if (!closing) frame?.focus()
+        if (frame) focusFrame(frame)
       }
 
     const onMessage = (
@@ -134,6 +144,8 @@ export default defineContentScript({
       else if (isTakeTypedMessage(message)) {
         sendResponse(held?.text ?? '')
         if (held) held.text = ''
+        const iframe = shadow.querySelector('iframe')
+        if (iframe && document.activeElement !== host) focusFrame(iframe)
       }
     }
 

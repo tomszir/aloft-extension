@@ -8,5 +8,5 @@ import { mountPalette } from '../palette/mount'
 // about to close doesn't flash it.
 document.title = i18n.t('newTabTitle')
 void newTabStays().then(() => {
-  if (!takeFocusFromAddressBar()) mountPalette('newtab')
+  if (!takeFocusFromAddressBar()) void mountPalette('newtab')
 })
