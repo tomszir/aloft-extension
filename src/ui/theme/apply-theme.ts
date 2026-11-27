@@ -1,18 +1,18 @@
 import type { Settings } from '../../core/settings'
-import { deriveTokens, type Theme, tokensToCssVars } from '../../core/theme'
+import { deriveTokens, PAGE_COLORS, type Theme, tokensToCssVars } from '../../core/theme'
 import { densityTokens, fontFamily } from '../../core/typography'
 
 const SCHEME_EXTRAS = {
   dark: {
     '--al-scrim': 'rgba(0, 0, 0, 0.45)',
-    '--al-page': '#131515',
+    '--al-page': PAGE_COLORS.dark,
     '--al-danger': '#F2A8A0',
     '--al-shadow': '0 24px 64px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.35)',
     '--al-lift-shadow': '0 10px 24px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.35)',
   },
   light: {
     '--al-scrim': 'rgba(20, 24, 24, 0.22)',
-    '--al-page': '#F2F3F3',
+    '--al-page': PAGE_COLORS.light,
     '--al-danger': '#B42318',
     '--al-shadow': '0 24px 64px rgba(20, 24, 24, 0.18), 0 2px 8px rgba(20, 24, 24, 0.08)',
     '--al-lift-shadow': '0 10px 24px rgba(20, 24, 24, 0.18), 0 2px 6px rgba(20, 24, 24, 0.1)',

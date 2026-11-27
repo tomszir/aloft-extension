@@ -2,6 +2,7 @@ import { For, Show } from 'solid-js'
 import { i18n } from '#i18n'
 import { deriveTokens, type Theme, tokensToCssVars } from '../../core/theme'
 import { Icon } from '../icon/icon'
+import '../icon/page-icons'
 import styles from './theme-picker.module.css'
 
 export interface ThemePickerProps {
@@ -51,6 +52,9 @@ export function ThemePicker(props: ThemePickerProps) {
                   <span class={styles.accent} />
                 </span>
                 <span class={styles.name}>{theme.name}</span>
+                <span class={styles.check} aria-hidden="true">
+                  <Icon name="check" />
+                </span>
               </label>
               {/* Beside the card, not in it: a button inside a label would also select it. */}
               <Show when={isCustom(theme) && props.onEdit}>

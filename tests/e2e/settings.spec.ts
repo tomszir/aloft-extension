@@ -203,8 +203,10 @@ test('the menu jumps to a section and marks it, as does scrolling', async ({
   await menu.getByRole('link', { name: 'Appearance' }).click()
   await expect(menu.getByRole('link', { name: 'Appearance' })).toHaveAttribute(
     'aria-current',
-    'true',
+    'location',
   )
+  // Keyboard focus goes along, so the next Tab is in that section.
+  await expect(page.locator('#al-appearance-title')).toBeFocused()
   await expect
     .poll(() =>
       page.locator('#appearance').evaluate((el) => Math.round(el.getBoundingClientRect().top)),
@@ -214,6 +216,6 @@ test('the menu jumps to a section and marks it, as does scrolling', async ({
   await page.locator('#whats-new').evaluate((el) => el.scrollIntoView())
   await expect(menu.getByRole('link', { name: "What's new" })).toHaveAttribute(
     'aria-current',
-    'true',
+    'location',
   )
 })

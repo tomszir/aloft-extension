@@ -1,4 +1,6 @@
-/* One column on narrow windows: the title, the preview, then the settings. */
+/* One column on narrow windows. The preview shows above the settings, though
+   it comes after them in the page, so the settings are read and tabbed to
+   first. */
 .layout {
   display: flex;
   flex-direction: column;
@@ -24,7 +26,8 @@
   order: 1;
   display: flex;
   box-sizing: border-box;
-  height: 70vh;
+  height: var(--al-preview-narrow-height);
+  min-height: calc(var(--al-preview-height) + 2 * var(--al-space-5));
   padding: var(--al-space-5);
 }
 
@@ -348,4 +351,21 @@
     width: calc(var(--al-theme-card-width) * 1.6);
     padding-inline: var(--al-space-5) var(--al-space-3);
   }
+}
+
+.saved-note {
+  margin: 0;
+  padding: 0 var(--al-space-1);
+  font-size: var(--al-font-size-sm);
+  color: var(--al-muted);
+}
+
+.saved-note:empty {
+  display: none;
+}
+
+/* Focused from the menu or after the theme editor closes, as a place for
+   the next Tab to start from, not as something to act on. */
+.section-title:focus {
+  outline: none;
 }

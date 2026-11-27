@@ -19,6 +19,9 @@ export const FontName = v.pipe(
   v.regex(/^[\p{L}\p{N} ._-]*$/u),
 )
 
+/** Whether a typed font name can be used (see FontName). */
+export const isFontName = (name: string): boolean => v.safeParse(FontName, name).success
+
 const STACKS: Record<Exclude<Font, 'custom'>, string> = {
   system: 'system-ui, sans-serif',
   sans: '"Helvetica Neue", Arial, "Liberation Sans", "Noto Sans", sans-serif',

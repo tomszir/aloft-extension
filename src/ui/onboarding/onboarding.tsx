@@ -3,7 +3,7 @@ import { i18n } from '#i18n'
 import type { Shortcuts } from '../../core/shortcut'
 import { Button } from '../button/button'
 import '../icon/page-icons'
-import { CtrlTSetup } from '../ctrl-t-setup/ctrl-t-setup'
+import { CtrlTSetup, newTabKey } from '../ctrl-t-setup/ctrl-t-setup'
 import { Logo } from '../logo/logo'
 import { ShortcutSentence } from '../shortcut-sentence/shortcut-sentence'
 import styles from './onboarding.module.css'
@@ -38,7 +38,7 @@ export function Onboarding(props: OnboardingProps) {
 
       <section id="ctrl-t" class={styles.card} aria-labelledby="ctrl-t-title">
         <h2 id="ctrl-t-title" class={styles.heading}>
-          {i18n.t('onboardingCtrlTTitle')}
+          {i18n.t('onboardingCtrlTTitle', [newTabKey()])}
         </h2>
         <CtrlTSetup shortcuts={props.shortcuts} onSetUp={props.onChangeShortcut} />
       </section>

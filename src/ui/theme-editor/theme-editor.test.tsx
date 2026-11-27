@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@solidjs/testing-library'
+import { fireEvent, render, screen, within } from '@solidjs/testing-library'
 import { describe, expect, it, vi } from 'vitest'
 import { PRESET_THEMES, type Theme } from '../../core/theme'
 import { ThemeEditor, type ThemeEditorProps } from './theme-editor'
@@ -62,10 +62,24 @@ describe('ThemeEditor', () => {
     fireEvent.click(screen.getByRole('button', { name: 'themeBack' }))
     fireEvent.click(screen.getByRole('button', { name: 'themeExport' }))
     fireEvent.click(screen.getByRole('button', { name: 'themeDelete' }))
+    // Deleting syncs to every device, so it asks first.
+    expect(props.onDelete).not.toHaveBeenCalled()
+    fireEvent.click(within(screen.getByRole('alert')).getByRole('button', { name: 'themeDelete' }))
     expect(props.onSave).toHaveBeenCalledOnce()
     expect(props.onCancel).toHaveBeenCalledOnce()
     expect(props.onExport).toHaveBeenCalledOnce()
     expect(props.onDelete).toHaveBeenCalledOnce()
+  })
+
+  it('asks before going back with unsaved changes, and not without', () => {
+    const props = renderEditor({ dirty: true })
+    fireEvent.click(screen.getByRole('button', { name: 'themeBack' }))
+    expect(props.onCancel).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'themeKeep' }))
+    expect(screen.queryByRole('alert')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'themeBack' }))
+    fireEvent.click(screen.getByRole('button', { name: 'themeDiscard' }))
+    expect(props.onCancel).toHaveBeenCalledOnce()
   })
 
   it("has nothing to delete before it's saved, and can't be saved without a name", () => {

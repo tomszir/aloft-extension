@@ -1,5 +1,10 @@
 import { storage } from '#imports'
-import { customThemesFitSync, normalizeCustomThemes, type Theme } from '../core/theme'
+import {
+  customThemesFitSync,
+  normalizeCustomThemes,
+  type Theme,
+  type ThemesSaved,
+} from '../core/theme'
 
 // Its own sync item, like the keywords, so themes don't eat into the
 // settings' 8 KB. Always normalized on the way out.
@@ -9,11 +14,18 @@ export async function loadCustomThemes(): Promise<Theme[]> {
   return normalizeCustomThemes(await themesItem.getValue())
 }
 
-/** False, saving nothing, when the themes don't fit in one sync item. */
-export async function saveCustomThemes(themes: readonly Theme[]): Promise<boolean> {
-  if (!customThemesFitSync(themes)) return false
-  await themesItem.setValue(themes)
-  return true
+/**
+ * Saves nothing when the themes don't fit in one sync item, or when sync
+ * storage refuses the write (its total quota, or too many writes a minute).
+ */
+export async function saveCustomThemes(themes: readonly Theme[]): Promise<ThemesSaved> {
+  if (!customThemesFitSync(themes)) return 'full'
+  try {
+    await themesItem.setValue(themes)
+    return 'saved'
+  } catch {
+    return 'failed'
+  }
 }
 
 export function watchCustomThemes(onChange: (themes: Theme[]) => void): () => void {

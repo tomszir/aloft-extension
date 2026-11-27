@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@solidjs/testing-library'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { DEFAULT_SETTINGS, type Settings } from '../../core/settings'
 import { SettingsPreview } from './settings-preview'
 
@@ -18,12 +18,17 @@ describe('SettingsPreview', () => {
     expect(frame().style.backdropFilter).toBe('blur(4px)')
   })
 
-  it('switches between the light and dark theme when they follow the system', () => {
+  it('switches between the light and dark theme without adding to the history', () => {
     render(() => <SettingsPreview src="p.html" appearance={appearance()} />)
+    const src = frame().getAttribute('src')
+    // A stand-in for the frame's window, to see where it's sent.
+    const replace = vi.fn()
+    Object.defineProperty(frame(), 'contentWindow', { value: { location: { replace } } })
     fireEvent.click(screen.getByRole('radio', { name: 'settingsSchemeDark' }))
-    expect(frame().getAttribute('src')).toBe('p.html#scheme=dark')
+    expect(replace).toHaveBeenLastCalledWith('p.html#scheme=dark')
     fireEvent.click(screen.getByRole('radio', { name: 'settingsSchemeLight' }))
-    expect(frame().getAttribute('src')).toBe('p.html#scheme=light')
+    expect(replace).toHaveBeenLastCalledWith('p.html#scheme=light')
+    expect(frame().getAttribute('src')).toBe(src)
   })
 
   it('shows the one scheme in use, without the switch, when one is chosen', () => {

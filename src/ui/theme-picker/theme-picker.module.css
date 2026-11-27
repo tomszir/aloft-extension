@@ -1,6 +1,9 @@
 /* A definite width: in a column flexbox, a fieldset otherwise measures its
    height with the grid at its narrowest, one card per row. */
+/* The page's accent, read here before each card sets its own: outlines drawn
+   in a card's accent would vanish on the page for some themes. */
 .field {
+  --al-ring: var(--al-accent);
   box-sizing: border-box;
   width: 100%;
   min-width: 0;
@@ -41,13 +44,32 @@
 }
 
 .card:has(:checked) {
-  outline: 2px solid var(--al-accent);
+  outline: 2px solid var(--al-ring);
   outline-offset: 2px;
 }
 
 .card:has(:focus-visible) {
-  outline: 2px solid var(--al-accent);
+  outline: 2px dashed var(--al-ring);
   outline-offset: 4px;
+}
+
+/* Selected is marked by more than its outline. */
+.check {
+  position: absolute;
+  bottom: var(--al-space-2);
+  right: var(--al-space-2);
+  display: none;
+  place-items: center;
+  width: var(--al-badge-size);
+  height: var(--al-badge-size);
+  border-radius: 50%;
+  background: var(--al-ring);
+  color: var(--al-page);
+  --al-glyph-size: calc(var(--al-badge-size) - var(--al-space-1));
+}
+
+.card:has(:checked) .check {
+  display: grid;
 }
 
 .radio {
@@ -120,7 +142,7 @@
 
 .edit:focus-visible,
 .new:focus-visible {
-  outline: 2px solid var(--al-accent);
+  outline: 2px solid var(--al-ring);
   outline-offset: 2px;
 }
 
@@ -135,7 +157,7 @@
   gap: var(--al-space-2);
   min-height: calc(var(--al-tile-height) * 1.6);
   padding: var(--al-space-3);
-  border: 1.5px dashed var(--al-border);
+  border: var(--al-slot-border) dashed var(--al-border);
   border-radius: var(--al-radius);
   background: none;
   color: var(--al-muted);

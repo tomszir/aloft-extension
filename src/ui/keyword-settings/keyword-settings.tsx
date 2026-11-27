@@ -43,13 +43,25 @@ export function KeywordSettings(props: KeywordSettingsProps) {
   const [error, setError] = createSignal<DraftError | 'full'>()
   const [confirmReset, setConfirmReset] = createSignal(false)
 
+  // The form replaces the button that opened it, so focus moves into the
+  // form and, when it closes, back to that button (or what took its place).
+  let formElement: HTMLFormElement | undefined
+  let opener: HTMLElement | undefined
   const edit = (keyword: Keyword | undefined) => {
     setError(undefined)
+    opener = document.activeElement instanceof HTMLElement ? document.activeElement : undefined
     setEditing({
       id: keyword?.id,
       draft: keyword
         ? { name: keyword.name, keyword: keyword.keyword, url: keyword.url }
         : EMPTY_DRAFT,
+    })
+    requestAnimationFrame(() => formElement?.querySelector('input')?.focus())
+  }
+  const close = () => {
+    setEditing(undefined)
+    requestAnimationFrame(() => {
+      if (opener?.isConnected) opener.focus()
     })
   }
   const change = (field: keyof KeywordDraft, value: string) => {
@@ -70,16 +82,17 @@ export function KeywordSettings(props: KeywordSettingsProps) {
       return
     }
     const next = saveDraft(props.keywords, current.draft, current.id, props.newId ?? defaultId)
-    if (await save(next)) setEditing(undefined)
+    if (await save(next)) close()
   }
   const remove = async (id: string) => {
-    if (await save(props.keywords.filter((k) => k.id !== id))) setEditing(undefined)
+    if (await save(props.keywords.filter((k) => k.id !== id))) close()
   }
   const toggle = (id: string, on: boolean) =>
     void save(props.keywords.map((k) => (k.id === id ? { ...k, enabled: on } : k)))
 
   const form = (current: Editing) => (
     <form
+      ref={formElement}
       class={styles.form}
       aria-label={current.id ? i18n.t('keywordEdit', [current.draft.name]) : i18n.t('keywordAdd')}
       onSubmit={(event) => {
@@ -136,7 +149,7 @@ export function KeywordSettings(props: KeywordSettingsProps) {
           </button>
         </Show>
         <span class={styles.spacer} />
-        <Button onClick={() => setEditing(undefined)}>{i18n.t('keywordCancel')}</Button>
+        <Button onClick={close}>{i18n.t('keywordCancel')}</Button>
         <Button type="submit" variant="primary">
           {i18n.t('keywordSave')}
         </Button>

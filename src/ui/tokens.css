@@ -53,6 +53,8 @@
   --al-settings-width: 720px;
   --al-keyword-field-width: 140px;
   --al-preview-height: 460px;
+  /* The preview's share of a narrow window, above the settings. */
+  --al-preview-narrow-height: 70vh;
   /* The settings column's side padding, which full-width bars reach past. */
   --al-settings-gutter: 28px;
   /* The settings preview: rounder than the palette, lifted off the page. */

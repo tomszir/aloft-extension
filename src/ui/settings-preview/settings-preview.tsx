@@ -1,4 +1,4 @@
-import { createSignal, onCleanup, Show } from 'solid-js'
+import { createEffect, createSignal, on, onCleanup, Show, untrack } from 'solid-js'
 import { i18n } from '#i18n'
 import type { Settings } from '../../core/settings'
 import { encodePreviewTheme, type Theme } from '../../core/theme'
@@ -41,6 +41,19 @@ export function SettingsPreview(props: SettingsPreviewProps) {
     return setting === 'system' ? (picked() ?? systemScheme()) : setting
   }
 
+  // Later changes go through location.replace, which only swaps the frame's
+  // hash: setting its src would add a history entry for every color tried,
+  // and Back would step through them. Both pages are Aloft's, so the settings
+  // page may reach into the frame.
+  let frame: HTMLIFrameElement | undefined
+  createEffect(
+    on(
+      () => previewHash(scheme(), props.editing),
+      (hash) => frame?.contentWindow?.location.replace(`${props.src}#${hash}`),
+      { defer: true },
+    ),
+  )
+
   return (
     <section class={styles.preview} aria-label={i18n.t('settingsPreview')}>
       <div class={styles.stage} data-scheme={scheme()}>
@@ -61,8 +74,9 @@ export function SettingsPreview(props: SettingsPreviewProps) {
             outside. The scheme goes in the hash, which changes the preview's
             theme without reloading it. */}
         <iframe
+          ref={frame}
           class={styles.frame}
-          src={`${props.src}#${previewHash(scheme(), props.editing)}`}
+          src={`${props.src}#${untrack(() => previewHash(scheme(), props.editing))}`}
           title={i18n.t('settingsPreview')}
           style={{
             'color-scheme': 'light dark',
@@ -70,10 +84,12 @@ export function SettingsPreview(props: SettingsPreviewProps) {
           }}
         />
         {/* The preview's own controls float over it, out of the settings. */}
-        <div class={styles.panel} data-scheme={props.appearance.colorScheme}>
+        <div class={styles.panel}>
           <span class={styles.caption}>
             {props.editing
-              ? i18n.t('settingsPreviewEditing', [props.editing.name.trim() || '…'])
+              ? props.editing.name.trim()
+                ? i18n.t('settingsPreviewEditing', [props.editing.name.trim()])
+                : i18n.t('settingsPreviewEditingUnnamed')
               : i18n.t('settingsPreviewNote')}
           </span>
           <Show when={props.appearance.colorScheme === 'system' && !props.editing}>

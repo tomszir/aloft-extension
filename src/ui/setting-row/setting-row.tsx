@@ -6,6 +6,8 @@ export interface SettingRowProps {
   /** For the control to be named by, through aria-labelledby. */
   labelId?: string
   description?: JSX.Element
+  /** For the control to be described by, through aria-describedby. */
+  descriptionId?: string
   /** Wide controls (theme cards, lists) go under the text instead of beside it. */
   stacked?: boolean
   children: JSX.Element
@@ -20,7 +22,9 @@ export function SettingRow(props: SettingRowProps) {
           {props.label}
         </span>
         <Show when={props.description}>
-          <div class={styles.description}>{props.description}</div>
+          <div id={props.descriptionId} class={styles.description}>
+            {props.description}
+          </div>
         </Show>
       </div>
       <div class={styles.control}>{props.children}</div>

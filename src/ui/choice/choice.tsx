@@ -16,6 +16,8 @@ export interface ChoiceProps<T extends string> {
   label: string
   /** The id of a visible label elsewhere, such as a settings row's; then there's no legend. */
   labelledBy?: string
+  /** The id of a description elsewhere, such as a settings row's. */
+  describedBy?: string
   options: readonly ChoiceOption<T>[]
   value: T
   onChange: (value: T) => void
@@ -42,7 +44,11 @@ export function Choice<T extends string>(props: ChoiceProps<T>) {
     ),
   )
   return (
-    <fieldset class={styles.field} aria-labelledby={props.labelledBy}>
+    <fieldset
+      class={styles.field}
+      aria-labelledby={props.labelledBy}
+      aria-describedby={props.describedBy}
+    >
       <Show when={!props.labelledBy}>
         <legend class={styles.legend}>{props.label}</legend>
       </Show>

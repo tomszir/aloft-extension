@@ -18,6 +18,7 @@ import {
   PRESET_THEMES,
   resolveTheme,
   ThemeSchema,
+  uniqueName,
 } from './theme'
 
 const heliumDark = PRESET_THEMES.find((t) => t.id === DEFAULT_DARK_THEME_ID)
@@ -190,8 +191,23 @@ describe('custom themes', () => {
 
   it('round-trips a theme being edited through the preview address, and rejects anything else', () => {
     const theme = custom('custom-a')
-    expect(decodePreviewTheme(encodePreviewTheme(theme))).toEqual(theme)
-    expect(decodePreviewTheme('%7Bnot')).toBeUndefined()
-    expect(decodePreviewTheme(encodeURIComponent('{"id":"x"}'))).toBeUndefined()
+    // Read back the way the preview does: the address decodes it once.
+    const read = (t: typeof theme) =>
+      new URLSearchParams(`theme=${encodePreviewTheme(t)}`).get('theme') ?? ''
+    expect(decodePreviewTheme(read(theme))).toEqual(theme)
+    const percent = { ...theme, name: '100% Mix %41' }
+    expect(decodePreviewTheme(read(percent))?.name).toBe('100% Mix %41')
+    expect(decodePreviewTheme('{not')).toBeUndefined()
+    expect(decodePreviewTheme('{"id":"x"}')).toBeUndefined()
+  })
+})
+
+describe('uniqueName', () => {
+  it('numbers a name a theme already has, ignoring case', () => {
+    const [first] = PRESET_THEMES
+    if (!first) throw new Error('missing presets')
+    expect(uniqueName('Fresh', PRESET_THEMES)).toBe('Fresh')
+    expect(uniqueName('paper', PRESET_THEMES)).toBe('paper 2')
+    expect(uniqueName('Paper', [...PRESET_THEMES, { ...first, name: 'Paper 2' }])).toBe('Paper 3')
   })
 })

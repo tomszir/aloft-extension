@@ -12,6 +12,12 @@ export interface CtrlTSetupProps {
 }
 
 /**
+ * The key browsers use for a new tab, as the person's keyboard says it. The
+ * OS decides how shortcuts are written, not the browser.
+ */
+export const newTabKey = (): string => (/mac/i.test(navigator.platform) ? '⌘T' : 'Ctrl+T')
+
+/**
  * Optional: browsers won't let an extension suggest Ctrl+T, but a person can
  * give it to Aloft's second command, which keeps Alt+Q working too.
  */
@@ -22,21 +28,25 @@ export function CtrlTSetup(props: CtrlTSetupProps) {
         when={opensWithNewTabKey(props.shortcuts)}
         fallback={
           <>
-            <p class={styles.text}>{i18n.t('ctrlTBody')}</p>
+            <p class={styles.text}>{i18n.t('ctrlTBody', [newTabKey()])}</p>
             <ol class={styles.steps}>
               <li>{i18n.t('ctrlTStepOpen')}</li>
-              <li>{i18n.t('ctrlTStepSet', [i18n.t('commandOpenSecond')])}</li>
+              <li>{i18n.t('ctrlTStepSet', [i18n.t('commandOpenSecond'), newTabKey()])}</li>
             </ol>
             <div class={styles.actions}>
               <Button variant="primary" icon="external-link" onClick={() => props.onSetUp()}>
                 {i18n.t('ctrlTButton')}
               </Button>
-              <span class={styles.note}>{i18n.t('ctrlTNote')}</span>
+              <span class={styles.note}>
+                {props.shortcuts.main
+                  ? i18n.t('ctrlTNote', [props.shortcuts.main])
+                  : i18n.t('ctrlTNoteNoShortcut')}
+              </span>
             </div>
           </>
         }
       >
-        <p class={styles.done}>{i18n.t('ctrlTDone')}</p>
+        <p class={styles.done}>{i18n.t('ctrlTDone', [newTabKey()])}</p>
       </Show>
     </div>
   )

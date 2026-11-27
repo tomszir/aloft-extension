@@ -1,4 +1,5 @@
 import { render } from 'solid-js/web'
+import { useCustomThemes } from '../../app/use-custom-themes'
 import { useSettings } from '../../app/use-settings'
 import { useShortcuts } from '../../app/use-shortcuts'
 import { useTheme } from '../../app/use-theme'
@@ -8,7 +9,8 @@ import './page.css'
 
 function OnboardingPage() {
   const { settings } = useSettings()
-  useTheme(settings)
+  const { themes: customThemes } = useCustomThemes()
+  useTheme(settings, { customThemes })
   const shortcuts = useShortcuts()
 
   return (

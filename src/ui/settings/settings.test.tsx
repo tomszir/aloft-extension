@@ -21,16 +21,17 @@ function renderSettings(
   initial: Partial<SettingsValue> = {},
   shortcuts: Shortcuts = { main: 'Alt+Q', second: '' },
   updatedFrom?: string,
+  initialThemes: readonly Theme[] = [],
 ) {
   const [settings, setSettings] = createSignal<SettingsValue>({ ...DEFAULT_SETTINGS, ...initial })
   const onChange = vi.fn((change: (current: SettingsValue) => SettingsValue) =>
     setSettings(change(settings())),
   )
   const onChangeShortcut = vi.fn()
-  const [customThemes, setCustomThemes] = createSignal<readonly Theme[]>([])
+  const [customThemes, setCustomThemes] = createSignal<readonly Theme[]>(initialThemes)
   const onSaveThemes = vi.fn(async (themes: readonly Theme[]) => {
     setCustomThemes(themes)
-    return true
+    return 'saved' as const
   })
   const onExportTheme = vi.fn()
   const onForgetPicks = vi.fn(async () => {})
@@ -153,6 +154,9 @@ describe('Settings', () => {
 
       fireEvent.click(screen.getByRole('button', { name: 'themeEditNamed' }))
       fireEvent.click(within(editor()).getByRole('button', { name: 'themeDelete' }))
+      fireEvent.click(
+        within(screen.getByRole('alert')).getByRole('button', { name: 'themeDelete' }),
+      )
       await vi.waitFor(() => expect(customThemes()).toHaveLength(0))
       expect(onSaveThemes).toHaveBeenCalledTimes(2)
       expect(settings().appearance.darkTheme).toBe('helium-dark')
@@ -179,6 +183,62 @@ describe('Settings', () => {
         expect(screen.getByRole('alert').textContent).toBe('themeImportNotJson'),
       )
     })
+  })
+
+  describe('theme limits and feedback', () => {
+    it("says where a saved theme went, which can be a picker that's hidden", async () => {
+      renderSettings({ appearance: { ...DEFAULT_SETTINGS.appearance, colorScheme: 'dark' } })
+      fireEvent.click(screen.getByRole('button', { name: 'themeNew' }))
+      fireEvent.click(within(screen.getByRole('form')).getByRole('button', { name: 'themeSave' }))
+      await vi.waitFor(() => expect(screen.getByRole('status').textContent).toBe('themeSavedDark'))
+    })
+
+    it('offers no new theme or import once the limit is reached, and says why', () => {
+      const [first] = PRESET_THEMES
+      if (!first) throw new Error('missing presets')
+      const full = Array.from({ length: 16 }, (_, i) => ({
+        ...first,
+        id: `custom-${i}`,
+        name: `T${i}`,
+      }))
+      renderSettings({}, undefined, undefined, full)
+      expect(screen.queryByRole('button', { name: 'themeNew' })).toBeNull()
+      expect(
+        (screen.getByRole('button', { name: 'themeImport' }) as HTMLButtonElement).disabled,
+      ).toBe(true)
+      expect(screen.getByText('themeAtLimit')).toBeTruthy()
+    })
+
+    it('renames an imported theme whose name is taken', async () => {
+      renderSettings()
+      const input = document.querySelector('input[type="file"]') as HTMLInputElement
+      const exported = JSON.stringify({
+        format: 'aloft-theme',
+        version: 1,
+        theme: { name: 'Paper', scheme: 'light', radius: 8, colors: PRESET_THEMES[1]?.colors },
+      })
+      fireEvent.change(input, { target: { files: [new File([exported], 't.json')] } })
+      await vi.waitFor(() =>
+        expect(
+          (
+            within(screen.getByRole('form')).getByRole('textbox', {
+              name: 'themeName',
+            }) as HTMLInputElement
+          ).value,
+        ).toBe('Paper 2'),
+      )
+    })
+  })
+
+  it('says why a custom font name was refused, and keeps the last good one', () => {
+    const { settings } = renderSettings({
+      appearance: { ...DEFAULT_SETTINGS.appearance, font: 'custom', customFont: 'Inter' },
+    })
+    fireEvent.change(screen.getByRole('textbox', { name: 'settingsFontName' }), {
+      target: { value: "Inter'; color: red" },
+    })
+    expect(screen.getByRole('alert').textContent).toBe('settingsFontNameInvalid')
+    expect(settings().appearance.customFont).toBe('Inter')
   })
 
   it('picks a font installed on the computer by name, and a density', () => {

@@ -259,6 +259,12 @@ export function tokensToCssVars(tokens: ThemeTokens): Record<`--al-${string}`, s
 
 export const MIN_TEXT_CONTRAST = 4.5
 
+/**
+ * The page behind Aloft's own pages (settings, onboarding) in each scheme. A
+ * theme's text is drawn on it there, so it counts in the contrast check.
+ */
+export const PAGE_COLORS = { light: '#F2F3F3', dark: '#131515' } as const
+
 export interface ContrastIssue {
   foreground: keyof ThemeColors
   background: keyof ThemeColors
@@ -283,7 +289,7 @@ export function contrastIssues(colors: ThemeColors): ContrastIssue[] {
 const EXPORT_FORMAT = 'aloft-theme'
 const EXPORT_VERSION = 1
 /** Imported text comes from users and the internet: keep parsing bounded. */
-const MAX_IMPORT_BYTES = 8 * 1024
+export const MAX_IMPORT_BYTES = 8 * 1024
 
 const ExportSchema = v.object({
   format: v.literal(EXPORT_FORMAT),
@@ -377,11 +383,26 @@ export function encodePreviewTheme(theme: Theme): string {
   return encodeURIComponent(JSON.stringify(theme))
 }
 
+/** `text` as the address gives it back, already decoded (URLSearchParams does that). */
 export function decodePreviewTheme(text: string): Theme | undefined {
   try {
-    const parsed = v.safeParse(ThemeSchema, JSON.parse(decodeURIComponent(text)))
+    const parsed = v.safeParse(ThemeSchema, JSON.parse(text))
     return parsed.success ? parsed.output : undefined
   } catch {
     return undefined
+  }
+}
+
+/** Saved; no room (too many themes, or too much for one sync item); or refused. */
+export type ThemesSaved = 'saved' | 'full' | 'failed'
+
+/** `name`, or with a number after it when a theme already has that name: "Mine 2". */
+export function uniqueName(name: string, themes: readonly Theme[]): string {
+  const taken = new Set(themes.map((t) => t.name.toLowerCase()))
+  if (!taken.has(name.toLowerCase())) return name
+  for (let n = 2; ; n++) {
+    const suffix = ` ${n}`
+    const candidate = `${name.slice(0, 40 - suffix.length)}${suffix}`
+    if (!taken.has(candidate.toLowerCase())) return candidate
   }
 }

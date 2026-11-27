@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { densityTokens, fontFamily } from './typography'
+import { densityTokens, fontFamily, isFontName } from './typography'
 
 describe('fontFamily', () => {
   it('gives each choice a stack that ends in a generic family', () => {
@@ -25,5 +25,12 @@ describe('densityTokens', () => {
     expect(densityTokens('default')).toEqual({})
     expect(densityTokens('compact')['--al-row-height']).toBe('36px')
     expect(densityTokens('comfortable')['--al-row-height']).toBe('50px')
+  })
+})
+
+describe('isFontName', () => {
+  it('accepts names of installed fonts and rejects ones that could escape their quotes', () => {
+    expect(isFontName('Atkinson Hyperlegible')).toBe(true)
+    expect(isFontName("Comic Sans'; color: red")).toBe(false)
   })
 })

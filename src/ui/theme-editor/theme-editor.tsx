@@ -1,6 +1,12 @@
-import { For, Show } from 'solid-js'
+import { createSignal, For, Show } from 'solid-js'
 import { i18n } from '#i18n'
-import { contrastRatio, MIN_TEXT_CONTRAST, type Theme, type ThemeColors } from '../../core/theme'
+import {
+  contrastRatio,
+  MIN_TEXT_CONTRAST,
+  PAGE_COLORS,
+  type Theme,
+  type ThemeColors,
+} from '../../core/theme'
 import { Button } from '../button/button'
 import '../icon/page-icons'
 import { SettingRow } from '../setting-row/setting-row'
@@ -11,6 +17,8 @@ export interface ThemeEditorProps {
   theme: Theme
   /** False for a theme not saved yet, which has nothing to delete. */
   saved: boolean
+  /** Changed since the editor opened, so going back would lose something. */
+  dirty?: boolean
   /** Why saving failed, if it did. */
   error?: string | undefined
   onChange: (theme: Theme) => void
@@ -100,13 +108,18 @@ export function ThemeEditor(props: ThemeEditorProps) {
       colors: { ...props.theme.colors, [key]: value.toUpperCase() },
     })
   }
-  // The weaker of the backgrounds it sits on is what decides.
+  // The weakest of the backgrounds it sits on decides, Aloft's own pages
+  // (settings, onboarding) included, where it's drawn on the page color.
   const contrast = (field: ColorField) =>
     Math.min(
+      contrastRatio(props.theme.colors[field.key], PAGE_COLORS[props.theme.scheme]),
       ...(field.readableOn ?? []).map((bg) =>
         contrastRatio(props.theme.colors[field.key], props.theme.colors[bg]),
       ),
     )
+  // Leaving with changes, and deleting (which syncs to every device), ask first.
+  const [confirming, setConfirming] = createSignal<'discard' | 'delete'>()
+  const back = () => (props.dirty ? setConfirming('discard') : props.onCancel())
 
   return (
     <form
@@ -118,10 +131,10 @@ export function ThemeEditor(props: ThemeEditorProps) {
       }}
     >
       <header class={styles.bar}>
-        <Button icon="arrow-left" onClick={() => props.onCancel()}>
+        <Button icon="arrow-left" onClick={back}>
           {i18n.t('themeBack')}
         </Button>
-        <h2 id="al-theme-editor-title" class={styles.title}>
+        <h2 id="al-theme-editor-title" class={styles.title} tabIndex={-1}>
           {props.saved ? i18n.t('themeEditTitle') : i18n.t('themeNewTitle')}
         </h2>
         <Button
@@ -133,6 +146,28 @@ export function ThemeEditor(props: ThemeEditorProps) {
           {i18n.t('themeSave')}
         </Button>
       </header>
+
+      <Show when={confirming()}>
+        {(asking) => (
+          <div class={styles.confirm} role="alert">
+            <span>
+              {asking() === 'discard' ? i18n.t('themeDiscardAsk') : i18n.t('themeDeleteAsk')}
+            </span>
+            <Button
+              class={styles.danger}
+              onClick={() => {
+                const answer = asking()
+                setConfirming(undefined)
+                if (answer === 'discard') props.onCancel()
+                else props.onDelete()
+              }}
+            >
+              {asking() === 'discard' ? i18n.t('themeDiscard') : i18n.t('themeDelete')}
+            </Button>
+            <Button onClick={() => setConfirming(undefined)}>{i18n.t('themeKeep')}</Button>
+          </div>
+        )}
+      </Show>
 
       <Show when={props.error}>
         {(error) => (
@@ -168,9 +203,14 @@ export function ThemeEditor(props: ThemeEditorProps) {
             <div class={styles.group}>
               <For each={group.fields}>
                 {(field) => (
-                  <SettingRow label={field.label()} description={field.description()}>
+                  <SettingRow
+                    label={field.label()}
+                    description={field.description()}
+                    descriptionId={`al-theme-${field.key}-note`}
+                  >
                     <Show when={field.readableOn}>
                       <span
+                        id={`al-theme-${field.key}-contrast`}
                         class={styles.badge}
                         data-low={contrast(field) < MIN_TEXT_CONTRAST || undefined}
                         title={i18n.t('themeContrastHint')}
@@ -178,6 +218,7 @@ export function ThemeEditor(props: ThemeEditorProps) {
                         {contrast(field) < MIN_TEXT_CONTRAST
                           ? i18n.t('themeContrastLow', [contrast(field).toFixed(1)])
                           : i18n.t('themeContrastOk', [contrast(field).toFixed(1)])}
+                        <span class={styles.hidden}>{i18n.t('themeContrastHint')}</span>
                       </span>
                     </Show>
                     <input
@@ -194,6 +235,7 @@ export function ThemeEditor(props: ThemeEditorProps) {
                       spellcheck={false}
                       autocapitalize="off"
                       aria-label={field.label()}
+                      aria-describedby={`al-theme-${field.key}-note${field.readableOn ? ` al-theme-${field.key}-contrast` : ''}`}
                       onChange={(event) => {
                         const value = event.currentTarget.value.trim()
                         const hex = value.startsWith('#') ? value : `#${value}`
@@ -258,7 +300,7 @@ export function ThemeEditor(props: ThemeEditorProps) {
           {i18n.t('themeExport')}
         </Button>
         <Show when={props.saved}>
-          <Button class={styles.danger} icon="trash-2" onClick={() => props.onDelete()}>
+          <Button class={styles.danger} icon="trash-2" onClick={() => setConfirming('delete')}>
             {i18n.t('themeDelete')}
           </Button>
         </Show>
