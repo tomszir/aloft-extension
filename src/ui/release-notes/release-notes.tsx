@@ -33,17 +33,24 @@ export function ReleaseNotes(props: ReleaseNotesProps) {
               </Show>
             </h3>
             <For each={release.intro}>{(text) => <p class={styles.intro}>{text}</p>}</For>
-            <Show when={release.notes.length > 0}>
-              <ul class={styles.notes}>
-                <For each={release.notes}>
-                  {(text) => (
-                    <li>
-                      <Note text={text} />
-                    </li>
-                  )}
-                </For>
-              </ul>
-            </Show>
+            <For each={release.groups}>
+              {(group) => (
+                <>
+                  <Show when={group.title}>
+                    {(title) => <h4 class={styles.group}>{title()}</h4>}
+                  </Show>
+                  <ul class={styles.notes}>
+                    <For each={group.notes}>
+                      {(text) => (
+                        <li>
+                          <Note text={text} />
+                        </li>
+                      )}
+                    </For>
+                  </ul>
+                </>
+              )}
+            </For>
           </article>
         )}
       </For>
