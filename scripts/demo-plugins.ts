@@ -186,6 +186,8 @@ export function demoRelease(version: string): Plugin {
         for (const [pattern, what] of BANNED) {
           if (pattern.test(file.code)) this.error(`${file.fileName} uses ${what}`)
         }
+        // After minifying, which drops comments: the file is served on its own.
+        file.code = `/*! Aloft demo ${version}. GPL-3.0-only. Source: https://github.com/tomszir/aloft-extension */\n${file.code}`
       }
     },
     async writeBundle(_options, bundle) {

@@ -38,8 +38,7 @@ export default defineConfig({
     rolldownOptions: {
       output: {
         // Vite leaves an ES library's whitespace in; this is a file to serve, not to bundle again.
-        minify: !process.env.DEMO_NO_MINIFY,
-        banner: `/*! Aloft demo ${version}. GPL-3.0-only. Source: https://github.com/tomszir/aloft-extension */`,
+        minify: true,
       },
     },
   },
