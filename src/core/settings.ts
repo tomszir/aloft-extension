@@ -8,8 +8,6 @@ export const SETTINGS_VERSION = 1
 const ThemeId = v.pipe(v.string(), v.regex(/^[a-z0-9-]{1,40}$/))
 
 export const SettingsSchema = v.object({
-  replaceNewTab: v.boolean(),
-  openWithCtrlL: v.boolean(),
   /** Shift+Enter always does the other one. */
   enterOpensIn: v.picklist(['new-tab', 'current-tab']),
   switchToOpenTabs: v.boolean(),
@@ -40,8 +38,6 @@ export const SettingsSchema = v.object({
 export type Settings = v.InferOutput<typeof SettingsSchema>
 
 export const DEFAULT_SETTINGS: Settings = {
-  replaceNewTab: true,
-  openWithCtrlL: false,
   enterOpensIn: 'new-tab',
   switchToOpenTabs: true,
   learnFromPicks: true,

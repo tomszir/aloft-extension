@@ -18,7 +18,7 @@
 
 ## What it does
 
-Press <kbd>Ctrl</kbd>+<kbd>T</kbd> and, instead of a blank tab, a search bar floats over the page you're on. Type to find what you need, press <kbd>Enter</kbd>, and you're there.
+Press <kbd>Alt</kbd>+<kbd>Q</kbd>, or <kbd>Ctrl</kbd>+<kbd>T</kbd> if you give it to Aloft, and a search bar floats over the page you're on. Type to find what you need, press <kbd>Enter</kbd>, and you're there.
 
 - **One search for everything:** open tabs in every window, history, bookmarks and recently closed tabs, ranked together, matched by initials and through typos, and learning which page you pick for what you type. Type an address to go straight to it, or anything else to search the web with your default engine.
 - **Keywords:** type `yt`, `gh`, `cl` or `gpt` and Space to search YouTube or GitHub, or ask Claude or ChatGPT, right from the bar.
@@ -48,14 +48,16 @@ To run a build from a release instead, download `aloft-<version>-chrome.zip` fro
 2. Turn on **Developer mode**.
 3. Click **Load unpacked** and choose the unzipped folder.
 
-On first run, Aloft asks for permission to draw on the sites you visit. That's what lets <kbd>Ctrl</kbd>+<kbd>T</kbd> open it over the current page. Without it, <kbd>Alt</kbd>+<kbd>Q</kbd> still works, and <kbd>Ctrl</kbd>+<kbd>T</kbd> shows Aloft as the new tab page instead.
+Aloft opens with <kbd>Alt</kbd>+<kbd>Q</kbd> and needs no access to the sites you visit.
+
+To open it with <kbd>Ctrl</kbd>+<kbd>T</kbd> instead of a blank tab, give it that key yourself: browsers don't let an extension take it. Open your browser's extension shortcuts (`chrome://extensions/shortcuts`; the first-run page has a button), find **Open Aloft (second shortcut, like Ctrl+T)** and press <kbd>Ctrl</kbd>+<kbd>T</kbd> in its box. <kbd>Alt</kbd>+<kbd>Q</kbd> keeps working, and <kbd>&gt;</kbd> **New tab** in Aloft opens an empty tab.
 
 ## Shortcuts
 
 | Keys                                                 | Does                                                                             |
 | ---------------------------------------------------- | -------------------------------------------------------------------------------- |
-| <kbd>Ctrl</kbd>+<kbd>T</kbd>                         | Open Aloft over the current page                                                 |
 | <kbd>Alt</kbd>+<kbd>Q</kbd>                          | Open or close Aloft from any page (change it in the browser's shortcut settings) |
+| <kbd>Ctrl</kbd>+<kbd>T</kbd>                         | The same, once you've given it to Aloft (see [Install](#install))                |
 | <kbd>↑</kbd> <kbd>↓</kbd>                            | Move through results                                                             |
 | <kbd>Enter</kbd> / <kbd>Shift</kbd>+<kbd>Enter</kbd> | Open in a new tab / in the current tab                                           |
 | <kbd>Alt</kbd>+<kbd>1</kbd>–<kbd>9</kbd>             | Open a pinned tab                                                                |

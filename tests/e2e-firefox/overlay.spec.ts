@@ -1,14 +1,5 @@
 import type { Page } from 'puppeteer-core'
-import {
-  activeTabUrl,
-  expect,
-  openPage,
-  paletteFrame,
-  pressNewTab,
-  pressOpenAloft,
-  tabUrls,
-  test,
-} from './fixtures'
+import { activeTabUrl, expect, openPage, paletteFrame, pressOpenAloft, test } from './fixtures'
 
 const overlayShown = (page: Page) =>
   page.evaluate(() => document.querySelector('aloft-overlay') !== null)
@@ -88,22 +79,4 @@ test('opens over a page whose CSP forbids frames', async ({ firefox, control, or
   await expect
     .poll(() => palette.evaluate(() => document.querySelector('[role="combobox"]') !== null))
     .toBe(true)
-})
-
-test('Ctrl+T opens Aloft over the page instead of a new tab', async ({
-  firefox,
-  control,
-  origin,
-}) => {
-  const page = await openPage(firefox, control, `${origin}/Reading`)
-  const tabsBefore = (await tabUrls(control)).length
-
-  await pressNewTab(control)
-
-  const palette = await paletteFrame(page)
-  await expect
-    .poll(() => palette.evaluate(() => document.activeElement?.getAttribute('role')))
-    .toBe('combobox')
-  await expect.poll(() => activeTabUrl(control)).toBe(page.url())
-  await expect.poll(async () => (await tabUrls(control)).length).toBe(tabsBefore)
 })

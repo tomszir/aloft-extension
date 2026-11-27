@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { Release } from '../../core/changelog'
 import { BUILT_IN_KEYWORDS } from '../../core/keywords'
 import { DEFAULT_SETTINGS, type Settings as SettingsValue } from '../../core/settings'
-import type { AccessState } from '../onboarding/onboarding'
+import type { Shortcuts } from '../../core/shortcut'
 import { Settings } from './settings'
 
 const release = (version: string): Release => ({
@@ -18,23 +18,21 @@ const RELEASES = ['0.6.0', '0.5.1', '0.5.0', '0.4.0'].map(release)
 // The test setup echoes i18n keys, so controls are found by their key.
 function renderSettings(
   initial: Partial<SettingsValue> = {},
-  access: AccessState = 'granted',
+  shortcuts: Shortcuts = { main: 'Alt+Q', second: '' },
   updatedFrom?: string,
 ) {
   const [settings, setSettings] = createSignal<SettingsValue>({ ...DEFAULT_SETTINGS, ...initial })
   const onChange = vi.fn((change: (current: SettingsValue) => SettingsValue) =>
     setSettings(change(settings())),
   )
-  const onAllow = vi.fn()
+  const onChangeShortcut = vi.fn()
   const onForgetPicks = vi.fn(async () => {})
   render(() => (
     <Settings
       settings={settings()}
       onChange={onChange}
-      shortcut="Alt+Q"
-      onChangeShortcut={vi.fn()}
-      access={access}
-      onAllow={onAllow}
+      shortcuts={shortcuts}
+      onChangeShortcut={onChangeShortcut}
       previewSrc="palette.html?host=preview"
       keywords={BUILT_IN_KEYWORDS}
       onKeywordsChange={async () => true}
@@ -45,7 +43,7 @@ function renderSettings(
       updatedFrom={updatedFrom}
     />
   ))
-  return { settings, onChange, onAllow, onForgetPicks }
+  return { settings, onChange, onChangeShortcut, onForgetPicks }
 }
 
 describe('Settings', () => {
@@ -64,7 +62,7 @@ describe('Settings', () => {
     })
 
     it('after an update, says so and shows everything since the version you had', () => {
-      renderSettings({}, 'granted', '0.5.0')
+      renderSettings({}, undefined, '0.5.0')
       expect(screen.getByText('settingsUpdated', { exact: false })).toBeTruthy()
       expect(screen.getByRole('link', { name: 'settingsSeeWhatsNew' }).getAttribute('href')).toBe(
         '#whats-new',
@@ -105,15 +103,16 @@ describe('Settings', () => {
     expect(settings().appearance.darkTheme).toBe('moss')
   })
 
-  it('asks for site access when Ctrl+T is on without it', () => {
-    const { onAllow } = renderSettings({}, 'not-asked')
-    fireEvent.click(screen.getByRole('button', { name: 'onboardingAllow' }))
-    expect(onAllow).toHaveBeenCalled()
+  it("offers to set Ctrl+T on the browser's shortcuts page until it's set", () => {
+    const { onChangeShortcut } = renderSettings()
+    fireEvent.click(screen.getByRole('button', { name: 'ctrlTButton' }))
+    expect(onChangeShortcut).toHaveBeenCalled()
   })
 
-  it('does not ask for access once Ctrl+T is off', () => {
-    renderSettings({ replaceNewTab: false }, 'not-asked')
-    expect(screen.queryByRole('button', { name: 'onboardingAllow' })).toBeNull()
+  it('says Ctrl+T opens Aloft once it does', () => {
+    renderSettings({}, { main: 'Alt+Q', second: 'Ctrl+T' })
+    expect(screen.getByText('ctrlTDone')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'ctrlTButton' })).toBeNull()
   })
 
   it('shows the palette as a preview', () => {

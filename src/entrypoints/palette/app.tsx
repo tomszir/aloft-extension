@@ -55,10 +55,11 @@ import { type Move, Palette } from '../../ui/palette/palette'
 
 /**
  * overlay: over a page, in a frame. tab: a tab Aloft opened because it
- * couldn't draw on the page. newtab: the browser's new tab page. preview: a
- * frame on the settings page, which shows real results but never acts on them.
+ * couldn't draw on the page (browser pages, the Web Store, the PDF viewer).
+ * preview: a frame on the settings page, which shows real results but never
+ * acts on them.
  */
-export type Host = 'overlay' | 'tab' | 'newtab' | 'preview'
+export type Host = 'overlay' | 'tab' | 'preview'
 
 export interface AppProps {
   host: Host
@@ -234,10 +235,9 @@ export function App(props: AppProps) {
     await (props.host === 'overlay' ? closeOverlay(tab.id) : closeTab(tab.id))
   }
 
-  // Esc on the new tab page only clears: closing it could close the window,
-  // as it's often a window's only tab.
+  // Esc in the settings preview only clears: there's nothing to close.
   async function dismiss(): Promise<void> {
-    if (props.host === 'newtab' || props.host === 'preview') setQuery(EMPTY_QUERY)
+    if (props.host === 'preview') setQuery(EMPTY_QUERY)
     else await close()
   }
 

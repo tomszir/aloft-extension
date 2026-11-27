@@ -111,7 +111,7 @@ export const test = base.extend<
       .poll(() => control.evaluate(() => typeof Reflect.get(globalThis, 'browser')).catch(() => ''))
       .toBe('object')
     // A fresh profile opens the onboarding tab once the install finishes. If
-    // that lands mid-test it becomes the tab Ctrl+T returns to.
+    // that lands mid-test it becomes the active tab a test is waiting on.
     await expect.poll(() => tabUrls(control)).toContain(`${EXTENSION_ORIGIN}/onboarding.html`)
     await use(control)
   },
@@ -168,14 +168,6 @@ export async function pressOpenAloft(control: Page, page: Page): Promise<void> {
     }
     await hooks.openAloft((await api.tabs.query({})).find((t) => t.url === target))
   }, page.url())
-}
-
-/** What Ctrl+T does: an active tab on the browser's new tab page. */
-export async function pressNewTab(control: Page): Promise<void> {
-  await control.evaluate(async () => {
-    const api = Reflect.get(globalThis, 'browser') as Api
-    await api.tabs.create({})
-  })
 }
 
 /** Pins or unpins the tab showing `url`. */

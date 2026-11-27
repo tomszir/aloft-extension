@@ -107,8 +107,7 @@ export default defineContentScript({
           () => {
             if (closing) return
             // Shown only now: until the palette has loaded, the frame holds an
-            // empty document that Chrome may paint opaque white. On Ctrl+T this
-            // runs in a background tab, where a fade can't start early anyway.
+            // empty document that Chrome may paint opaque white.
             iframe.style.opacity = '1'
             // The palette asks for the held keys once its search box exists,
             // which is when focus moves in; this only covers a palette that

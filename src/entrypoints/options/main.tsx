@@ -2,8 +2,7 @@ import { createResource } from 'solid-js'
 import { render } from 'solid-js/web'
 import { useKeywords } from '../../app/use-keywords'
 import { useSettings } from '../../app/use-settings'
-import { useShortcut } from '../../app/use-shortcut'
-import { useSiteAccess } from '../../app/use-site-access'
+import { useShortcuts } from '../../app/use-shortcuts'
 import { useTheme } from '../../app/use-theme'
 import { RELEASES } from '../../core/releases'
 import { openShortcutSettings } from '../../platform/commands'
@@ -16,8 +15,7 @@ import './page.css'
 function SettingsPage() {
   const { settings, update } = useSettings()
   useTheme(settings)
-  const shortcut = useShortcut()
-  const { access, request } = useSiteAccess()
+  const shortcuts = useShortcuts()
   const { keywords, save } = useKeywords()
   // Showing what's new here is what makes it old news: the palette stops
   // offering it.
@@ -34,10 +32,8 @@ function SettingsPage() {
     <Settings
       settings={settings()}
       onChange={(change) => void update(change)}
-      shortcut={shortcut()}
+      shortcuts={shortcuts()}
       onChangeShortcut={openShortcutSettings}
-      access={access()}
-      onAllow={request}
       previewSrc="/palette.html?host=preview"
       keywords={keywords()}
       onKeywordsChange={save}

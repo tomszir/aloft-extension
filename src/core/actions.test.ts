@@ -16,6 +16,7 @@ describe('availableActions', () => {
       'duplicate',
       'move-to-new-window',
       'close-other-tabs',
+      'new-tab',
       'new-window',
       'reopen-closed-tab',
       'open-settings',
@@ -42,6 +43,7 @@ describe('availableActions', () => {
 
   it('only offers page-free actions on its own pages', () => {
     expect(availableActions({ ...over, overPage: false })).toEqual([
+      'new-tab',
       'new-window',
       'reopen-closed-tab',
       'open-settings',

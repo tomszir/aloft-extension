@@ -1,6 +1,6 @@
 # Aloft
 
-A Manifest V3 extension (WXT, Solid, TypeScript) that opens a floating command bar over the current page with Ctrl+T or Alt+Q. How it fits together: [docs/architecture.md](docs/architecture.md).
+A Manifest V3 extension (WXT, Solid, TypeScript) that opens a floating command bar over the current page with Alt+Q, or Ctrl+T once the user assigns it. How it fits together: [docs/architecture.md](docs/architecture.md).
 
 The repository is public: nothing private goes in it (personal notes, plans, links only the maintainer can open, local paths, credentials).
 
@@ -24,7 +24,7 @@ Run all of the first four before opening a PR. The `pre-push` hook runs the end-
   - Types: `feat` `fix` `perf` `refactor` `docs` `test` `build` `ci` `chore` `revert`.
   - The summary is imperative, lowercase, at most 72 characters, no trailing period.
   - `feat`, `fix` and `perf` summaries become the first draft of the release notes, so describe what a user sees or can now do, not the implementation: `fix: stop the list jumping while a page loads`, not `fix: debounce onUpdated listener`. If a PR title can't say it that way, put the wording in a `BEGIN_COMMIT_OVERRIDE` … `END_COMMIT_OVERRIDE` block in the PR body; the draft reads it from there.
-  - Scope `feat`, `fix` and `perf` by the part of Aloft a user would name: `search`, `actions`, `pinned`, `overlay`, `newtab`, `onboarding`, `settings`, `theme`. Leave the scope out when none fits or the change spans several. Other types don't need one.
+  - Scope `feat`, `fix` and `perf` by the part of Aloft a user would name: `search`, `actions`, `pinned`, `overlay`, `onboarding`, `settings`, `theme`. Leave the scope out when none fits or the change spans several. Other types don't need one.
   - Add a body only when the why isn't obvious: a few short lines, no list of changed files.
   - Breaking changes: `type!:` or a `BREAKING CHANGE:` footer. That covers anything that makes a user redo something: settings that don't carry over, a changed or removed shortcut or keyword, or an imported theme that stops loading. Mark these before 1.0 too, even though they only bump the minor version.
 - **No AI attribution**, anywhere: no `Co-Authored-By` trailers, no "Generated with/by" lines, no emoji signatures in commits, PR titles or PR bodies. The `commit-msg` hook and the `pr-title` CI job reject them.

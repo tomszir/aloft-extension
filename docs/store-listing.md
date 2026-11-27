@@ -12,7 +12,7 @@ The text and answers for the Web Store developer dashboard, kept here so they ch
 
 **Description:**
 
-> Press Ctrl+T and, instead of a blank tab, a search bar floats over the page you're on. Type to find what you need, press Enter, and you're there. Esc puts you back exactly where you were.
+> Press Alt+Q and a search bar floats over the page you're on. Type to find what you need, press Enter, and you're there. Esc puts you back exactly where you were.
 >
 > ONE SEARCH FOR EVERYTHING
 > Open tabs in every window, history, bookmarks and recently closed tabs, ranked together, with what matched marked in each result. Type an address to go straight to it, or anything else to search the web with your default search engine.
@@ -29,8 +29,8 @@ The text and answers for the Web Store developer dashboard, kept here so they ch
 > PRIVATE BY DESIGN
 > Aloft makes no network requests and collects nothing. Your tabs, history and bookmarks are only read on your device, while the bar is open, and the bar runs in a frame that web pages can't read.
 >
-> WORKS WITHOUT EXTRA ACCESS
-> Alt+Q opens Aloft on any page with no extra permissions. Allowing access to all sites, which Aloft asks for once, lets Ctrl+T open it over the current page too; without it, Ctrl+T shows Aloft as the new tab page.
+> CTRL+T, IF YOU LIKE
+> Aloft needs no access to the sites you visit: its shortcut opens it over the page you're on. Prefer Ctrl+T to a blank tab? Give it to Aloft on your browser's shortcuts page; the first-run page shows how, and Alt+Q keeps working too.
 >
 > Made for Helium, and works in any Chromium browser. Open source: github.com/tomszir/aloft-extension
 
@@ -63,18 +63,17 @@ All of them are generated: the screenshots and marquee tile by `pnpm screenshots
 
 **Permission justifications** (the same reasons as [permissions.md](permissions.md)):
 
-| Permission  | Justification                                                                                                                                               |
-| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `tabs`      | Reads the titles and addresses of open tabs so they can be searched and switched to, and shows pinned tabs at the top of the bar.                           |
-| `history`   | Searches the user's history for what they type.                                                                                                             |
-| `bookmarks` | Searches the user's bookmarks for what they type.                                                                                                           |
-| `sessions`  | Lists recently closed tabs and reopens the one the user picks.                                                                                              |
-| `search`    | Sends the typed text to the browser's default search engine when the user picks "Search the web".                                                           |
-| `storage`   | Saves the user's settings.                                                                                                                                  |
-| `scripting` | Adds the frame that shows the command bar to the page the user is on, when they open Aloft.                                                                 |
-| `activeTab` | Lets the keyboard shortcut open Aloft over the current page without access to all sites.                                                                    |
-| `favicon`   | Shows site icons from the browser's own icon cache, so no site is contacted for them.                                                                       |
-| Host access | Optional, asked for once on the first-run page. Only used so Ctrl+T, which isn't a gesture that grants `activeTab`, can open the bar over the current page. |
+| Permission  | Justification                                                                                                                     |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `tabs`      | Reads the titles and addresses of open tabs so they can be searched and switched to, and shows pinned tabs at the top of the bar. |
+| `history`   | Searches the user's history for what they type.                                                                                   |
+| `bookmarks` | Searches the user's bookmarks for what they type.                                                                                 |
+| `sessions`  | Lists recently closed tabs and reopens the one the user picks.                                                                    |
+| `search`    | Sends the typed text to the browser's default search engine when the user picks "Search the web".                                 |
+| `storage`   | Saves the user's settings.                                                                                                        |
+| `scripting` | Adds the frame that shows the command bar to the page the user is on, when they open Aloft.                                       |
+| `activeTab` | Lets Aloft's keyboard shortcuts open it over the current page without access to any site.                                         |
+| `favicon`   | Shows site icons from the browser's own icon cache, so no site is contacted for them.                                             |
 
 **Remote code:** No, I am not using remote code. Everything Aloft runs is in the package.
 

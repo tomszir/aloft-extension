@@ -2,6 +2,7 @@ export type ActionId =
   | 'pin'
   | 'unpin'
   | 'duplicate'
+  | 'new-tab'
   | 'new-window'
   | 'move-to-new-window'
   | 'close-other-tabs'
@@ -34,6 +35,7 @@ const ORDER: readonly ActionId[] = [
   'duplicate',
   'move-to-new-window',
   'close-other-tabs',
+  'new-tab',
   'new-window',
   'reopen-closed-tab',
   'open-settings',
@@ -48,6 +50,8 @@ export function availableActions(context: ActionContext): ActionId[] {
     // Moving the only tab would just leave an empty window behind.
     'move-to-new-window': overPage && otherTabsInWindow > 0,
     'close-other-tabs': overPage && otherUnpinnedTabs > 0,
+    // Ctrl+T may open Aloft instead, so an empty tab is always one action away.
+    'new-tab': true,
     'new-window': true,
     'reopen-closed-tab': hasRecentlyClosed,
     'open-settings': true,

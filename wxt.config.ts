@@ -30,8 +30,8 @@ export default defineConfig({
           },
         }
       : {
-          // 121 adds tabs.Tab.lastAccessed, which Ctrl+T uses to find the tab
-          // to return to.
+          // 121 adds tabs.Tab.lastAccessed, which orders open tabs by when
+          // they were last used.
           minimum_chrome_version: '121',
         }),
     permissions: [
@@ -46,10 +46,6 @@ export default defineConfig({
       // favicons via chrome-extension://<id>/_favicon/; Firefox has no such cache
       ...(browser === 'firefox' ? [] : ['favicon']),
     ],
-    // Asked for only when the user turns on Ctrl+T or Ctrl+L: those aren't a
-    // gesture Chrome grants activeTab for, so Aloft needs site access to draw
-    // over the page.
-    optional_host_permissions: ['<all_urls>'],
     // Automated tests can't press the shortcut that grants activeTab, so only
     // the e2e build starts with site access.
     host_permissions: mode === 'e2e' ? ['<all_urls>'] : undefined,
@@ -57,6 +53,11 @@ export default defineConfig({
       'open-aloft': {
         suggested_key: { default: 'Alt+Q' },
         description: '__MSG_commandOpen__',
+      },
+      // Unset, for a key the browser won't let an extension suggest: Ctrl+T.
+      // A second command keeps Alt+Q working alongside it.
+      'open-aloft-second': {
+        description: '__MSG_commandOpenSecond__',
       },
     },
     web_accessible_resources: [

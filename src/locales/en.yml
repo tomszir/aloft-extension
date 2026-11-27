@@ -4,6 +4,7 @@ extName: Aloft – Command Bar for Tabs & History
 extShortName: Aloft
 extDescription: A floating command bar for your tabs, history and bookmarks.
 commandOpen: Open Aloft
+commandOpenSecond: Open Aloft (second shortcut, like Ctrl+T)
 paletteLabel: Aloft
 palettePlaceholder: Search or enter address
 placeholderActions: Search actions
@@ -32,18 +33,17 @@ keywordOfferHint: Space or Tab to type here
 actionOpen: Open
 actionSwitch: Switch to tab
 actionRestore: Restore
-newTabTitle: New Tab
 onboardingTitle: Aloft is ready
 onboardingShortcut: Press $1 on any page to open Aloft.
 onboardingNoShortcut: Aloft has no shortcut set. Pick one to open it from any page.
 onboardingChangeShortcut: Change shortcut
 onboardingCtrlTTitle: Open with Ctrl+T
-onboardingCtrlTBody: To open Aloft over the page you're on when you press Ctrl+T, the browser has to let it draw on the sites you visit.
-onboardingPrivacy: Aloft never sends anything anywhere. Site access is only used to show the command bar on top of the current page.
-onboardingAllow: Allow on all sites
-onboardingAllowed: Done. Ctrl+T now opens Aloft over the page you're on.
-onboardingDenied: Access wasn't granted. You can try again here at any time.
-onboardingWithout: Without it, Ctrl+T shows Aloft as the new tab page instead.
+ctrlTBody: Ctrl+T can open Aloft over the page you're on instead of an empty tab. Browsers only let you set that yourself, in two steps.
+ctrlTStepOpen: Open your browser's shortcuts for extensions.
+ctrlTStepSet: Find "$1" under Aloft, and press Ctrl+T in its box.
+ctrlTButton: Open shortcut settings
+ctrlTNote: Alt+Q keeps working too. For an empty tab, type > new tab in Aloft.
+ctrlTDone: Done. Ctrl+T opens Aloft over the page you're on. For an empty tab, type > new tab in Aloft.
 pinnedLabel: Pinned
 pinnedHint: 1–9 to open
 pinnedMenuLabel: Options for $1
@@ -57,6 +57,7 @@ actionRun: Run
 actionPin: Pin tab
 actionUnpin: Unpin tab
 actionDuplicate: Duplicate tab
+actionNewTab: New tab
 actionNewWindow: New window
 actionMoveToNewWindow: Move tab to new window
 actionCloseOtherTabs: Close other tabs
@@ -74,9 +75,6 @@ settingsReleaseNew: New
 settingsPreview: Preview
 settingsPreviewNote: Your real tabs, history and bookmarks, as Aloft will show them. Nothing opens from here.
 settingsOpening: Opening Aloft
-settingsCtrlT: Open over the current page with Ctrl+T
-settingsCtrlTNote: When off, or on pages Aloft can't draw on, Ctrl+T shows Aloft as the new tab page.
-settingsCtrlTNeedsAccess: This needs access to all sites, which Aloft uses only to draw the command bar on top of the page.
 settingsResults: Results
 settingsEnterOpensIn: Enter opens a result in
 settingsEnterNewTab: A new tab

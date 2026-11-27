@@ -91,6 +91,7 @@ const ACTION_ICON: Record<ActionId, IconName> = {
   pin: 'pin',
   unpin: 'pin-off',
   duplicate: 'copy',
+  'new-tab': 'plus',
   'new-window': 'app-window',
   'move-to-new-window': 'square-arrow-out-up-right',
   'close-other-tabs': 'copy-x',

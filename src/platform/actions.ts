@@ -19,6 +19,9 @@ export async function runAction(action: ActionId, target: ActionTarget): Promise
     case 'duplicate':
       await browser.tabs.duplicate(host.id)
       return
+    case 'new-tab':
+      await browser.tabs.create({ windowId: host.windowId, index: host.index + 1 })
+      return
     case 'new-window':
       await browser.windows.create({ focused: true })
       return

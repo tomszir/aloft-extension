@@ -1,6 +1,6 @@
 # Architecture
 
-Aloft is a Manifest V3 extension built with [WXT](https://wxt.dev). Its main job is a floating command bar that opens over the current page with Ctrl+T or Alt+Q.
+Aloft is a Manifest V3 extension built with [WXT](https://wxt.dev). Its main job is a floating command bar that opens over the current page with Alt+Q, or Ctrl+T once the user assigns it.
 
 ## The palette runs in an iframe
 
@@ -10,7 +10,7 @@ The palette shows tab titles, history and bookmarks. Anything drawn into a web p
 - **One code path:** `palette.html` is the overlay, the new-tab fallback and the settings preview.
 - **No relay in Chromium:** extension pages inside a frame can call `chrome.tabs`, `history`, `bookmarks`, `sessions` and `search` directly.
 - **Relay in Firefox:** an extension page framed inside a website gets only content-script APIs (`runtime`, `storage`, `i18n`), with no `tabs`, `history`, `bookmarks` or `sessions`. So in the Firefox build the overlay palette asks the background for results and actions over `runtime` messaging, and a long-lived port carries tab events back. The page can't see that traffic. The palette imports everything from `platform/palette-api.ts`, which uses the relay (`platform/relay.ts`, served by `relay-host.ts`) only in the Firefox build and only when `browser.tabs` is missing, so the palette's UI code is the same in both builds and Chromium builds don't contain the relay. The background answers only Aloft's own `palette.html`, and takes the host tab from the message's sender. The new-tab fallback and the settings preview aren't framed by a website, so they call the APIs directly there too.
-- **No flash while it loads:** the frame stays invisible until the palette has loaded (Ctrl+T draws it in a background tab, where a fade can't run yet), `palette.html` declares `light dark` in its own `<head>` so its first paint matches the iframe, and the palette draws nothing until settings are read, so it never paints the default theme first.
+- **No flash while it loads:** the frame stays invisible until the palette has loaded, `palette.html` declares `light dark` in its own `<head>` so its first paint matches the iframe, and the palette draws nothing until settings are read, so it never paints the default theme first.
 - **Dimming** is the frame's own background, so it follows the theme. **Blur** is set on the iframe element in the page's document, because a filter inside the frame can't reach the page behind it.
 - **Small injected script:** the background reads settings and passes the overlay script only what it needs, so settings parsing and its libraries stay out of the code injected into pages.
 - **Closing:** the palette talks to its host content script with `chrome.tabs.sendMessage` (in Firefox, through the background relay), never `window.postMessage`, which the page could see.
@@ -18,22 +18,21 @@ The palette shows tab titles, history and bookmarks. Anything drawn into a web p
 
 ## How Aloft opens
 
-| Trigger                                                     | How                                                                                                                                 | Permission                                              |
-| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| Alt+Q (`open-aloft` command)                                | background injects the overlay host into the active tab                                                                             | `activeTab`, granted by the shortcut                    |
-| Ctrl+T / New Tab button                                     | the new tab page is overridden; `tabs.onCreated` sees it, injects the overlay into the previously active tab and closes the new tab | optional `<all_urls>`, asked for on the onboarding page |
-| Ctrl+L (opt-in)                                             | a small content script, registered only while the setting is on                                                                     | same optional `<all_urls>`                              |
-| `chrome://` pages, Web Store, PDF viewer, or no site access | injection fails, so the new tab stays and shows the palette full page                                                               | none                                                    |
+Aloft opens only from its keyboard shortcuts, which grant `activeTab` for the tab they're pressed on, so it needs no access to any site.
 
-MV3 service workers keep no memory between wake-ups, so the previously active tab for each window is kept in `storage.session`.
+| Trigger                                              | How                                                                     |
+| ---------------------------------------------------- | ----------------------------------------------------------------------- |
+| Alt+Q (`open-aloft` command)                         | the background injects the overlay into the active tab                  |
+| A second shortcut, e.g. Ctrl+T (`open-aloft-second`) | the same; it has no suggested key, so it's unset until the user sets it |
+| `chrome://` pages, the Web Store, the PDF viewer     | injection fails, so the palette opens as a tab of its own next to it    |
 
-On a new tab page the browser keeps keyboard focus in the address bar, whatever the page focuses, so keys typed before Aloft is back on the previous tab are lost. The intercept switches back as soon as the page has taken its first script, and the new tab page draws nothing until the background says the tab stays, so a closing tab doesn't flash the palette. A tab that stays replaces itself once (`newtab.html?focus`), because a page that navigates itself gets focus; the address bar then shows its address.
+**Why Ctrl+T is the user's to set:** browsers don't let an extension suggest Ctrl+T, but a person can assign it on the browser's shortcuts page (`chrome://extensions/shortcuts`), and it then takes the place of the browser's own new tab. Onboarding and settings walk through it and see it's set by reading `commands.getAll()`. It goes on a second command so Alt+Q keeps working. Aloft used to replace the new tab page instead and switch back to the previous tab, but the browser always showed the new tab for a moment first, so the page under the palette blinked. With Ctrl+T set this way, Aloft also offers `> New tab` for an empty tab.
 
 ## Typing while it opens
 
 Keys sent into a frame that's still loading are lost, and keys that reach the page can set off its own shortcuts. So:
 
-- **Held from the start:** the script that hands the overlay its options (`prepareInPage` in `platform/overlay.ts`) also starts keeping keys from the page, before Ctrl+T even switches back. Typed characters are held as text, with Backspace applied. Esc, function keys and anything with Ctrl, Alt or Meta pass, since they may be the browser's (AltGr counts as typing).
+- **Held from the start:** the script that hands the overlay its options (`prepareInPage` in `platform/overlay.ts`) also starts keeping keys from the page, before the overlay is even drawn. Typed characters are held as text, with Backspace applied. Esc, function keys and anything with Ctrl, Alt or Meta pass, since they may be the browser's (AltGr counts as typing).
 - **Focus moves in once the palette can take keys:** the overlay focuses the frame when the palette first asks for the held text, which it does once its search box exists, not on the frame's `load` (the palette reads settings before it draws). The palette then focuses its input as its window gets focus: a cross-origin frame can't take focus by itself, so its own early `focus()` call does nothing.
 - **Handed over by messaging:** the palette asks the overlay for the held text (`takeTyped`, extension messaging like closing) and puts it in front of anything typed since, a character at a time, so `yt ` still makes the YouTube chip. It asks again whenever the frame gets focus back, which also covers a key that reached the page after focus left the frame.
 - **Inside the palette**, typing on a pin or in its menu moves to the search box, and with nothing focused after a click on the panel, keys act as if typed there.
