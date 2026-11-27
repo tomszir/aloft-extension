@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- The policy of the page the demo is made for: nothing from elsewhere,
+         and no inline styles or scripts. -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'"
+    />
+    <title>Aloft demo</title>
+    <link rel="stylesheet" href="/fonts.css" />
+    <link rel="stylesheet" href="/dev.css" />
+    <script type="module" src="/dev.js"></script>
+  </head>
+  <body>
+    <main>
+      <h1>Aloft</h1>
+      <p>A floating command bar for your tabs, history and bookmarks.</p>
+      <p class="controls">
+        <button type="button" id="try">Try Aloft</button>
+        <button type="button" id="scheme">Switch page to light</button>
+      </p>
+      <p id="note" role="status"></p>
+      <p id="install" hidden>Add to Chrome · Add to Firefox</p>
+    </main>
+    <div id="aloft-demo"></div>
+  </body>
+</html>

@@ -1,0 +1,28 @@
+# Strings only the web demo shows. Kept apart from src/locales/en.yml so the
+# extension's own messages stay exactly as they are; the demo build merges the
+# two, and keys must not repeat.
+demoLabel: Aloft demo
+tourLabel: Tour
+tourStepCount: $1 / $2
+tourNext: Next
+tourSkip: Skip tour
+tourFinish: Finish
+tourStepDone: Done.
+tourSearchTitle: Search everything
+tourSearchBody: Type a word, like hand. Open tabs, history and bookmarks come up ranked together.
+tourPinTitle: Jump to a pinned tab
+tourPinBody: Press $1, or clear the box and click a pinned tab.
+tourPinBodyTouch: Clear the box and tap a pinned tab.
+tourActionsTitle: Type > for actions
+tourActionsBody: Type $1 and run one, like Pin tab. The bar comes back with the change.
+tourSiteTitle: Search a site
+tourSiteBody: Type $1 and Space to search YouTube, or $2 for every site.
+tourThemeTitle: Make it yours
+tourThemeBody: Pick a theme. You can import these Instrument themes into Aloft too.
+tourThemePicker: Theme
+wouldSwitch: Would switch to $1
+wouldOpenNewTab: Would open $1 in a new tab
+wouldOpenHere: Would open $1 in this tab
+wouldSearch: Would search the web for “$1”
+wouldReopen: Would reopen $1
+wouldRun: Would run “$1”

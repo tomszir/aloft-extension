@@ -1,5 +1,6 @@
-// Enforces the bundle budgets from docs/architecture.md for every package that
-// has been built. Run after `pnpm build` (and `pnpm build:firefox`).
+// Enforces the bundle budgets from docs/architecture.md and docs/demo.md for
+// everything that has been built. Run after `pnpm build` (and `pnpm
+// build:firefox`, `pnpm demo:build`).
 // The overlay script is injected into every page Aloft opens on, and the
 // palette has to appear instantly, so both are kept small on purpose.
 import { access, readdir, readFile } from 'node:fs/promises'
@@ -62,8 +63,24 @@ for (const target of TARGETS) {
     console.log(`  note: unbudgeted content scripts: ${unexpected.join(', ')}`)
 }
 
+// The web demo is one file with its styles and strings inside, loaded only
+// when a visitor asks for it, so it gets a little more than the palette page.
+const DEMO = { file: 'demo/aloft-demo.js', kb: 46 }
+const demoBuilt = await access(join(OUTPUT, DEMO.file)).then(
+  () => true,
+  () => false,
+)
+if (demoBuilt) {
+  checked++
+  console.log('demo')
+  const size = await gzipKb(OUTPUT, DEMO.file)
+  const ok = size <= DEMO.kb
+  failed ||= !ok
+  console.log(`${ok ? '✓' : '✗'} web demo: ${size.toFixed(1)} KB gzipped (budget ${DEMO.kb} KB)`)
+}
+
 if (checked === 0) {
-  console.log('nothing built: run pnpm build first')
+  console.log('nothing built: run pnpm build or pnpm demo:build first')
   failed = true
 }
 process.exit(failed ? 1 : 0)

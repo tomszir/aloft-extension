@@ -21,7 +21,9 @@
     "test:e2e": "wxt build --mode e2e && wxt build -b firefox --mode e2e && playwright test",
     "size": "node scripts/check-size.mjs",
     "screenshots": "wxt build --mode e2e && node scripts/screenshots.ts",
-    "brand": "node scripts/brand.ts"
+    "brand": "node scripts/brand.ts",
+    "demo:build": "vite build -c vite.demo.config.ts",
+    "demo:dev": "node scripts/demo-dev.ts"
   },
   "dependencies": {
     "solid-js": "1.9.20",
@@ -39,6 +41,7 @@
     "happy-dom": "21.0.4",
     "puppeteer-core": "24.43.1",
     "typescript": "7.0.2",
+    "vite": "8.3.8",
     "vite-plugin-solid": "2.11.17",
     "vitest": "5.1.1",
     "wxt": "0.21.5"

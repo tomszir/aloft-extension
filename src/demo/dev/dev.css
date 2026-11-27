@@ -1,0 +1,69 @@
+/* A stand-in for the page the demo is embedded in: its own type and colours,
+   so the demo can be checked against them. */
+:root {
+  color-scheme: dark;
+  --font-sans: "Inter Tight", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --bg: #0b0b0a;
+  --fg: #e9e8e3;
+  --muted: #8f8e88;
+  --accent: #ff6b35;
+}
+
+:root[data-scheme="light"] {
+  color-scheme: light;
+  --bg: #f7f7f5;
+  --fg: #121212;
+  --muted: #5f5f5b;
+  --accent: #e8480c;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 17px / 1.6 var(--font-sans);
+}
+
+main {
+  max-width: 640px;
+  margin: 15vh auto;
+  padding: 0 16px;
+}
+
+h1 {
+  font-size: 44px;
+  margin: 0 0 8px;
+}
+
+p {
+  color: var(--muted);
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+button {
+  font: inherit;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--muted);
+  background: transparent;
+  color: var(--fg);
+  cursor: pointer;
+}
+
+#try {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+#note {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  min-height: 1.6em;
+}
