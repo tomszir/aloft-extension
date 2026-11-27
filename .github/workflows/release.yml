@@ -40,36 +40,65 @@ jobs:
           # A personal token, so the release PR triggers CI like any other PR;
           # PRs opened with GITHUB_TOKEN don't. Falls back until one is set.
           token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
-      # Drafts the version's notes in CHANGELOG.md on the release PR, for the
-      # maintainer to rewrite before merging (docs/releasing.md).
+      # The release PR's branch, which the notes and the screenshots are
+      # committed to for the maintainer to look over before merging.
       - if: ${{ steps.release.outputs.pr }}
         uses: jdx/mise-action@v3
       - if: ${{ steps.release.outputs.pr }}
-        id: notes
+        id: branch
         # GitHub reads env before if, so the PR's JSON is parsed here: fromJSON
         # would fail on the empty output of a run that left the PR alone.
         env:
           PR: ${{ steps.release.outputs.pr }}
-          PREVIOUS: ${{ steps.before.outputs.head }}
-          # Reads PR bodies for their commit overrides.
-          GH_TOKEN: ${{ github.token }}
         run: |
           BRANCH=$(jq -r .headBranchName <<<"$PR")
           git fetch --tags origin "$BRANCH"
           git checkout -B "$BRANCH" "origin/$BRANCH"
-          node scripts/release-notes.ts draft "$PREVIOUS"
-          if git diff --quiet; then exit 0; fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          echo "name=$BRANCH" >> "$GITHUB_OUTPUT"
+      # Drafts the version's notes in CHANGELOG.md, for the maintainer to
+      # rewrite before merging (docs/releasing.md).
+      - if: ${{ steps.branch.outputs.name }}
+        env:
+          PREVIOUS: ${{ steps.before.outputs.head }}
+          # Reads PR bodies for their commit overrides.
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node scripts/release-notes.ts draft "$PREVIOUS"
+          if git diff --quiet; then exit 0; fi
           git commit -qam 'docs: draft the release notes'
-          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+      # Retakes the store screenshots from what's being released. They're only
+      # rewritten when they look different, so this commit means the listing
+      # will change; addons.mozilla.org gets them when the release publishes.
+      - if: ${{ steps.branch.outputs.name }}
+        run: pnpm install --frozen-lockfile
+      - if: ${{ steps.branch.outputs.name }}
+        id: playwright
+        run: echo "version=$(pnpm exec playwright --version | cut -d' ' -f2)" >> "$GITHUB_OUTPUT"
+      - if: ${{ steps.branch.outputs.name }}
+        id: browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      - if: ${{ steps.branch.outputs.name && steps.browsers.outputs.cache-hit != 'true' }}
+        run: pnpm exec playwright install chromium
+      - if: ${{ steps.branch.outputs.name }}
+        run: |
+          pnpm screenshots
+          git add -A docs/screenshots
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -qm 'docs: update the store screenshots'
       # The same personal token, so the push runs CI on the release PR. It's
-      # handed to this one push and nothing else.
-      - if: ${{ steps.notes.outputs.branch }}
+      # handed to this one push and nothing else. It also runs when the
+      # screenshots failed, so the drafted notes still get there.
+      - if: ${{ always() && steps.branch.outputs.name }}
         env:
           TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
-          BRANCH: ${{ steps.notes.outputs.branch }}
+          BRANCH: ${{ steps.branch.outputs.name }}
         run: |
+          if [ "$(git rev-parse HEAD)" = "$(git rev-parse "origin/$BRANCH")" ]; then exit 0; fi
           auth=$(printf 'x-access-token:%s' "$TOKEN" | base64 -w0)
           echo "::add-mask::$auth"
           git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $auth" \

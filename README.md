@@ -29,18 +29,18 @@ Press <kbd>Alt</kbd>+<kbd>Q</kbd>, or <kbd>Ctrl</kbd>+<kbd>T</kbd> if you give i
 
 <table>
     <tr>
-        <td><img src="docs/screenshots/2-search.png" alt="Searching history and bookmarks" /></td>
+        <td><img src="docs/screenshots/2-search.png" alt="Searching open tabs and history at once" /></td>
         <td><img src="docs/screenshots/3-actions.png" alt="Actions after typing >" /></td>
     </tr>
     <tr>
-        <td><img src="docs/screenshots/4-light.png" alt="Aloft in light mode" /></td>
-        <td><img src="docs/screenshots/5-themes.png" alt="Aloft with the Moss theme" /></td>
+        <td><img src="docs/screenshots/4-keywords.png" alt="Search keywords, in light mode" /></td>
+        <td><img src="docs/screenshots/5-themes.png" alt="The theme choices in Aloft's settings" /></td>
     </tr>
 </table>
 
 ## Install
 
-Get it from the [Chrome Web Store](https://chromewebstore.google.com/detail/neddelfbiddcgalggpghgbephhnebpjh). It works in any Chromium browser, Helium included. See [what's new](CHANGELOG.md) in each version.
+Get it from the [Chrome Web Store](https://chromewebstore.google.com/detail/neddelfbiddcgalggpghgbephhnebpjh) for any Chromium browser, Helium included, or from [Firefox Add-ons](https://addons.mozilla.org/firefox/addon/aloft/). See [what's new](CHANGELOG.md) in each version.
 
 To run a build from a release instead, download `aloft-<version>-chrome.zip` from the [latest release](https://github.com/tomszir/aloft-extension/releases/latest) and unzip it. Then:
 
