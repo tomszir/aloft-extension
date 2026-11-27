@@ -12,6 +12,8 @@ import {
 } from '../../core/keywords'
 import { displayUrl, tileLetter } from '../../core/results'
 import { Button } from '../button/button'
+import { Icon } from '../icon/icon'
+import '../icon/page-icons'
 import { Favicon, type FaviconLoader } from '../favicon/favicon'
 import { Toggle } from '../toggle/toggle'
 import styles from './keyword-settings.module.css'
@@ -37,6 +39,16 @@ const ERROR_TEXT: Record<DraftError | 'full', () => string> = {
 const EMPTY_DRAFT: KeywordDraft = { name: '', keyword: '', url: 'https://' }
 
 const defaultId = () => `custom-${Date.now().toString(36)}`
+
+// The site a keyword searches, without the search address around it: the
+// whole template is in the editor.
+function siteOf(url: string): string {
+  try {
+    return new URL(url.replace('%s', '')).hostname.replace(/^www\./, '')
+  } catch {
+    return displayUrl(url)
+  }
+}
 
 export function KeywordSettings(props: KeywordSettingsProps) {
   const [editing, setEditing] = createSignal<Editing>()
@@ -166,39 +178,41 @@ export function KeywordSettings(props: KeywordSettingsProps) {
               <Show
                 when={editing()?.id === keyword.id && editing()}
                 fallback={
-                  <div class={styles.row} data-off={!keyword.enabled || undefined}>
-                    <span class={styles.icon}>
+                  // Like every other switch in settings: the row flips it, and
+                  // Edit, beside the switch, is a control of its own.
+                  <Toggle
+                    label={keyword.name}
+                    checked={keyword.enabled}
+                    muted={!keyword.enabled}
+                    onChange={(on) => toggle(keyword.id, on)}
+                    leading={
                       <Favicon
                         pageUrl={keywordUrl(keyword, '')}
                         load={props.favicon}
                         letter={tileLetter(keyword.name, keyword.url)}
                       />
-                    </span>
-                    <span class={styles.text}>
-                      <span class={styles.name}>
-                        {keyword.name}
+                    }
+                    note={
+                      <span class={styles.detail}>
+                        <kbd class={styles.word}>{keyword.keyword}</kbd>
+                        <span class={styles.url}>{siteOf(keyword.url)}</span>
                         <Show when={!keyword.builtIn}>
                           <span class={styles.tag}>{i18n.t('keywordYours')}</span>
                         </Show>
                       </span>
-                      <span class={styles.url}>{displayUrl(keyword.url)}</span>
-                    </span>
-                    <kbd class={styles.word}>{keyword.keyword}</kbd>
-                    <button
-                      type="button"
-                      class={styles.edit}
-                      aria-label={i18n.t('keywordEdit', [keyword.name])}
-                      onClick={() => edit(keyword)}
-                    >
-                      {i18n.t('keywordEditShort')}
-                    </button>
-                    <Toggle
-                      label={i18n.t('keywordUse', [keyword.name])}
-                      labelHidden
-                      checked={keyword.enabled}
-                      onChange={(on) => toggle(keyword.id, on)}
-                    />
-                  </div>
+                    }
+                    action={
+                      <button
+                        type="button"
+                        class={styles.edit}
+                        aria-label={i18n.t('keywordEdit', [keyword.name])}
+                        title={i18n.t('keywordEdit', [keyword.name])}
+                        onClick={() => edit(keyword)}
+                      >
+                        <Icon name="pencil" />
+                      </button>
+                    }
+                  />
                 }
               >
                 {(current) => form(current())}
@@ -212,7 +226,9 @@ export function KeywordSettings(props: KeywordSettingsProps) {
       </Show>
       <div class={styles.actions}>
         <Show when={editing() === undefined}>
-          <Button onClick={() => edit(undefined)}>{i18n.t('keywordAdd')}</Button>
+          <Button icon="plus" onClick={() => edit(undefined)}>
+            {i18n.t('keywordAdd')}
+          </Button>
         </Show>
         <span class={styles.spacer} />
         <Show

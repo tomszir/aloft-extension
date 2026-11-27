@@ -101,9 +101,7 @@ settingsPicksForgotten: Forgotten.
 settingsShowPinned: Show pinned tabs above the results
 settingsKeywords: Keywords
 settingsKeywordsNote: Type a keyword, then Space or Tab, to search a site or ask an AI from Aloft. Type @ in Aloft to see them all; starting with @ always works. What you type becomes part of the site's address, so it's saved in your history.
-keywordUse: Use $1
 keywordEdit: Edit $1
-keywordEditShort: Edit
 keywordYours: Yours
 keywordName: Name
 keywordKeyword: Keyword

@@ -417,7 +417,7 @@ export function Settings(props: SettingsProps) {
             </h2>
             <p class={styles.sectionNote}>{i18n.t('settingsKeywordsNote')}</p>
           </div>
-          <div class={styles.group}>
+          <div class={`${styles.group} ${styles.flush}`}>
             <KeywordSettings
               keywords={props.keywords}
               favicon={props.favicon}

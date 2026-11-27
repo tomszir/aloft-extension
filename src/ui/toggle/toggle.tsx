@@ -7,11 +7,15 @@ export interface ToggleProps {
   onChange: (checked: boolean) => void
   /**
    * Shown under the label, and read out as the switch's description. Text
-   * only: the whole row is the switch's label, so a button here would flip it.
+   * only: it's part of what flips the switch.
    */
   note?: JSX.Element
-  /** For a switch whose row already shows what it's for: the label is only read out. */
-  labelHidden?: boolean
+  /** Drawn before the text, such as a site's icon. */
+  leading?: JSX.Element
+  /** A control of its own beside the switch, such as Edit; it doesn't flip the switch. */
+  action?: JSX.Element
+  /** Shown faded, for something switched off that is still listed. */
+  muted?: boolean
 }
 
 let nextId = 0
@@ -22,31 +26,41 @@ let nextId = 0
  */
 export function Toggle(props: ToggleProps) {
   const id = nextId++
+  const inputId = `al-toggle-${id}`
   const labelId = `al-toggle-label-${id}`
   const noteId = `al-toggle-note-${id}`
   return (
-    <label class={styles.row} data-plain={props.labelHidden || undefined}>
-      <span class={styles.text}>
-        <span id={labelId} class={props.labelHidden ? styles.hidden : styles.label}>
-          {props.label}
-        </span>
-        <Show when={props.note}>
-          <span id={noteId} class={styles.note}>
-            {props.note}
-          </span>
+    <div class={styles.row} data-muted={props.muted || undefined}>
+      {/* The label covers the text, so pressing anywhere on it flips the
+          switch, and leaves room for an action that mustn't. */}
+      <label for={inputId} class={styles.hit}>
+        <Show when={props.leading}>
+          <span class={styles.leading}>{props.leading}</span>
         </Show>
-      </span>
+        <span class={styles.text}>
+          <span id={labelId} class={styles.label}>
+            {props.label}
+          </span>
+          <Show when={props.note}>
+            <span id={noteId} class={styles.note}>
+              {props.note}
+            </span>
+          </Show>
+        </span>
+      </label>
+      {props.action}
       <input
+        id={inputId}
         class={styles.switch}
         type="checkbox"
         role="switch"
         checked={props.checked}
         aria-checked={props.checked}
-        // Named by the label alone; the note, inside the same row, describes it.
+        // Named by the label alone; the note describes it.
         aria-labelledby={labelId}
         aria-describedby={props.note ? noteId : undefined}
         onChange={(event) => props.onChange(event.currentTarget.checked)}
       />
-    </label>
+    </div>
   )
 }

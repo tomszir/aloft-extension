@@ -172,6 +172,12 @@
   border-top: 1px solid var(--al-divider);
 }
 
+/* For a list with rows of its own (keywords): its rows sit at the card's
+   padding like any other card's, without the space around a single row. */
+.flush > * {
+  padding-block: 0;
+}
+
 .section > .group + .group {
   margin-top: var(--al-space-3);
 }

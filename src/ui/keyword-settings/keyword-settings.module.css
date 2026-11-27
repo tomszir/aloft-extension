@@ -1,7 +1,6 @@
 .list {
   display: flex;
   flex-direction: column;
-  gap: var(--al-space-4);
 }
 
 .rows {
@@ -16,30 +15,16 @@
   border-top: 1px solid var(--al-divider);
 }
 
-.row {
-  display: flex;
-  align-items: center;
-  gap: var(--al-space-4);
-  padding: var(--al-space-3) 0;
+/* Rows are the shared switch rows; these are only their contents. */
+.item > * {
+  padding-block: var(--al-space-3);
 }
 
-.icon {
-  display: flex;
-  flex: none;
-}
-
-.text {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.name {
+.detail {
   display: flex;
   align-items: center;
   gap: var(--al-space-2);
-  font-weight: var(--al-font-weight-medium);
+  min-width: 0;
 }
 
 .tag {
@@ -50,29 +35,21 @@
 
 .url {
   overflow: hidden;
-  font-size: var(--al-font-size-sm);
-  color: var(--al-muted);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .word {
   flex: none;
-  padding: 2px var(--al-space-2);
+  padding: 0 var(--al-space-2);
   border-radius: var(--al-kbd-radius);
   background: var(--al-keycap);
   color: var(--al-keycap-text);
-  font-family: ui-monospace, monospace;
-  font-size: var(--al-font-size-sm);
+  font-family: var(--al-font-mono);
+  font-size: var(--al-font-size-xs);
+  line-height: var(--al-kbd-size);
 }
 
-.row[data-off] .icon,
-.row[data-off] .text,
-.row[data-off] .word {
-  opacity: var(--al-asleep-opacity);
-}
-
-.edit,
 .danger {
   flex: none;
   padding: var(--al-space-1) var(--al-space-2);
@@ -84,8 +61,28 @@
   cursor: pointer;
 }
 
+/* Square, beside the switch: opens the keyword's form. */
 .edit {
-  color: var(--al-accent);
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: var(--al-button-height);
+  height: var(--al-button-height);
+  padding: 0;
+  border: 0;
+  border-radius: var(--al-button-radius);
+  background: none;
+  color: var(--al-muted);
+  cursor: pointer;
+  transition:
+    background-color var(--al-duration-fast) var(--al-ease-out),
+    color var(--al-duration-fast) var(--al-ease-out);
+  --al-glyph-size: var(--al-icon-size);
+}
+
+.edit:hover {
+  background: var(--al-keycap);
+  color: var(--al-text);
 }
 
 .danger {
@@ -149,6 +146,12 @@
 }
 
 .buttons,
+/* Under the last keyword, like another row of the list. */
+.actions {
+  padding-block: var(--al-space-3);
+  border-top: 1px solid var(--al-divider);
+}
+
 .actions,
 .confirm {
   display: flex;
