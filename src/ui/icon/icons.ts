@@ -39,6 +39,7 @@ export const PAGE_ICON_NAMES = [
   'moon',
   'palette',
   'pencil',
+  'shield-check',
   'sparkles',
   'sun',
   'trash-2',

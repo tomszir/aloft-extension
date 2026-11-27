@@ -81,6 +81,18 @@ settingsShortcut: Keyboard shortcut
 settingsSectionsLabel: Settings sections
 settingsUpdated: Aloft was updated to $1.
 settingsSeeWhatsNew: See what's new
+settingsPrivacy: Privacy
+settingsPrivacyLocal: Nothing leaves your browser
+settingsPrivacyLocalNote: Aloft makes no network requests and has no analytics or tracking. A search goes to your default search engine, or a keyword's site, only when you choose it.
+settingsPrivacyRead: Read on this device, only while Aloft is open
+settingsPrivacyReadNote: Your open tabs, history, bookmarks and recently closed tabs, to show results. Websites can't read Aloft or anything it shows.
+settingsPrivacySync: Settings sync with your browser
+settingsPrivacySyncNote: Your settings, themes and keywords follow your browser profile if you've turned on sync. They hold no browsing data.
+settingsPrivacyPolicy: Privacy policy
+settingsPermissions: Permissions and why Aloft needs them
+settingsFooterVersion: Aloft $1
+settingsFooterSource: Source on GitHub
+settingsFooterMadeBy: Made by
 settingsWhatsNew: What's new
 settingsVersion: You have version $1.
 settingsEarlierVersions: Earlier versions

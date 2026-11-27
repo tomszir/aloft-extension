@@ -2,6 +2,7 @@ import { createEffect, createSignal, For, on, Show } from 'solid-js'
 import { i18n } from '#i18n'
 import { type Release, releasesBetween } from '../../core/changelog'
 import type { Keyword } from '../../core/keywords'
+import { AUTHOR, LINKS } from '../../core/links'
 import type { Settings as SettingsValue } from '../../core/settings'
 import type { Shortcuts } from '../../core/shortcut'
 import {
@@ -102,6 +103,7 @@ const SECTIONS: readonly { id: string; icon: IconName; label: () => string }[] =
   { id: 'sources', icon: 'layers', label: () => i18n.t('settingsSources') },
   { id: 'keywords', icon: 'at-sign', label: () => i18n.t('settingsKeywords') },
   { id: 'appearance', icon: 'palette', label: () => i18n.t('settingsAppearance') },
+  { id: 'privacy', icon: 'shield-check', label: () => i18n.t('settingsPrivacy') },
   { id: 'whats-new', icon: 'sparkles', label: () => i18n.t('settingsWhatsNew') },
 ]
 
@@ -360,26 +362,6 @@ export function Settings(props: SettingsProps) {
               onChange={(on) => set('switchToOpenTabs', on)}
             />
             <Toggle
-              label={i18n.t('settingsLearnFromPicks')}
-              checked={props.settings.learnFromPicks}
-              onChange={(on) => set('learnFromPicks', on)}
-              note={i18n.t('settingsLearnFromPicksNote')}
-            />
-            <SettingRow
-              label={i18n.t('settingsForgetPicks')}
-              description={
-                <span aria-live="polite">
-                  {forgotten()
-                    ? i18n.t('settingsPicksForgotten')
-                    : i18n.t('settingsForgetPicksNote')}
-                </span>
-              }
-            >
-              <Button icon="trash-2" onClick={() => void forgetPicks()}>
-                {i18n.t('settingsForgetPicksButton')}
-              </Button>
-            </SettingRow>
-            <Toggle
               label={i18n.t('settingsShowPinned')}
               checked={props.settings.pinned.showInAloft}
               onChange={(on) => set('pinned', { showInAloft: on })}
@@ -586,6 +568,59 @@ export function Settings(props: SettingsProps) {
           </div>
         </section>
 
+        <section id="privacy" class={styles.section} aria-labelledby="al-privacy-title">
+          <h2 id="al-privacy-title" class={styles.sectionTitle} tabIndex={-1}>
+            <span class={styles.sectionIcon}>
+              <Icon name="shield-check" />
+            </span>
+            <span class={styles.sectionLabel}>{i18n.t('settingsPrivacy')}</span>
+          </h2>
+          <div class={styles.group}>
+            <SettingRow
+              label={i18n.t('settingsPrivacyLocal')}
+              description={i18n.t('settingsPrivacyLocalNote')}
+            />
+            <SettingRow
+              label={i18n.t('settingsPrivacyRead')}
+              description={i18n.t('settingsPrivacyReadNote')}
+            />
+            <SettingRow
+              label={i18n.t('settingsPrivacySync')}
+              description={i18n.t('settingsPrivacySyncNote')}
+            />
+            <Toggle
+              label={i18n.t('settingsLearnFromPicks')}
+              checked={props.settings.learnFromPicks}
+              onChange={(on) => set('learnFromPicks', on)}
+              note={i18n.t('settingsLearnFromPicksNote')}
+            />
+            <SettingRow
+              label={i18n.t('settingsForgetPicks')}
+              description={
+                <span aria-live="polite">
+                  {forgotten()
+                    ? i18n.t('settingsPicksForgotten')
+                    : i18n.t('settingsForgetPicksNote')}
+                </span>
+              }
+            >
+              <Button icon="trash-2" onClick={() => void forgetPicks()}>
+                {i18n.t('settingsForgetPicksButton')}
+              </Button>
+            </SettingRow>
+            <div class={styles.links}>
+              <a href={LINKS.privacy} target="_blank" rel="noreferrer">
+                {i18n.t('settingsPrivacyPolicy')}
+                <Icon name="external-link" />
+              </a>
+              <a href={LINKS.permissions} target="_blank" rel="noreferrer">
+                {i18n.t('settingsPermissions')}
+                <Icon name="external-link" />
+              </a>
+            </div>
+          </div>
+        </section>
+
         <section id="whats-new" class={styles.section} aria-labelledby="al-whats-new-title">
           <div class={styles.sectionHead}>
             <h2 id="al-whats-new-title" class={styles.sectionTitle} tabIndex={-1}>
@@ -618,6 +653,18 @@ export function Settings(props: SettingsProps) {
           </div>
         </section>
       </main>
+      <footer class={styles.footer}>
+        <span>{i18n.t('settingsFooterVersion', [props.version])}</span>
+        <a href={LINKS.source} target="_blank" rel="noreferrer">
+          {i18n.t('settingsFooterSource')}
+        </a>
+        <span>
+          {i18n.t('settingsFooterMadeBy')}{' '}
+          <a href={LINKS.author} target="_blank" rel="noreferrer">
+            {AUTHOR}
+          </a>
+        </span>
+      </footer>
     </>
   )
 

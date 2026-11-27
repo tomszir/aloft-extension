@@ -3,6 +3,7 @@ import { createSignal } from 'solid-js'
 import { describe, expect, it, vi } from 'vitest'
 import type { Release } from '../../core/changelog'
 import { BUILT_IN_KEYWORDS } from '../../core/keywords'
+import { AUTHOR, LINKS } from '../../core/links'
 import { DEFAULT_SETTINGS, type Settings as SettingsValue } from '../../core/settings'
 import type { Shortcuts } from '../../core/shortcut'
 import { PRESET_THEMES, type Theme } from '../../core/theme'
@@ -272,6 +273,33 @@ describe('Settings', () => {
     expect(screen.getByTitle('settingsPreview').getAttribute('src')).toMatch(
       /^palette\.html\?host=preview#/,
     )
+  })
+
+  it('says what Aloft reads and syncs, with learning and its controls beside it', () => {
+    renderSettings()
+    const privacy = screen.getByRole('region', { name: 'settingsPrivacy' })
+    for (const fact of ['settingsPrivacyLocal', 'settingsPrivacyRead', 'settingsPrivacySync']) {
+      expect(within(privacy).getByText(fact)).toBeTruthy()
+    }
+    expect(within(privacy).getByRole('switch', { name: 'settingsLearnFromPicks' })).toBeTruthy()
+    expect(within(privacy).getByRole('button', { name: 'settingsForgetPicksButton' })).toBeTruthy()
+    expect(
+      within(privacy).getByRole('link', { name: 'settingsPrivacyPolicy' }).getAttribute('href'),
+    ).toBe(LINKS.privacy)
+    expect(
+      within(screen.getByRole('navigation')).getByRole('link', { name: 'settingsPrivacy' }),
+    ).toBeTruthy()
+  })
+
+  it('credits who made Aloft and links its source, opening each in a new tab', () => {
+    renderSettings()
+    const footer = screen.getByRole('contentinfo')
+    const author = within(footer).getByRole('link', { name: AUTHOR })
+    expect(author.getAttribute('href')).toBe(LINKS.author)
+    expect(author.getAttribute('target')).toBe('_blank')
+    expect(
+      within(footer).getByRole('link', { name: 'settingsFooterSource' }).getAttribute('href'),
+    ).toBe(LINKS.source)
   })
 
   it('turns learning off, and forgets what was learned on request', async () => {

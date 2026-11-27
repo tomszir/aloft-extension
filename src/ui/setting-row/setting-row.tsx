@@ -10,7 +10,8 @@ export interface SettingRowProps {
   descriptionId?: string
   /** Wide controls (theme cards, lists) go under the text instead of beside it. */
   stacked?: boolean
-  children: JSX.Element
+  /** Left out for a row that only states something. */
+  children?: JSX.Element
 }
 
 /** One setting: what it is on the left, its control on the right, as in grouped lists. */
@@ -27,7 +28,9 @@ export function SettingRow(props: SettingRowProps) {
           </div>
         </Show>
       </div>
-      <div class={styles.control}>{props.children}</div>
+      <Show when={props.children}>
+        <div class={styles.control}>{props.children}</div>
+      </Show>
     </div>
   )
 }
