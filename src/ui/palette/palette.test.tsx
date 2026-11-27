@@ -293,6 +293,14 @@ describe('Palette', () => {
       expect(document.querySelector('[data-mode]')?.getAttribute('data-mode')).toBe('actions')
     })
 
+    it('says so when no action matches', () => {
+      renderPalette({ chip: 'actions', query: 'zzz', sections: [], activeId: undefined })
+      expect(screen.getByRole('status').textContent).toBe('actionsNone')
+      cleanup()
+      renderPalette({ chip: null, query: 'zzz', sections: [], activeId: undefined })
+      expect(screen.queryByRole('status')).toBeNull()
+    })
+
     it('is not shown for a > typed outside it', () => {
       renderPalette({ query: '>' })
       expect(screen.queryByText('sectionActions')).toBeNull()

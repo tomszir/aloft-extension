@@ -101,3 +101,12 @@ test('> becomes a chip that Backspace and Esc turn back into text', async ({
     .click()
   await expect.poll(() => isPinned(background, `${TEST_ORIGIN}/Host`)).toBe(true)
 })
+
+test('says so when no action matches', async ({ context, background }) => {
+  const page = await context.newPage()
+  await page.goto(`${TEST_ORIGIN}/Host`)
+  await pressOpenAloft(background, page)
+  await palette(page).getByRole('combobox').fill('>')
+  await palette(page).getByRole('combobox').pressSequentially('zzz')
+  await expect(palette(page).getByRole('status')).toHaveText('No matching actions')
+})

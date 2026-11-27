@@ -50,8 +50,9 @@ test('a changed setting is saved and reaches the preview', async ({ context, bac
   await expect(preview(page).getByRole('option', { name: /Search the web/ })).toBeVisible()
   await expect(openTabs).toHaveCount(0)
 
+  // Back on, the tab is the best match, above the search.
   await page.getByRole('switch', { name: 'Open tabs' }).click()
-  await expect(openTabs.getByRole('option', { name: /Delta notes/ })).toBeVisible()
+  await expect(preview(page).getByRole('option').first()).toContainText('Delta notes')
 })
 
 test('the preview never acts on what it shows', async ({ context, background }) => {

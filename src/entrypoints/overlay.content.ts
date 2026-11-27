@@ -1,6 +1,7 @@
 import { browser } from 'wxt/browser'
 import { createIframeUi } from '#imports'
 import {
+  type HeldTyping,
   isCloseOverlayMessage,
   isTakeTypedMessage,
   readHeldKeys,
@@ -141,8 +142,13 @@ export default defineContentScript({
     ) => {
       if (isCloseOverlayMessage(message)) close()
       else if (isTakeTypedMessage(message)) {
-        sendResponse(held?.text ?? '')
-        if (held) held.text = ''
+        const typing: HeldTyping = { text: held?.text ?? '', submit: held?.submit }
+        sendResponse(typing)
+        if (held) {
+          held.text = ''
+          held.submit = undefined
+        }
+        ;('')
         const iframe = shadow.querySelector('iframe')
         if (iframe && document.activeElement !== host) focusFrame(iframe)
       }

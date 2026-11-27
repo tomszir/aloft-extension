@@ -133,6 +133,13 @@
   background: var(--al-panel);
 }
 
+.empty {
+  margin: 0;
+  padding: var(--al-space-5);
+  font-size: var(--al-font-size-sm);
+  color: var(--al-muted);
+}
+
 .footer {
   display: flex;
   align-items: center;

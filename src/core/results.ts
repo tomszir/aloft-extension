@@ -106,9 +106,27 @@ const DAY = 24 * 60 * 60 * 1000
 // this much, about one word-start match.
 const MAX_LIFT = 3
 
-/** The address as rows show it: no scheme, no www, no slash after a bare host. */
+/**
+ * The address as rows show it: no scheme, no www, no slash after a bare host,
+ * and the path's escapes as the characters they stand for, as the address bar
+ * shows them. The host stays as it is, so a lookalike can't pass for a site.
+ */
 export function displayUrl(url: string): string {
-  return bareUrl(url).replace(/^([^/?#]+)\/$/, '$1')
+  const bare = bareUrl(url).replace(/^([^/?#]+)\/$/, '$1')
+  const at = bare.search(/[/?#]/)
+  return at === -1 ? bare : bare.slice(0, at) + readable(bare.slice(at))
+}
+
+// Characters that would hide or reorder the text around them stay escaped.
+const UNSAFE = /[\p{Cc}\p{Cf}]/u
+
+function readable(rest: string): string {
+  try {
+    const decoded = decodeURIComponent(rest)
+    return UNSAFE.test(decoded) ? rest : decoded
+  } catch {
+    return rest
+  }
 }
 
 /**
@@ -293,6 +311,31 @@ export function buildSections(
       )
     : []
 
+  // A page that plainly starts with what's typed goes above the search, so
+  // Enter opens it: an open tab or bookmark by its title, any page by its
+  // site, as the address bar completes "gi" to github.com. History titles
+  // don't count; "how to" shouldn't open a page read once. Never over an
+  // address or a page picked here before, which already say what Enter does.
+  const best =
+    pick || url
+      ? undefined
+      : (matchedTabs.find((t) => startsWithTyped(text, t, true)) ??
+        bookmarks.find((b) => startsWithTyped(text, b, true)) ??
+        history.find((h) => startsWithTyped(text, h, false)))
+  const isBest = (page: object) => page === best
+  const tabsShown = matchedTabs.filter((t) => !isBest(t))
+  const bookmarksShown = bookmarks.filter((b) => !isBest(b))
+  const historyShown = history.filter((h) => !isBest(h))
+  if (best) {
+    const row: Result =
+      'tabId' in best
+        ? { ...tabResult(best), highlights: highlightRanges(terms, best.title) }
+        : 'id' in best
+          ? bookmarkResult(best, terms)
+          : historyResult(best, terms)
+    top.splice(top.length - 1, 0, row)
+  }
+
   return compact([
     {
       id: 'keywords',
@@ -307,24 +350,37 @@ export function buildSections(
     { id: 'top', results: top },
     {
       id: 'tabs',
-      results: matchedTabs.map((t) => ({
+      results: tabsShown.map((t) => ({
         ...tabResult(t),
         highlights: highlightRanges(terms, t.title),
       })),
     },
-    { id: 'history', results: history.map((h) => historyResult(h, terms)) },
-    {
-      id: 'bookmarks',
-      results: bookmarks.map((b) => ({
-        kind: 'bookmark',
-        id: `bookmark:${b.id}`,
-        title: b.title,
-        url: b.url,
-        highlights: highlightRanges(terms, b.title),
-      })),
-    },
+    { id: 'history', results: historyShown.map((h) => historyResult(h, terms)) },
+    { id: 'bookmarks', results: bookmarksShown.map((b) => bookmarkResult(b, terms)) },
   ])
 }
+
+// At least two characters, so a single letter still searches.
+const MIN_BEST_MATCH = 2
+
+function startsWithTyped(
+  text: string,
+  page: { title: string; url: string },
+  byTitle: boolean,
+): boolean {
+  const typed = text.toLowerCase()
+  if (typed.length < MIN_BEST_MATCH) return false
+  if (byTitle && page.title.toLowerCase().startsWith(typed)) return true
+  return !/\s/.test(typed) && bareUrl(page.url).toLowerCase().startsWith(typed)
+}
+
+const bookmarkResult = (b: BookmarkEntry, terms: readonly string[]): Result => ({
+  kind: 'bookmark',
+  id: `bookmark:${b.id}`,
+  title: b.title,
+  url: b.url,
+  highlights: highlightRanges(terms, b.title),
+})
 
 /**
  * The row for a learned page at the top: its open tab when there is one, so
@@ -344,15 +400,7 @@ function learnedTopHit(
     .sort((a, b) => b.lastAccessed - a.lastAccessed)[0]
   if (tab) return { ...tabResult(tab), highlights: highlightRanges(terms, tab.title) }
   const bookmark = sources.bookmarks ? bookmarks.find((b) => pageKey(b.url) === key) : undefined
-  if (bookmark) {
-    return {
-      kind: 'bookmark',
-      id: `bookmark:${bookmark.id}`,
-      title: bookmark.title,
-      url: bookmark.url,
-      highlights: highlightRanges(terms, bookmark.title),
-    }
-  }
+  if (bookmark) return bookmarkResult(bookmark, terms)
   if (!sources.history) return undefined
   return historyResult({ title: page.title, url: page.url, visitCount: 0, lastVisitTime: 0 }, terms)
 }

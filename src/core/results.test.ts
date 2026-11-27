@@ -106,8 +106,27 @@ describe('buildSections', () => {
   })
 
   it('offers search first, and the address first when it looks like one', () => {
-    expect(ids('aloft')[0]).toBe('search')
+    expect(ids('rules')[0]).toBe('search')
     expect(ids('github.com/tomszir').slice(0, 2)).toEqual(['url', 'search'])
+  })
+
+  describe('best match', () => {
+    it('puts an open tab or bookmark whose title starts with the text above the search', () => {
+      expect(ids('window').slice(0, 2)).toEqual(['tab:3', 'search'])
+      expect(ids('aloft d').slice(0, 2)).toEqual(['bookmark:b1', 'search'])
+      // Listed once, at the top.
+      expect(ids('window').filter((id) => id === 'tab:3')).toHaveLength(1)
+    })
+
+    it('puts any page whose site starts with the text above the search', () => {
+      expect(ids('notes').slice(0, 2)).toEqual(['history:https://notes.test/aloft', 'search'])
+    })
+
+    it('leaves history titles, single letters and addresses to what they are', () => {
+      expect(ids('aloft i')[0]).toBe('search')
+      expect(ids('w')[0]).toBe('search')
+      expect(ids('wiki.hypr.land/Configuring')[0]).toBe('url')
+    })
   })
 
   it('does not repeat a page that is already open', () => {
@@ -186,7 +205,8 @@ describe('learned picks', () => {
   it('only lifts a page within its section while it is picked just once', () => {
     const opts = learned('https://notes.test/aloft', 1)
     const results = ids('aloft', opts)
-    expect(results[0]).toBe('search')
+    // The bookmark is the best match; the picked page stays in its section.
+    expect(results.slice(0, 2)).toEqual(['bookmark:b1', 'search'])
     const history = results.filter((id) => id.startsWith('history:'))
     expect(history[0]).toBe('history:https://notes.test/aloft')
   })
@@ -289,6 +309,16 @@ describe('displayUrl', () => {
     expect(displayUrl('https://www.github.com/')).toBe('github.com')
     expect(displayUrl('https://github.com/tomszir/')).toBe('github.com/tomszir/')
     expect(displayUrl('https://github.com/?tab=1')).toBe('github.com/?tab=1')
+  })
+
+  it('shows escapes in the path as the characters they stand for, but not in the host', () => {
+    expect(displayUrl('https://lv.test/%C4%93dieni/Reading%20list')).toBe(
+      'lv.test/ēdieni/Reading list',
+    )
+    expect(displayUrl('https://xn--80ak6aa92e.com/a%20b')).toBe('xn--80ak6aa92e.com/a b')
+    // Malformed escapes, and characters that hide or reorder text, stay as they are.
+    expect(displayUrl('https://a.test/100%')).toBe('a.test/100%')
+    expect(displayUrl('https://a.test/%E2%80%AEevil')).toBe('a.test/%E2%80%AEevil')
   })
 })
 
