@@ -103,3 +103,39 @@
   color: inherit;
   font-weight: var(--al-font-weight-semibold);
 }
+
+.tag {
+  margin-left: var(--al-space-2);
+  padding: 0 var(--al-space-2);
+  border-radius: var(--al-kbd-radius);
+  background: var(--al-chip-tint);
+  color: var(--al-chip-ink);
+  font-size: var(--al-font-size-xs);
+}
+
+/* Shown on the row under the mouse and on the selected one. */
+.close {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: var(--al-icon-tile);
+  height: var(--al-icon-tile);
+  margin-left: calc(-1 * var(--al-space-2));
+  padding: 0;
+  border: 0;
+  border-radius: var(--al-kbd-radius);
+  background: none;
+  color: var(--al-muted);
+  cursor: pointer;
+  opacity: 0;
+}
+
+.row:hover .close,
+.row[data-active] .close {
+  opacity: 1;
+}
+
+.close:hover {
+  background: var(--al-chip-tint);
+  color: var(--al-text);
+}

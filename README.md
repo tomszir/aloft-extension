@@ -61,6 +61,7 @@ To open it with <kbd>Ctrl</kbd>+<kbd>T</kbd> instead of a blank tab, give it tha
 | <kbd>↑</kbd> <kbd>↓</kbd>                            | Move through results                                                             |
 | <kbd>Enter</kbd> / <kbd>Shift</kbd>+<kbd>Enter</kbd> | Open in a new tab / in the current tab                                           |
 | <kbd>Alt</kbd>+<kbd>1</kbd>–<kbd>9</kbd>             | Open a pinned tab                                                                |
+| <kbd>Del</kbd>                                       | Close the selected open tab                                                      |
 | <kbd>&gt;</kbd>                                      | Tab actions                                                                      |
 | <kbd>Esc</kbd>                                       | Close Aloft                                                                      |
 
