@@ -158,7 +158,7 @@ describe('sectionBody', () => {
 })
 
 describe('amoNotes', () => {
-  it('keeps a summary, headings and lists in the HTML addons.mozilla.org takes', () => {
+  it('writes a summary, headings and lists as plain text', () => {
     const markdown = [
       'A bigger release & more.',
       '',
@@ -171,20 +171,23 @@ describe('amoNotes', () => {
     ].join('\n')
     expect(amoNotes(markdown)).toBe(
       [
-        'A bigger release &amp; more.',
-        '<ul><li><strong>Breaking:</strong> no new tab.</li></ul>',
+        'A bigger release & more.',
         '',
-        '<b>Opening Aloft</b>',
-        '<ul><li>Keeps <code>Enter</code> and &lt;typing&gt;.</li><li>See <a href="https://example.com/a">the docs</a>.</li></ul>',
+        '• Breaking: no new tab.',
+        '',
+        'Opening Aloft',
+        '',
+        '• Keeps Enter and <typing>.',
+        '• See the docs (https://example.com/a).',
       ].join('\n'),
     )
   })
 
-  it('works on every release in the changelog', () => {
-    for (const { version } of parseChangelog(readFileSync(CHANGELOG, 'utf8'))) {
-      const html = amoNotes(sectionBody(readFileSync(CHANGELOG, 'utf8'), version) ?? '')
-      expect(html).not.toMatch(/^[-#]/m)
-      expect(html.replace(/<\/?(b|strong|code|ul|li|a( href="[^"]+")?)>/g, '')).not.toMatch(/[<>]/)
+  it('leaves no Markdown in any release in the changelog', () => {
+    const changelog = readFileSync(CHANGELOG, 'utf8')
+    for (const { version } of parseChangelog(changelog)) {
+      const text = amoNotes(sectionBody(changelog, version) ?? '')
+      expect(text).not.toMatch(/^[-#]|\*\*|`|\]\(/m)
     }
   })
 })

@@ -65,7 +65,7 @@ Publishing is skipped until this is done. It only has to be done once.
 
 Each release also carries `aloft-<version>-firefox.zip` and `aloft-<version>-sources.zip`. The sources zip is what AMO's reviewers rebuild the package from: `pnpm install --frozen-lockfile && pnpm zip:firefox` on it gives the same package.
 
-`publish.yml`'s `firefox` job runs `scripts/amo.ts`, which uploads the Firefox zip as a listed version, waits for validation, attaches the sources zip, and sets the version's release notes from `CHANGELOG.md`. Running it again for a version AMO already has only resets the notes. Automated review signs and lists the version within minutes to hours; a human review may follow later.
+`publish.yml`'s `firefox` job runs `scripts/amo.ts`, which uploads the Firefox zip as a listed version, waits for validation, attaches the sources zip, and sets the version's release notes from `CHANGELOG.md`, as plain text since AMO shows HTML tags as written. Running it again for a version AMO already has only resets the notes. Automated review signs and lists the version within minutes to hours; a human review may follow later.
 
 The listing itself (description, categories and so on) is edited by hand from [amo-listing.md](amo-listing.md). AMO's API can't set a version's notes to reviewer, so a new version goes to review without them. If a reviewer asks how to build it, the answer is in amo-listing.md, and also in this file, which is in the sources zip.
 

@@ -83,43 +83,29 @@ export function sectionBody(notes: string, version: string): string | undefined 
   return section?.text.split('\n').slice(1).join('\n').trim()
 }
 
-const escapeHtml = (text: string) =>
-  text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-
-const inlineHtml = (text: string) =>
-  escapeHtml(text)
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/`(.+?)`/g, '<code>$1</code>')
-    .replace(/\[(.+?)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2">$1</a>')
+const plainText = (text: string) =>
+  text
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/`(.+?)`/g, '$1')
+    .replace(/\[(.+?)\]\((https?:\/\/[^\s)]+)\)/g, '$1 ($2)')
 
 /**
- * A section's Markdown as addons.mozilla.org's release notes, which take
- * plain text with a few HTML tags (b, strong, em, code, a, ul, li) and turn
- * every newline into a line break, so each list is kept on one line.
+ * A section's Markdown as addons.mozilla.org's release notes, which show
+ * plain text as written (HTML tags too) and only link bare addresses.
  */
 export function amoNotes(markdown: string): string {
-  const blocks: string[] = []
-  let list: string[] = []
-  const endList = () => {
-    if (list.length > 0) blocks.push(`<ul>${list.map((item) => `<li>${item}</li>`).join('')}</ul>`)
-    list = []
-  }
+  const lines: string[] = []
   for (const line of markdown.split('\n')) {
-    const item = /^[-*] (.+)$/.exec(line)
-    const heading = /^#{3,} (.+)$/.exec(line)
-    if (item?.[1] !== undefined) {
-      list.push(inlineHtml(item[1]))
-      continue
-    }
-    endList()
-    if (heading?.[1] !== undefined) blocks.push(`<b>${inlineHtml(heading[1])}</b>`)
-    else if (line.trim() !== '') blocks.push(inlineHtml(line.trim()))
+    const item = /^[-*] (.+)$/.exec(line)?.[1]
+    const heading = /^#{3,} (.+)$/.exec(line)?.[1]
+    if (item !== undefined) lines.push(`• ${plainText(item)}`)
+    else if (heading !== undefined) lines.push(plainText(heading))
+    else lines.push(plainText(line.trim()))
   }
-  endList()
-  // A blank line before each paragraph and heading; a list follows straight on.
-  return blocks
-    .map((block, i) => (i === 0 ? block : `${block.startsWith('<ul>') ? '\n' : '\n\n'}${block}`))
-    .join('')
+  return lines
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
 }
 
 export interface DraftInput {
