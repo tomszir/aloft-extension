@@ -179,10 +179,6 @@
   gap: var(--al-space-3);
 }
 
-.danger {
-  color: var(--al-danger);
-}
-
 .confirm {
   display: flex;
   flex-wrap: wrap;

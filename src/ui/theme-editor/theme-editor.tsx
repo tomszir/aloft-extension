@@ -154,7 +154,7 @@ export function ThemeEditor(props: ThemeEditorProps) {
               {asking() === 'discard' ? i18n.t('themeDiscardAsk') : i18n.t('themeDeleteAsk')}
             </span>
             <Button
-              class={styles.danger}
+              danger
               onClick={() => {
                 const answer = asking()
                 setConfirming(undefined)
@@ -300,7 +300,7 @@ export function ThemeEditor(props: ThemeEditorProps) {
           {i18n.t('themeExport')}
         </Button>
         <Show when={props.saved}>
-          <Button class={styles.danger} icon="trash-2" onClick={() => setConfirming('delete')}>
+          <Button danger icon="trash-2" onClick={() => setConfirming('delete')}>
             {i18n.t('themeDelete')}
           </Button>
         </Show>

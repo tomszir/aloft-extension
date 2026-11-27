@@ -55,6 +55,21 @@
   border-color: color-mix(in srgb, var(--al-border), var(--al-text) 18%);
 }
 
+.ghost {
+  padding: 0 var(--al-space-4);
+  background: none;
+  color: var(--al-text);
+}
+
+.danger {
+  color: var(--al-danger);
+}
+
+/* Tinted with the button's own color, so a danger one turns faintly red. */
+.ghost:hover:not(:disabled) {
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .button {
     transition: none;

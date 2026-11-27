@@ -152,17 +152,20 @@ export function KeywordSettings(props: KeywordSettingsProps) {
       </Show>
       <div class={`${styles.buttons} ${styles.wide}`}>
         <Show when={current.id && !props.keywords.find((k) => k.id === current.id)?.builtIn}>
-          <button
-            type="button"
-            class={styles.danger}
+          <Button
+            variant="ghost"
+            danger
+            icon="trash-2"
             onClick={() => current.id && void remove(current.id)}
           >
             {i18n.t('keywordDelete')}
-          </button>
+          </Button>
         </Show>
         <span class={styles.spacer} />
-        <Button onClick={close}>{i18n.t('keywordCancel')}</Button>
-        <Button type="submit" variant="primary">
+        <Button icon="x" onClick={close}>
+          {i18n.t('keywordCancel')}
+        </Button>
+        <Button type="submit" variant="primary" icon="check">
           {i18n.t('keywordSave')}
         </Button>
       </div>
@@ -234,21 +237,25 @@ export function KeywordSettings(props: KeywordSettingsProps) {
         <Show
           when={confirmReset()}
           fallback={
-            <button
-              type="button"
-              class={styles.danger}
+            <Button
+              variant="ghost"
+              danger
+              icon="undo-2"
               disabled={!props.keywords.some(isChanged)}
               onClick={() => setConfirmReset(true)}
             >
               {i18n.t('keywordReset')}
-            </button>
+            </Button>
           }
         >
           <span class={styles.confirm}>
             {i18n.t('keywordResetConfirm')}
-            <Button onClick={() => setConfirmReset(false)}>{i18n.t('keywordCancel')}</Button>
+            <Button icon="x" onClick={() => setConfirmReset(false)}>
+              {i18n.t('keywordCancel')}
+            </Button>
             <Button
               variant="primary"
+              icon="undo-2"
               onClick={() => {
                 setConfirmReset(false)
                 setEditing(undefined)
