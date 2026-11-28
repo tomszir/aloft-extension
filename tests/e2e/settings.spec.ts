@@ -219,3 +219,101 @@ test('the menu jumps to a section and marks it, as does scrolling', async ({
     'location',
   )
 })
+
+const EMBER = {
+  id: 'custom-ember',
+  name: 'Ember',
+  scheme: 'dark',
+  radius: 6,
+  colors: {
+    panel: '#1A1110',
+    selected: '#2A1C1A',
+    border: '#3A2522',
+    text: '#F5E6E2',
+    muted: '#C2A8A2',
+    accent: '#FF7A45',
+  },
+}
+const DOCS = {
+  id: 'custom-docs',
+  name: 'Docs',
+  keyword: 'docs',
+  url: 'https://docs.example/?q=%s',
+  enabled: true,
+}
+
+async function syncStorage(background: Worker, change: 'clear' | object): Promise<void> {
+  await background.evaluate(async (value) => {
+    const api = Reflect.get(globalThis, 'chrome') as {
+      storage: { sync: { set: (items: object) => Promise<void>; clear: () => Promise<void> } }
+    }
+    if (value === 'clear') await api.storage.sync.clear()
+    else await api.storage.sync.set(value)
+  }, change)
+}
+
+async function stored(background: Worker, key: string): Promise<unknown> {
+  return background.evaluate(async (name) => {
+    const api = Reflect.get(globalThis, 'chrome') as {
+      storage: { sync: { get: (key: string) => Promise<Record<string, unknown>> } }
+    }
+    return (await api.storage.sync.get(name))[name]
+  }, key)
+}
+
+test('a backup exported from settings restores them, and the preview follows', async ({
+  context,
+  background,
+}) => {
+  await syncStorage(background, {
+    settings: {
+      enterOpensIn: 'current-tab',
+      appearance: { colorScheme: 'dark', darkTheme: EMBER.id },
+    },
+    themes: [EMBER],
+    keywords: { builtIn: { youtube: { enabled: false } }, custom: [DOCS] },
+  })
+  const page = await context.newPage()
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await openSettings(page, background)
+  const panel = () =>
+    preview(page)
+      .locator('html')
+      .evaluate((html) => html.style.getPropertyValue('--al-panel'))
+  await expect.poll(panel).toBe(EMBER.colors.panel)
+
+  const backup = page.getByRole('region', { name: 'Backup' })
+  const downloading = page.waitForEvent('download')
+  await backup.getByRole('button', { name: 'Export', exact: true }).click()
+  const download = await downloading
+  expect(download.suggestedFilename()).toMatch(/^aloft-backup-\d{4}-\d{2}-\d{2}\.json$/)
+  const file = await download.path()
+
+  // Back to how Aloft ships, as on a new computer.
+  await syncStorage(background, 'clear')
+  await expect(page.getByRole('radio', { name: 'Ember' })).toHaveCount(0)
+  await expect.poll(panel).not.toBe(EMBER.colors.panel)
+
+  await backup.locator('input[type="file"]').setInputFiles(file)
+  const ask = backup.getByRole('alert')
+  await expect(ask).toContainText('Restore this backup?')
+  await expect(ask).toContainText('Adds 1 theme.')
+  await expect(ask).toContainText('Adds 1 keyword.')
+  // Nothing is saved until it's confirmed.
+  expect(await stored(background, 'themes')).toBeUndefined()
+  await ask.getByRole('button', { name: 'Restore', exact: true }).click()
+  await expect(backup.getByText('Restored from the backup.')).toBeVisible()
+
+  await expect.poll(() => stored(background, 'themes')).toEqual([EMBER])
+  await expect
+    .poll(() => stored(background, 'keywords'))
+    .toEqual({ builtIn: { youtube: { enabled: false } }, custom: [DOCS] })
+  await expect
+    .poll(() => storedSettings(background))
+    .toMatchObject({
+      enterOpensIn: 'current-tab',
+      appearance: { colorScheme: 'dark', darkTheme: EMBER.id },
+    })
+  await expect(page.getByRole('radio', { name: 'Ember' })).toBeChecked()
+  await expect.poll(panel).toBe(EMBER.colors.panel)
+})

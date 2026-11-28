@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, within } from '@solidjs/testing-library'
 import { createSignal } from 'solid-js'
 import { describe, expect, it, vi } from 'vitest'
+import { exportBackup } from '../../core/backup'
 import type { Release } from '../../core/changelog'
 import { BUILT_IN_KEYWORDS } from '../../core/keywords'
 import { AUTHOR, LINKS } from '../../core/links'
@@ -36,6 +37,7 @@ function renderSettings(
     return 'saved' as const
   })
   const onExportTheme = vi.fn()
+  const onExportBackup = vi.fn()
   const onForgetPicks = vi.fn(async () => {})
   render(() => (
     <Settings
@@ -54,6 +56,7 @@ function renderSettings(
       customThemes={customThemes()}
       onSaveThemes={onSaveThemes}
       onExportTheme={onExportTheme}
+      onExportBackup={onExportBackup}
     />
   ))
   return {
@@ -64,6 +67,7 @@ function renderSettings(
     customThemes,
     onSaveThemes,
     onExportTheme,
+    onExportBackup,
   }
 }
 
@@ -300,6 +304,35 @@ describe('Settings', () => {
     expect(
       within(footer).getByRole('link', { name: 'settingsFooterSource' }).getAttribute('href'),
     ).toBe(LINKS.source)
+  })
+
+  it('restores a backup from its own section, and the preview follows it', async () => {
+    const { settings } = renderSettings()
+    const backup = screen.getByRole('region', { name: 'settingsBackup' })
+    expect(
+      within(screen.getByRole('navigation')).getByRole('link', { name: 'settingsBackup' }),
+    ).toBeTruthy()
+    const stage = () => document.querySelector('[data-scheme]')?.getAttribute('data-scheme')
+    const before = stage()
+    const scheme = before === 'dark' ? 'light' : 'dark'
+    const text = exportBackup({
+      settings: {
+        ...DEFAULT_SETTINGS,
+        appearance: { ...DEFAULT_SETTINGS.appearance, colorScheme: scheme },
+      },
+      themes: [],
+      keywords: BUILT_IN_KEYWORDS,
+    })
+    fireEvent.change(within(backup).getByLabelText('backupImport'), {
+      target: { files: [new File([text], 'backup.json', { type: 'application/json' })] },
+    })
+    fireEvent.click(
+      within(await within(backup).findByRole('alert')).getByRole('button', {
+        name: 'backupRestore',
+      }),
+    )
+    await vi.waitFor(() => expect(settings().appearance.colorScheme).toBe(scheme))
+    expect(stage()).toBe(scheme)
   })
 
   it('turns learning off, and forgets what was learned on request', async () => {

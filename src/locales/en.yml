@@ -118,6 +118,40 @@ settingsForgetPicks: Forget what Aloft learned
 settingsForgetPicksNote: Clears every page Aloft has learned on this device.
 settingsForgetPicksButton: Forget
 settingsPicksForgotten: Forgotten.
+settingsBackup: Backup
+backupExport: Back up your settings
+backupExportNote: Your settings, themes and keywords, saved as a file. It holds nothing Aloft learned from your picks, and no browsing data.
+backupExportButton: Export
+backupImport: Restore from a backup
+backupImportNote: You see what changes before anything is saved. Themes and keywords from the backup are added to yours.
+backupImportButton: Import
+backupAsk: Restore this backup?
+backupReplacesSettings: Your settings are replaced with the backup's.
+backupThemesAdded:
+  1: Adds 1 theme.
+  n: Adds $1 themes.
+backupThemesSkipped:
+  1: 1 theme doesn't fit in what your browser syncs and is left out.
+  n: $1 themes don't fit in what your browser syncs and are left out.
+backupBuiltIns: The built-in keywords are set as in the backup.
+backupKeywordsAdded:
+  1: Adds 1 keyword.
+  n: Adds $1 keywords.
+backupKeywordsSkipped:
+  1: 1 keyword doesn't fit in what your browser syncs and is left out.
+  n: $1 keywords don't fit in what your browser syncs and are left out.
+backupKeywordsSwitchedOff:
+  1: 1 keyword clashes with another one, so it's switched off under a new keyword.
+  n: $1 keywords clash with others, so they're switched off under new keywords.
+backupNewer: This backup is from a newer version of Aloft, so some of it may not carry over.
+backupNothing: This backup matches what you have, so there's nothing to restore.
+backupRestore: Restore
+backupCancel: Cancel
+backupClose: Close
+backupRestored: Restored from the backup.
+backupTooLarge: That file is too big to be an Aloft backup.
+backupNotBackup: That file isn't an Aloft backup. Backups are JSON files exported from Aloft's settings.
+backupFailed: Your browser didn't save all of the backup just now. Try again in a minute.
 settingsShowPinned: Show pinned tabs above the results
 settingsKeywords: Keywords
 settingsKeywordsNote: Type a keyword, then Space or Tab, to search a site or ask an AI from Aloft. Type @ in Aloft to see them all; starting with @ always works. What you type becomes part of the site's address, so it's saved in your history.
