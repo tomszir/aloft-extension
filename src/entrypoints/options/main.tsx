@@ -15,14 +15,21 @@ import { Settings } from '../../ui/settings/settings'
 import './page.css'
 
 // A file saved from the page itself: nothing leaves the computer.
-function downloadTheme(theme: Theme): void {
-  const url = URL.createObjectURL(new Blob([exportTheme(theme)], { type: 'application/json' }))
+function download(text: string, name: string): void {
+  const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }))
   const link = document.createElement('a')
   link.href = url
-  link.download = `aloft-theme-${theme.id.replace(/^custom-/, '')}.json`
+  link.download = name
   link.click()
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
+
+const downloadTheme = (theme: Theme) =>
+  download(exportTheme(theme), `aloft-theme-${theme.id.replace(/^custom-/, '')}.json`)
+
+// The date in the name tells backups apart in a downloads folder.
+const downloadBackup = (text: string) =>
+  download(text, `aloft-backup-${new Date().toISOString().slice(0, 10)}.json`)
 
 function SettingsPage() {
   const { settings, update } = useSettings()
@@ -58,6 +65,7 @@ function SettingsPage() {
       customThemes={customThemes()}
       onSaveThemes={saveThemes}
       onExportTheme={downloadTheme}
+      onExportBackup={downloadBackup}
     />
   )
 }

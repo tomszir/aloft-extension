@@ -19,6 +19,7 @@ import {
   uniqueName,
 } from '../../core/theme'
 import { FONTS, type Font, isFontName } from '../../core/typography'
+import { BackupSettings } from '../backup-settings/backup-settings'
 import { Button } from '../button/button'
 import { Choice } from '../choice/choice'
 import { CtrlTSetup, newTabKey } from '../ctrl-t-setup/ctrl-t-setup'
@@ -59,6 +60,8 @@ export interface SettingsProps {
   /** False, saving nothing, when they don't fit in sync storage. */
   onSaveThemes: (themes: readonly Theme[]) => Promise<ThemesSaved>
   onExportTheme: (theme: Theme) => void
+  /** Saves a backup's text as a file. */
+  onExportBackup: (text: string) => void
 }
 
 type Scheme = 'light' | 'dark'
@@ -104,6 +107,7 @@ const SECTIONS: readonly { id: string; icon: IconName; label: () => string }[] =
   { id: 'keywords', icon: 'at-sign', label: () => i18n.t('settingsKeywords') },
   { id: 'appearance', icon: 'palette', label: () => i18n.t('settingsAppearance') },
   { id: 'privacy', icon: 'shield-check', label: () => i18n.t('settingsPrivacy') },
+  { id: 'backup', icon: 'download', label: () => i18n.t('settingsBackup') },
   { id: 'whats-new', icon: 'sparkles', label: () => i18n.t('settingsWhatsNew') },
 ]
 
@@ -618,6 +622,26 @@ export function Settings(props: SettingsProps) {
                 <Icon name="external-link" />
               </a>
             </div>
+          </div>
+        </section>
+
+        <section id="backup" class={styles.section} aria-labelledby="al-backup-title">
+          <h2 id="al-backup-title" class={styles.sectionTitle} tabIndex={-1}>
+            <span class={styles.sectionIcon}>
+              <Icon name="download" />
+            </span>
+            <span class={styles.sectionLabel}>{i18n.t('settingsBackup')}</span>
+          </h2>
+          <div class={styles.group}>
+            <BackupSettings
+              settings={props.settings}
+              customThemes={props.customThemes}
+              keywords={props.keywords}
+              onExport={props.onExportBackup}
+              onChange={props.onChange}
+              onSaveThemes={props.onSaveThemes}
+              onKeywordsChange={props.onKeywordsChange}
+            />
           </div>
         </section>
 
