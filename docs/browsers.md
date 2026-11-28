@@ -44,6 +44,7 @@ Ctrl+T opens Aloft only once someone gives it to Aloft's second shortcut on the 
 ## Chromium findings
 
 - **Helium's `helium://` pages** open in a new tab, but an existing tab sent there asks for an outside app. Aloft opens them as `chrome://`, which Helium shows as the same page.
+- **Copying from the overlay:** Chromium blocks `navigator.clipboard.writeText` in a cross-origin frame unless the page delegates it, so the overlay's frame carries `allow="clipboard-write *"`. It has to be `*`: with `use_dynamic_url` the frame's `src` isn't the origin the palette loads at, so `allow="clipboard-write"` alone matches nothing. The wildcard reaches only the document in that one frame. No permission is needed. Closing the palette's own tab straight after the write can lose it, so the palette waits a moment after copying before it closes.
 
 ## Firefox findings
 
@@ -51,6 +52,7 @@ From a prototype build run in Firefox 160:
 
 - **The overlay frame has no `tabs`, `history`, `bookmarks` or `sessions`.** Firefox gives an extension page inside a website's iframe only content-script APIs. The Firefox build relays these calls through the background ([architecture.md](architecture.md#the-palette-runs-in-an-iframe)).
 - **A strict page CSP doesn't block the overlay:** with `frame-src 'none'` the frame still loads.
+- **Copying needs no permission**, from the overlay frame or from the palette's own tab.
 - **No `_favicon` cache**, so the favicon gap below applies.
 - **Manifest:** Firefox needs `browser_specific_settings.gecko` with an id, `strict_min_version` and `data_collection_permissions: { required: ["none"] }`. The Chromium-only keys (`minimum_chrome_version`, `favicon`, `use_dynamic_url`) stay out of it.
 - **Testing:** Puppeteer installs the extension with `installExtension` over WebDriver BiDi. Reaching `moz-extension://` pages needs `MOZ_REMOTE_ALLOW_SYSTEM_ACCESS=1` in Firefox's environment, and a fixed internal id comes from the `extensions.webextensions.uuids` pref.

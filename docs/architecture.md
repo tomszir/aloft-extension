@@ -105,4 +105,4 @@ Biome enforces the boundaries (see `overrides` in `biome.json`):
 - **End-to-end tests:** Playwright loads the built extension.
 - **Accessibility:** WAI-ARIA combobox and listbox pattern, and Esc gives focus back to the page.
 - **Web demo:** the palette also runs on an ordinary page, over an invented browser in memory, for Aloft's product page. It's a separate build that swaps `platform/` for fakes, so the extension's packages don't change; see [demo.md](demo.md).
-- **Budgets:** palette JS under 43 KB gzipped (raised from 40 for themes, density, the readable-address and best-match work, and the tab and page actions; keep it tight), overlay content script under 5 KB, the web demo under 46 KB, first results in under 50 ms.
+- **Budgets:** palette JS under 44 KB gzipped (raised from 40 for themes, density, the readable-address and best-match work, the tab and page actions, and the result menu; keep it tight), overlay content script under 5 KB, the web demo under 47 KB, first results in under 50 ms.

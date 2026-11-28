@@ -1,11 +1,18 @@
 import { createEffect, createMemo, createSignal, on, onCleanup } from 'solid-js'
 import { actionEntries } from '../../app/action-entries'
+import { resultMenu } from '../../app/result-menu'
 import { useCustomThemes } from '../../app/use-custom-themes'
 import { useKeywords } from '../../app/use-keywords'
 import { useSettings } from '../../app/use-settings'
 import { type PreviewOverride, useTheme } from '../../app/use-theme'
 import { useZoomCorrection } from '../../app/use-zoom-correction'
-import { availableActions, duplicateTabs, otherWindows, type WindowEntry } from '../../core/actions'
+import {
+  type ActionId,
+  availableActions,
+  duplicateTabs,
+  otherWindows,
+  type WindowEntry,
+} from '../../core/actions'
 import { keywordHost } from '../../core/keywords'
 import { EMPTY_LEARNED, learnedPages } from '../../core/learned'
 import { dropIndex, moveIndex, pinnedRow } from '../../core/pinned'
@@ -50,6 +57,7 @@ import {
   movePinned,
   openResult,
   openWhatsNew,
+  removeFromHistory,
   runAction,
   searchBookmarks,
   searchHistory,
@@ -64,6 +72,8 @@ import { type Move, Palette } from '../../ui/palette/palette'
 const SUBMIT_WAIT_MS = 1000
 // Enter pressed in the palette itself waits less: the person is watching.
 const LIVE_ENTER_WAIT_MS = 300
+// See copyAddress.
+const COPY_SETTLE_MS = 150
 
 /** What the settings page asks its preview to show: `#scheme=dark&theme=…`. */
 function previewFromHash(): PreviewOverride {
@@ -335,6 +345,47 @@ export function App(props: AppProps) {
     setClosed(await loadRecentlyClosed())
   }
 
+  // Called right away, while the click or key still counts as the person's.
+  // Chromium can drop a write still on its way when the page goes at once,
+  // as the palette's own tab does, so it closes a moment later.
+  async function copyAddress(url: string): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(url)
+    } catch {
+      // Refused: the palette stays, so it doesn't look as if it worked.
+      return
+    }
+    await new Promise((done) => setTimeout(done, COPY_SETTLE_MS))
+    await close()
+  }
+
+  async function forget(url: string): Promise<void> {
+    const kept = (h: HistoryEntry) => h.url !== url
+    setHistory((list) => list.filter(kept))
+    setRecentHistory((list) => list.filter(kept))
+    await removeFromHistory(url)
+  }
+
+  async function actOnTab(action: ActionId, tab: TabEntry, windowId?: number): Promise<void> {
+    const host = { id: tab.tabId, index: tab.index, windowId: tab.windowId }
+    await runAction(action, { host, lastClosed: undefined, windowId })
+    // Moving takes the person along to the tab; anything else only changes
+    // the row, which the tab events bring back.
+    if (action === 'move-to-new-window' || action === 'move-to-window') await close()
+  }
+
+  const menuFor =
+    props.host === 'preview'
+      ? undefined
+      : (result: Result) =>
+          resultMenu(result, tabs(), windows(), {
+            open: (picked, disposition) => void activate(picked, false, disposition),
+            close: (tab) => void closeResultTab(tab),
+            act: (action, tab, windowId) => void actOnTab(action, tab, windowId),
+            copy: (url) => void copyAddress(url),
+            forget: (url) => void forget(url),
+          })
+
   async function showWhatsNew(): Promise<void> {
     const host = hostTab() ?? (await props.hostTab)
     if (host === undefined) return
@@ -345,7 +396,7 @@ export function App(props: AppProps) {
   // One result at a time: a second Enter while the first is still opening
   // would open it again.
   let acting = false
-  async function activate(result: Result, shift: boolean): Promise<void> {
+  async function activate(result: Result, shift: boolean, place?: Disposition): Promise<void> {
     if (result.kind === 'keyword') {
       setQuery(enterKeyword(result.keyword))
       return
@@ -354,7 +405,7 @@ export function App(props: AppProps) {
     acting = true
     setSubmitting(undefined)
     try {
-      await open(result, shift)
+      await open(result, shift, place)
     } catch {
       // A page the browser wouldn't open; the palette shouldn't stay stuck.
       await close().catch(() => undefined)
@@ -363,7 +414,7 @@ export function App(props: AppProps) {
     }
   }
 
-  async function open(result: Result, shift: boolean): Promise<void> {
+  async function open(result: Result, shift: boolean, place?: Disposition): Promise<void> {
     const host = hostTab() ?? (await props.hostTab)
     if (host === undefined) return
     if (result.kind === 'action') {
@@ -379,7 +430,7 @@ export function App(props: AppProps) {
     const flipped: Disposition = preferred === 'new-tab' ? 'current-tab' : 'new-tab'
     // As its own tab, the palette already is the new tab.
     const disposition: Disposition =
-      props.host === 'overlay' ? (shift ? flipped : preferred) : 'current-tab'
+      place ?? (props.host === 'overlay' ? (shift ? flipped : preferred) : 'current-tab')
 
     const q = parsed()
     const learnable =
@@ -392,7 +443,8 @@ export function App(props: AppProps) {
       openResult(result, disposition, {
         host,
         openTabs: tabs(),
-        switchToOpenTabs: settings().switchToOpenTabs,
+        // A tab picked from the menu is a new one, even with the page open.
+        switchToOpenTabs: place === undefined && settings().switchToOpenTabs,
       }),
     ])
     // A page loading in the host tab replaces the palette; anything else
@@ -453,6 +505,7 @@ export function App(props: AppProps) {
         void activate(result, shift)
       }}
       onCloseTab={props.host === 'preview' ? undefined : (result) => void closeResultTab(result)}
+      menuFor={menuFor}
       hostWindowId={hostTab()?.windowId}
       onClose={() => void dismiss()}
       enterOpensIn={

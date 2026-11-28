@@ -97,15 +97,15 @@ What the host page needs to know:
 
 The invented browser (`src/demo/browser-state.ts`, from the sites in `src/demo/sites.ts`, which the store screenshots use too) has one window: four pinned tabs, one of them asleep; three open tabs, the first being the page the demo sits on; a recently closed tab; about twenty history entries and five bookmarks, all on `*.aloft.test`. The fake platform (`src/demo/platform/`) answers the palette from it.
 
-Search, ranking, best matches, keywords (`yt`, `gh`, the `@` list), `>` actions, pinned tabs with Alt+1–9, the pin menu and dragging pins, Shift+Enter, learned picks and themes all run the extension's own code.
+Search, ranking, best matches, keywords (`yt`, `gh`, the `@` list), `>` actions, pinned tabs with Alt+1–9, the pin menu and dragging pins, the result menu (Ctrl+K or ⌘K, or a right click), Shift+Enter, learned picks and themes all run the extension's own code.
 
-**Changes the state:** pin and unpin, duplicate, close other tabs, close duplicate tabs, reopen closed tab, closing a tab from its row (Delete), moving and unpinning pins, and opening a page in a new tab (it then shows among the open tabs). Switching to a tab wakes it if it was asleep. Learned picks, settings and themes are kept in memory, never in storage, until `destroy()`.
+**Changes the state:** pin and unpin, duplicate, close other tabs, close duplicate tabs, reopen closed tab, closing a tab from its row (Delete) or its menu, pinning or unpinning it from its menu, removing a page from history, moving and unpinning pins, and opening a page in a new tab (it then shows among the open tabs). Switching to a tab wakes it if it was asleep. Learned picks, settings and themes are kept in memory, never in storage, until `destroy()`.
 
 **Only reported** through `onWould`, because they'd leave the page: switching tabs ("Would switch to …"), opening a page ("Would open … in a new tab", or "in this tab" with Shift+Enter), web searches, reopening a closed tab, and the actions for a new tab or window, moving to a new window, reloading, closing, muting or bookmarking the page, the browser's own pages and Aloft's settings ("Would run “History”"). The page the demo sits on never changes.
 
 **After acting**, the extension's bar closes. The demo's opens again straight away, as if Alt+Q had been pressed, so the change shows: a pin added by `> Pin tab` is in the row.
 
-**Left out:** favicons (letter tiles instead), "What's new", the overlay's held typing and zoom correction (it shares the page's zoom), and the selection's slide between rows, which finds rows by `document.getElementById` and so can't see into the shadow root. Tab order and the pin menu's arrow keys use `document.activeElement` in the palette; the demo redoes those moves from the shadow root's focus (`src/demo/focus.ts`).
+**Left out:** favicons (letter tiles instead), "What's new", the overlay's held typing and zoom correction (it shares the page's zoom), and the selection's slide between rows, which finds rows by `document.getElementById` and so can't see into the shadow root. Tab order and the menus' arrow keys use `document.activeElement` in the palette; the demo redoes those moves from the shadow root's focus (`src/demo/focus.ts`).
 
 ## The tour
 
@@ -134,4 +134,4 @@ The demo's unit tests run as their own Vitest project with the same swaps, and f
 
 ## Budget
 
-**44.1 KB gzipped** at 1.0.0 (level 9, as `pnpm size` measures; Vite's build output says about 45.7 KB), against a budget of **46 KB**. The palette page's budget is 43 KB, but its CSS and strings are separate files; here they're inside, about 5.5 KB between them. `pnpm size` checks it whenever `.output/demo` exists, and CI builds it on every PR.
+**44.1 KB gzipped** at 1.0.0 (level 9, as `pnpm size` measures; Vite's build output says about 45.7 KB), against a budget of **47 KB**. The palette page's budget is 44 KB, but its CSS and strings are separate files; here they're inside, about 5.5 KB between them. `pnpm size` checks it whenever `.output/demo` exists, and CI builds it on every PR.

@@ -23,6 +23,8 @@ export interface ResultRowProps {
   onClose?: () => void
   /** An open tab in a window other than the one Aloft is open in. */
   otherWindow?: boolean
+  /** Opens the row's menu at a point, on a right click; unset for rows without one. */
+  onMenu?: (x: number, y: number) => void
 }
 
 const verb = (keyword: Keyword) =>
@@ -200,6 +202,11 @@ export function ResultRow(props: ResultRowProps) {
       // Clicking must not pull focus out of the input.
       onMouseDown={(event) => event.preventDefault()}
       onClick={(event) => props.onActivate(event.shiftKey)}
+      onContextMenu={(event) => {
+        if (!props.onMenu) return
+        event.preventDefault()
+        props.onMenu(event.clientX, event.clientY)
+      }}
     >
       <Show
         when={glyph(props.result)}

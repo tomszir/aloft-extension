@@ -130,6 +130,10 @@ export async function closeTab(tabId: number): Promise<void> {
   session().browser.close(tabId)
 }
 
+export async function removeFromHistory(url: string): Promise<void> {
+  session().browser.forget(url)
+}
+
 /** After acting, the bar opens again on what changed; otherwise it closes. */
 export async function closeOverlay(_tabId: number): Promise<void> {
   const s = session()

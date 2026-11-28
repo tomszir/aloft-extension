@@ -87,6 +87,9 @@ export default defineContentScript({
       anchor: dialog,
       onBeforeMount(_wrapper, iframe) {
         iframe.title = 'Aloft'
+        // Lets the palette's "Copy address" write to the clipboard: Chromium
+        // blocks that in a cross-origin frame unless the page delegates it.
+        iframe.allow = 'clipboard-write *'
         Object.assign(iframe.style, {
           width: '100%',
           height: '100%',

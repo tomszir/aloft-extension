@@ -31,6 +31,7 @@ export const closeOverlay = call('closeOverlay')
 export const takeTyped = call('takeTyped')
 export const openWhatsNew = call('openWhatsNew')
 export const closeTab = call('closeTab')
+export const removeFromHistory = call('removeFromHistory')
 
 export function watchTabs(onChange: () => void): () => void {
   return viaRelay ? watchRelayed({ kind: 'tabs' }, oncePerFrame(onChange)) : watchTabsHere(onChange)

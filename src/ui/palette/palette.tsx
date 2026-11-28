@@ -12,7 +12,7 @@ import { KeywordChip } from '../keyword-chip/keyword-chip'
 import { slideHighlight } from '../motion/slide'
 import { PinnedRow } from '../pinned-row/pinned-row'
 import { ResultRow } from '../result-row/result-row'
-import { TileMenu } from '../tile-menu/tile-menu'
+import { type MenuItem, TileMenu } from '../tile-menu/tile-menu'
 import styles from './palette.module.css'
 
 export type PalettePosition = 'upper-third' | 'center'
@@ -52,6 +52,8 @@ export interface PaletteProps {
   /** Moves a dragged pin to a position in the row. Without it, pins can't be dragged. */
   onReorderPin?: (pin: TabEntry, position: number) => void
   onUnpin: (pin: TabEntry) => void
+  /** What a row's menu offers; unset, or empty for a row, where there's none. */
+  menuFor?: (result: Result) => MenuItem[]
   /** The version Aloft was updated to, while that's still news; offered in the footer. */
   whatsNew?: string | undefined
   onWhatsNew?: () => void
@@ -68,6 +70,16 @@ const SECTION_LABEL: Record<SectionId, (() => string) | undefined> = {
   closed: () => i18n.t('sectionRecentlyClosed'),
   actions: () => i18n.t('sectionActions'),
 }
+
+// The OS decides how shortcuts are written and which modifier is the usual one.
+const isMac = /mac/i.test(navigator.platform)
+const MENU_KEY = isMac ? '⌘K' : 'Ctrl+K'
+// By code too, so the key works where K types another letter.
+const isMenuKey = (event: KeyboardEvent) =>
+  (event.key.toLowerCase() === 'k' || event.code === 'KeyK') &&
+  (isMac ? event.metaKey && !event.ctrlKey : event.ctrlKey && !event.metaKey) &&
+  !event.altKey &&
+  !event.shiftKey
 
 const MOVES: Record<string, Move> = {
   ArrowDown: 'next',
@@ -142,10 +154,26 @@ export function Palette(props: PaletteProps) {
     window.removeEventListener('blur', releaseAlt)
   })
 
-  const [menu, setMenu] = createSignal<{ pin: TabEntry; x: number; y: number }>()
+  const [menu, setMenu] = createSignal<{
+    label: string
+    items: MenuItem[]
+    x: number
+    y: number
+  }>()
   const closeMenu = () => {
     setMenu(undefined)
     input?.focus()
+  }
+  const rowMenu = (result: Result) => props.menuFor?.(result) ?? []
+  const hasRowMenu = createMemo(() => {
+    const result = activeResult()
+    return result !== undefined && rowMenu(result).length > 0
+  })
+  const openRowMenu = (result: Result, x: number, y: number) => {
+    const items = rowMenu(result)
+    if (items.length === 0) return
+    const name = 'title' in result ? result.title : 'url' in result ? result.url : ''
+    setMenu({ label: i18n.t('pinnedMenuLabel', [name]), items, x, y })
   }
   const menuItems = (pin: TabEntry) => {
     const position = props.pins.findIndex((p) => p.tabId === pin.tabId)
@@ -206,7 +234,16 @@ export function Palette(props: PaletteProps) {
       return
     }
     const move = MOVES[event.key]
-    if (move) {
+    if (isMenuKey(event)) {
+      // Ctrl+K is also the browser's search shortcut; here it's the row's.
+      event.preventDefault()
+      const result = activeResult()
+      // Not by id: the web demo draws the palette in a shadow root.
+      const row = panel?.querySelector('[aria-selected="true"]')
+      if (!result || !row) return
+      const box = row.getBoundingClientRect()
+      openRowMenu(result, box.left, box.bottom + 4)
+    } else if (move) {
       event.preventDefault()
       props.onMove(move)
     } else if (
@@ -230,6 +267,15 @@ export function Palette(props: PaletteProps) {
       if (result) props.onActivate(result, event.shiftKey)
     }
   }
+
+  // Only while the selected row has a menu, so the footer names what's there.
+  const optionsHint = (end: boolean) => (
+    <Show when={hasRowMenu()}>
+      <span class={`${styles.hint} ${end ? styles.hintEnd : ''}`}>
+        <Kbd>{MENU_KEY}</Kbd> {i18n.t('hintOptions')}
+      </span>
+    </Show>
+  )
 
   const inOtherWindow = (result: Result) =>
     result.kind === 'tab' &&
@@ -320,7 +366,14 @@ export function Palette(props: PaletteProps) {
             altHeld={altHeld()}
             favicon={props.favicon}
             onOpen={(pin) => props.onOpenPin(pin)}
-            onMenu={(pin, anchor) => setMenu({ pin, x: anchor.left, y: anchor.bottom + 4 })}
+            onMenu={(pin, anchor) =>
+              setMenu({
+                label: i18n.t('pinnedMenuLabel', [pin.title]),
+                items: menuItems(pin),
+                x: anchor.left,
+                y: anchor.bottom + 4,
+              })
+            }
             onReorder={props.onReorderPin}
           />
         </Show>
@@ -364,6 +417,14 @@ export function Palette(props: PaletteProps) {
                       onActivate={(shift) => props.onActivate(result(), shift)}
                       onClose={closeFor(result())}
                       otherWindow={inOtherWindow(result())}
+                      onMenu={
+                        props.menuFor
+                          ? (x, y) => {
+                              props.onHover(result().id)
+                              openRowMenu(result(), x, y)
+                            }
+                          : undefined
+                      }
                     />
                   )}
                 </Keyed>
@@ -394,13 +455,15 @@ export function Palette(props: PaletteProps) {
                 <span class={styles.hint}>
                   <Kbd>&gt;</Kbd> {i18n.t('hintActions')}
                 </span>
+                {optionsHint(false)}
                 <span class={styles.hint}>
                   <Kbd>Esc</Kbd> {i18n.t('hintClose')}
                 </span>
               </>
             }
           >
-            <span class={`${styles.hint} ${styles.hintEnd}`}>
+            {optionsHint(true)}
+            <span class={`${styles.hint} ${hasRowMenu() ? '' : styles.hintEnd}`}>
               <Kbd>Esc</Kbd> {i18n.t('hintBack')}
             </span>
           </Show>
@@ -410,10 +473,10 @@ export function Palette(props: PaletteProps) {
       <Show when={menu()}>
         {(open) => (
           <TileMenu
-            label={i18n.t('pinnedMenuLabel', [open().pin.title])}
+            label={open().label}
             x={open().x}
             y={open().y}
-            items={menuItems(open().pin)}
+            items={open().items}
             onClose={closeMenu}
           />
         )}

@@ -171,6 +171,11 @@ export class DemoBrowser {
     return this.tabList.filter((t) => t.pinned).length
   }
 
+  forget(url: string): void {
+    this.historyList = this.historyList.filter((h) => h.url !== url)
+    this.changed()
+  }
+
   close(tabId: number): void {
     // The page the demo sits on stays, as the page under the palette would.
     if (tabId === this.hostId) return
