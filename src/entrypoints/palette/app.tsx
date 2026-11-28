@@ -5,7 +5,7 @@ import { useKeywords } from '../../app/use-keywords'
 import { useSettings } from '../../app/use-settings'
 import { type PreviewOverride, useTheme } from '../../app/use-theme'
 import { useZoomCorrection } from '../../app/use-zoom-correction'
-import { availableActions } from '../../core/actions'
+import { availableActions, duplicateTabs, otherWindows, type WindowEntry } from '../../core/actions'
 import { keywordHost } from '../../core/keywords'
 import { EMPTY_LEARNED, learnedPages } from '../../core/learned'
 import { dropIndex, moveIndex, pinnedRow } from '../../core/pinned'
@@ -41,10 +41,12 @@ import type { Disposition, HostTab } from '../../platform/open-result'
 import {
   closeOverlay,
   closeTab,
+  isBookmarked,
   loadBookmarks,
   loadRecentHistory,
   loadRecentlyClosed,
   loadTabs,
+  loadWindows,
   movePinned,
   openResult,
   openWhatsNew,
@@ -109,6 +111,7 @@ export function App(props: AppProps) {
 
   const [hostTab, setHostTab] = createSignal<HostTab>()
   const [tabs, setTabs] = createSignal<TabEntry[]>([])
+  const [windows, setWindows] = createSignal<WindowEntry[]>([])
   const [closed, setClosed] = createSignal<ClosedEntry[]>([])
   const [history, setHistory] = createSignal<HistoryEntry[]>([])
   const [recentHistory, setRecentHistory] = createSignal<HistoryEntry[]>([])
@@ -120,6 +123,10 @@ export function App(props: AppProps) {
   let tabsRead = 0
   const readTabs = () => {
     const id = ++tabsRead
+    // Windows are only for actions, so they don't hold up the list.
+    void loadWindows().then((next) => {
+      if (id === tabsRead) setWindows(next)
+    })
     return loadTabs().then((next) => {
       if (id === tabsRead) setTabs(next)
     })
@@ -220,18 +227,36 @@ export function App(props: AppProps) {
   // space to results, while Alt+1–9 keeps working.
   const pins = createMemo(() => (parsed().kind === 'empty' ? pinShortcuts() : []))
 
+  const hostEntry = createMemo(() => tabs().find((t) => t.tabId === hostTab()?.id))
+  const [hostBookmarked, setHostBookmarked] = createSignal(false)
+  createEffect(
+    on(
+      () => hostEntry()?.url,
+      (url) => {
+        if (url && props.host === 'overlay') void isBookmarked(url).then(setHostBookmarked)
+      },
+    ),
+  )
   const actions = createMemo(() => {
     const host = hostTab()
+    const entry = hostEntry()
     const inWindow = tabs().filter((t) => t.windowId === host?.windowId && t.tabId !== host?.id)
+    const moveTo = host ? otherWindows(windows(), host.windowId) : []
     return actionEntries(
       availableActions({
         overPage: props.host === 'overlay',
-        hostPinned: tabs().some((t) => t.tabId === host?.id && t.pinned),
+        hostPinned: entry?.pinned ?? false,
+        hostAudible: entry?.audible ?? false,
+        hostMuted: entry?.muted ?? false,
+        hostBookmarked: hostBookmarked(),
         otherTabsInWindow: inWindow.length,
         otherUnpinnedTabs: inWindow.filter((t) => !t.pinned).length,
+        duplicateTabs: host ? duplicateTabs(tabs(), host).length : 0,
+        otherWindows: moveTo.length,
         hasRecentlyClosed: closed().length > 0,
         browserPages: HAS_BROWSER_PAGES,
       }),
+      moveTo,
     )
   })
 
@@ -342,8 +367,12 @@ export function App(props: AppProps) {
     const host = hostTab() ?? (await props.hostTab)
     if (host === undefined) return
     if (result.kind === 'action') {
-      await runAction(result.action, { host, lastClosed: closed()[0] })
-      await close()
+      const gone = await runAction(result.action, {
+        host,
+        lastClosed: closed()[0],
+        windowId: result.windowId,
+      })
+      if (!gone) await close()
       return
     }
     const preferred = settings().enterOpensIn

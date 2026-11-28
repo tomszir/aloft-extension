@@ -1,10 +1,11 @@
-import type { Page } from '@playwright/test'
+import type { Page, Worker } from '@playwright/test'
 import {
   activeTabUrl,
   expect,
   isPinned,
   palettePainted,
   pressOpenAloft,
+  sendPaletteKey,
   TEST_ORIGIN,
   test,
 } from './fixtures'
@@ -136,4 +137,133 @@ test("opens the browser's own page beside this one, and switches to it once it's
   await runAction(page, '> extensions', '^Extensions')
   await expect.poll(() => activeTabUrl(background)).toBe('chrome://extensions/')
   expect(context.pages().filter((p) => p.url() === 'chrome://extensions/')).toHaveLength(1)
+})
+
+type Tab = { id?: number; url?: string; windowId: number; mutedInfo?: { muted: boolean } }
+type Api = {
+  tabs: {
+    query: (q: object) => Promise<Tab[]>
+    update: (id: number, props: object) => Promise<unknown>
+  }
+  windows: { create: (props: object) => Promise<{ id?: number }> }
+  bookmarks: { search: (q: object) => Promise<unknown[]> }
+}
+
+const tabsAt = (background: Worker, url: string) =>
+  background.evaluate(async (target) => {
+    const api = Reflect.get(globalThis, 'chrome') as Api
+    return (await api.tabs.query({})).filter((t) => t.url === target)
+  }, url)
+
+const bookmarkCount = (background: Worker, url: string) =>
+  background.evaluate(async (target) => {
+    const api = Reflect.get(globalThis, 'chrome') as Api
+    return (await api.bookmarks.search({ url: target })).length
+  }, url)
+
+// Aloft's frame goes with the tab, so Enter is sent the way that doesn't wait
+// for an answer from it.
+async function runClosingAction(page: Page, query: string, name: string) {
+  await palettePainted(page)
+  await palette(page).getByRole('combobox').fill(query)
+  await expect(palette(page).getByRole('option', { selected: true })).toContainText(name)
+  await sendPaletteKey(page, { key: 'Enter' })
+}
+
+test('closes the tab', async ({ context, background }) => {
+  const page = await context.newPage()
+  await page.goto(`${TEST_ORIGIN}/Host`)
+  await pressOpenAloft(background, page)
+  await runClosingAction(page, '> close tab', 'Close tab')
+
+  await expect.poll(() => page.isClosed()).toBe(true)
+})
+
+test('reloads the tab', async ({ context, background }) => {
+  const page = await context.newPage()
+  await page.goto(`${TEST_ORIGIN}/Host`)
+  await pressOpenAloft(background, page)
+  const reloaded = page.waitForEvent('load')
+  await runClosingAction(page, '> reload', 'Reload')
+
+  await reloaded
+  await expect(page.locator('iframe[title="Aloft"]')).toHaveCount(0)
+})
+
+test('unmutes a muted tab', async ({ context, background }) => {
+  const page = await context.newPage()
+  await page.goto(`${TEST_ORIGIN}/Host`)
+  const [host] = await tabsAt(background, `${TEST_ORIGIN}/Host`)
+  await background.evaluate(async (id) => {
+    const api = Reflect.get(globalThis, 'chrome') as Api
+    await api.tabs.update(id, { muted: true })
+  }, host?.id ?? -1)
+  await pressOpenAloft(background, page)
+  await palettePainted(page)
+  await palette(page).getByRole('combobox').fill('>')
+  await expect(palette(page).getByRole('option', { name: /Unmute tab/ })).toBeVisible()
+  await expect(palette(page).getByRole('option', { name: /^Mute tab/ })).toHaveCount(0)
+  await palette(page)
+    .getByRole('option', { name: /Unmute tab/ })
+    .click()
+
+  await expect
+    .poll(async () => (await tabsAt(background, `${TEST_ORIGIN}/Host`))[0]?.mutedInfo?.muted)
+    .toBe(false)
+})
+
+test('bookmarks the page, then removes the bookmark', async ({ context, background }) => {
+  const url = `${TEST_ORIGIN}/Host`
+  const page = await context.newPage()
+  await page.goto(url)
+  await pressOpenAloft(background, page)
+  await runAction(page, '> bookmark this', 'Bookmark this page')
+  await expect.poll(() => bookmarkCount(background, url)).toBe(1)
+
+  await pressOpenAloft(background, page)
+  await palettePainted(page)
+  await palette(page).getByRole('combobox').fill('>')
+  await expect(palette(page).getByRole('option', { name: /Remove bookmark/ })).toBeVisible()
+  await expect(palette(page).getByRole('option', { name: /Bookmark this page/ })).toHaveCount(0)
+  await palette(page)
+    .getByRole('option', { name: /Remove bookmark/ })
+    .click()
+  await expect.poll(() => bookmarkCount(background, url)).toBe(0)
+})
+
+test("closes the window's duplicate tabs, keeping this one", async ({ context, background }) => {
+  for (const path of ['Copy', 'Copy#part', 'Host#top', 'Other']) {
+    const tab = await context.newPage()
+    await tab.goto(`${TEST_ORIGIN}/${path}`)
+  }
+  const page = await context.newPage()
+  await page.goto(`${TEST_ORIGIN}/Host`)
+  await pressOpenAloft(background, page)
+  await runAction(page, '> duplicates', 'Close duplicate tabs')
+
+  const urls = () =>
+    context
+      .pages()
+      .map((p) => p.url())
+      .filter((u) => u.startsWith(TEST_ORIGIN))
+      .sort()
+  await expect
+    .poll(urls)
+    .toEqual([`${TEST_ORIGIN}/Copy#part`, `${TEST_ORIGIN}/Host`, `${TEST_ORIGIN}/Other`])
+})
+
+test('moves the tab to another window', async ({ context, background }) => {
+  const page = await context.newPage()
+  await page.goto(`${TEST_ORIGIN}/Host`)
+  const other = await background.evaluate(async (url) => {
+    const api = Reflect.get(globalThis, 'chrome') as Api
+    return (await api.windows.create({ url, focused: false })).id
+  }, `${TEST_ORIGIN}/Elsewhere`)
+  await page.bringToFront()
+  await pressOpenAloft(background, page)
+  await runAction(page, '> move', 'Move tab to the window with Elsewhere \\(1 tab\\)')
+
+  await expect
+    .poll(async () => (await tabsAt(background, `${TEST_ORIGIN}/Host`))[0]?.windowId)
+    .toBe(other)
 })

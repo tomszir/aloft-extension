@@ -7,6 +7,7 @@
 export const PALETTE_ICON_NAMES = [
   'app-window',
   'bookmark',
+  'bookmark-minus',
   'copy',
   'copy-x',
   'download',
@@ -19,12 +20,16 @@ export const PALETTE_ICON_NAMES = [
   'pin-off',
   'plus',
   'puzzle',
+  'rotate-cw',
   'search',
   'settings',
   'sliders-horizontal',
   'square-arrow-out-up-right',
   'terminal',
   'undo-2',
+  'volume-2',
+  'volume-x',
+  'x',
 ] as const
 
 /** Only on Aloft's own pages (settings, onboarding); added by page-icons.ts. */
@@ -44,7 +49,6 @@ export const PAGE_ICON_NAMES = [
   'sun',
   'trash-2',
   'upload',
-  'x',
 ] as const
 
 export const ICON_NAMES = [...PALETTE_ICON_NAMES, ...PAGE_ICON_NAMES]
@@ -63,6 +67,7 @@ addIcons(
     [
       './svg/app-window.svg',
       './svg/bookmark.svg',
+      './svg/bookmark-minus.svg',
       './svg/copy.svg',
       './svg/copy-x.svg',
       './svg/download.svg',
@@ -75,12 +80,16 @@ addIcons(
       './svg/pin-off.svg',
       './svg/plus.svg',
       './svg/puzzle.svg',
+      './svg/rotate-cw.svg',
       './svg/search.svg',
       './svg/settings.svg',
       './svg/sliders-horizontal.svg',
       './svg/square-arrow-out-up-right.svg',
       './svg/terminal.svg',
       './svg/undo-2.svg',
+      './svg/volume-2.svg',
+      './svg/volume-x.svg',
+      './svg/x.svg',
     ],
     { query: '?raw', import: 'default', eager: true },
   ),

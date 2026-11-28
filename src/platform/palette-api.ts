@@ -15,6 +15,8 @@ const call = <K extends PaletteCallName>(name: K): PaletteCalls[K] =>
 
 export const currentTab = call('currentTab')
 export const loadTabs = call('loadTabs')
+export const loadWindows = call('loadWindows')
+export const isBookmarked = call('isBookmarked')
 export const searchHistory = call('searchHistory')
 export const loadRecentHistory = call('loadRecentHistory')
 export const searchBookmarks = call('searchBookmarks')

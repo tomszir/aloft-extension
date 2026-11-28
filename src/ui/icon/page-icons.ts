@@ -20,7 +20,6 @@ addIcons(
       './svg/sun.svg',
       './svg/trash-2.svg',
       './svg/upload.svg',
-      './svg/x.svg',
     ],
     { query: '?raw', import: 'default', eager: true },
   ),

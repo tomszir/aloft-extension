@@ -1,4 +1,5 @@
 import { type Browser, browser } from 'wxt/browser'
+import type { WindowEntry } from '../core/actions'
 import type { BookmarkEntry, ClosedEntry, HistoryEntry, TabEntry } from '../core/results'
 
 // Aloft's own pages and blank about: pages are never worth switching to or
@@ -32,9 +33,37 @@ export async function loadTabs(): Promise<TabEntry[]> {
         title: t.title || url,
         url,
         lastAccessed: t.lastAccessed ?? 0,
+        audible: t.audible ?? false,
+        muted: t.mutedInfo?.muted ?? false,
       },
     ]
   })
+}
+
+/**
+ * Every ordinary window, named after the tab showing in it. Read apart from
+ * `loadTabs`, which leaves out new tab pages, so a window holding only one
+ * still counts.
+ */
+export async function loadWindows(): Promise<WindowEntry[]> {
+  const windows = await browser.windows.getAll({ populate: true, windowTypes: ['normal'] })
+  return windows.flatMap((w) => {
+    const tabs = w.tabs ?? []
+    const shown = tabs.find((t) => t.active) ?? tabs[0]
+    if (w.id === undefined || !shown) return []
+    const title = shown.title || shown.url || ''
+    return [{ windowId: w.id, title, tabCount: tabs.length, incognito: w.incognito }]
+  })
+}
+
+/** Whether `url` is bookmarked, as the browser matches it: the exact address. */
+export async function isBookmarked(url: string): Promise<boolean> {
+  try {
+    return (await browser.bookmarks.search({ url })).length > 0
+  } catch {
+    // Addresses the bookmarks API won't take, like the browser's own pages.
+    return false
+  }
 }
 
 /** Calls `listener` on every change to any tab. */
