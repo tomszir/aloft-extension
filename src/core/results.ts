@@ -18,6 +18,8 @@ export interface TabEntry {
   title: string
   url: string
   lastAccessed: number
+  /** The tab's icon as a data: image, set only where showing it needs no request. */
+  icon?: string
 }
 
 export interface HistoryEntry {

@@ -44,6 +44,10 @@ export async function paletteFrame(page: Page): Promise<Frame> {
   return palette
 }
 
+/** A 1×1 PNG, the icon of the test server's /icon pages. */
+const DATA_ICON =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+
 export const test = base.extend<
   { firefox: Browser; control: Page },
   { executablePath: string; origin: string }
@@ -63,7 +67,8 @@ export const test = base.extend<
     { scope: 'worker', timeout: 300_000 },
   ],
   // A real server, since Puppeteer has no request routing for Firefox. The
-  // path becomes the page title; /strict pages send a CSP that forbids frames.
+  // path becomes the page title; /strict pages send a CSP that forbids frames,
+  // and /icon pages have a data: image for their icon.
   origin: [
     // biome-ignore lint/correctness/noEmptyPattern: Playwright requires a destructured first argument.
     async ({}, use) => {
@@ -76,7 +81,10 @@ export const test = base.extend<
             : {}),
         })
         const title = decodeURIComponent(path.slice(1)) || 'Test page'
-        response.end(`<!doctype html><title>${title}</title><input id="field" aria-label="Field">`)
+        const icon = path.startsWith('/icon') ? `<link rel="icon" href="${DATA_ICON}">` : ''
+        response.end(
+          `<!doctype html><title>${title}</title>${icon}<input id="field" aria-label="Field">`,
+        )
       })
       await new Promise<void>((done) => server.listen(0, '127.0.0.1', done))
       const { port } = server.address() as AddressInfo
