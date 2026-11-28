@@ -89,10 +89,37 @@ test('pins another tab from its menu and stays open', async ({ context, backgrou
   await expect(palette(page).getByRole('combobox')).toBeFocused()
 })
 
-test('removes a page from history', async ({ context, background }) => {
+test('removes a page from history, and forgets it was picked', async ({ context, background }) => {
   const page = await context.newPage()
   await page.goto(`${TEST_ORIGIN}/Forgettable`)
   await page.goto(`${TEST_ORIGIN}/Host`)
+  const learnedUrls = () =>
+    background.evaluate(async () => {
+      const api = Reflect.get(globalThis, 'chrome') as {
+        storage: { local: { get: (key: string) => Promise<Record<string, unknown>> } }
+      }
+      const { learned } = await api.storage.local.get('learned')
+      const picks = (learned as { picks?: { url: string }[] } | undefined)?.picks ?? []
+      return picks.map((pick) => pick.url)
+    })
+  await background.evaluate(
+    async ({ forgettable, kept }) => {
+      const api = Reflect.get(globalThis, 'chrome') as {
+        storage: { local: { set: (items: object) => Promise<void> } }
+      }
+      const pick = (url: string, text: string) => ({
+        text,
+        url,
+        title: text,
+        weight: 3,
+        at: Date.now(),
+      })
+      await api.storage.local.set({
+        learned: { picks: [pick(forgettable, 'forget'), pick(kept, 'keep')] },
+      })
+    },
+    { forgettable: `${TEST_ORIGIN}/Forgettable`, kept: `${TEST_ORIGIN}/Kept` },
+  )
   const visits = () =>
     background.evaluate(async () => {
       const api = Reflect.get(globalThis, 'chrome') as {
@@ -114,5 +141,6 @@ test('removes a page from history', async ({ context, background }) => {
 
   await expect(row).toHaveCount(0)
   await expect.poll(visits).toBe(0)
+  await expect.poll(learnedUrls).toEqual([`${TEST_ORIGIN}/Kept`])
   await sendPaletteKey(page, { key: 'Escape' })
 })

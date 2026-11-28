@@ -102,6 +102,13 @@ export function recordPick(
   }
 }
 
+/** Forgets every pick of `url`, so a page removed from history stops being suggested. */
+export function forgetPage(learned: LearnedPicks, url: string): LearnedPicks {
+  const key = pageKey(url)
+  const picks = learned.picks.filter((pick) => pageKey(pick.url) !== key)
+  return picks.length === learned.picks.length ? learned : { picks }
+}
+
 /**
  * The pages learned for `typed`, strongest first. A pick made for longer text
  * counts too, in proportion to how much of it is typed, so "gi" already leans

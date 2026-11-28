@@ -14,7 +14,7 @@ import {
   type WindowEntry,
 } from '../../core/actions'
 import { keywordHost } from '../../core/keywords'
-import { EMPTY_LEARNED, learnedPages } from '../../core/learned'
+import { EMPTY_LEARNED, forgetPage, learnedPages } from '../../core/learned'
 import { dropIndex, moveIndex, pinnedRow } from '../../core/pinned'
 import {
   applyInput,
@@ -42,7 +42,7 @@ import type { Settings } from '../../core/settings'
 import { decodePreviewTheme, type Theme } from '../../core/theme'
 import { HAS_BROWSER_PAGES } from '../../platform/browser-pages'
 import { pageFavicon } from '../../platform/favicon'
-import { loadLearned, savePick } from '../../platform/learned'
+import { forgetPicksOf, loadLearned, savePick } from '../../platform/learned'
 import type { HeldTyping, Submit } from '../../platform/messages'
 import type { Disposition, HostTab } from '../../platform/open-result'
 import {
@@ -363,7 +363,8 @@ export function App(props: AppProps) {
     const kept = (h: HistoryEntry) => h.url !== url
     setHistory((list) => list.filter(kept))
     setRecentHistory((list) => list.filter(kept))
-    await removeFromHistory(url)
+    setLearned((learned) => forgetPage(learned, url))
+    await Promise.all([removeFromHistory(url), forgetPicksOf(url)])
   }
 
   async function actOnTab(action: ActionId, tab: TabEntry, windowId?: number): Promise<void> {
