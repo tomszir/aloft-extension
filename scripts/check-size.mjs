@@ -45,7 +45,7 @@ for (const target of TARGETS) {
   console.log(target)
   const budgets = [
     { name: 'overlay content script', files: ['content-scripts/overlay.js'], kb: 5 },
-    { name: 'palette page', files: await scriptsOf(out, 'palette.html'), kb: 42 },
+    { name: 'palette page', files: await scriptsOf(out, 'palette.html'), kb: 43 },
   ]
 
   for (const budget of budgets) {

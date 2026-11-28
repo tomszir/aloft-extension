@@ -18,6 +18,9 @@ export interface TabEntry {
   title: string
   url: string
   lastAccessed: number
+  /** Playing sound; a muted tab can be too. */
+  audible?: boolean
+  muted?: boolean
 }
 
 export interface HistoryEntry {
@@ -73,7 +76,14 @@ export type Result =
   | ({ kind: 'history'; id: string; title: string; url: string } & Highlighted)
   | ({ kind: 'bookmark'; id: string; title: string; url: string } & Highlighted)
   | { kind: 'closed'; id: string; sessionId: string; title: string; url: string }
-  | ({ kind: 'action'; id: string; action: ActionId; title: string; hint: string } & Highlighted)
+  | ({
+      kind: 'action'
+      id: string
+      action: ActionId
+      title: string
+      hint: string
+      windowId?: number
+    } & Highlighted)
 
 export type SectionId = 'keywords' | 'top' | 'tabs' | 'history' | 'bookmarks' | 'closed' | 'actions'
 
@@ -189,8 +199,9 @@ export function buildSections(
         id: 'actions',
         results: matched.map((a) => ({
           kind: 'action',
-          id: `action:${a.id}`,
+          id: a.windowId === undefined ? `action:${a.id}` : `action:${a.id}:${a.windowId}`,
           action: a.id,
+          windowId: a.windowId,
           title: a.label,
           hint: a.hint,
           highlights: highlightRanges(terms, a.label),

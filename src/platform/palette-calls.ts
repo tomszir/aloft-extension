@@ -11,10 +11,12 @@ import {
 import { type HostTab, openResult } from './open-result'
 import { movePinned, unpin } from './pinned'
 import {
+  isBookmarked,
   loadBookmarks,
   loadRecentHistory,
   loadRecentlyClosed,
   loadTabs,
+  loadWindows,
   searchBookmarks,
   searchHistory,
 } from './sources'
@@ -60,6 +62,8 @@ export function paletteCalls(tab: () => Promise<Browser.tabs.Tab | undefined>) {
   return {
     currentTab: async () => toHostTab(await tab()),
     loadTabs,
+    loadWindows,
+    isBookmarked,
     searchHistory,
     loadRecentHistory,
     searchBookmarks,

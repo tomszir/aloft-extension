@@ -1,4 +1,4 @@
-import type { ActionId } from '../../core/actions'
+import { type ActionId, duplicateTabs, type WindowEntry } from '../../core/actions'
 import type { Result } from '../../core/results'
 import type { HeldTyping } from '../../platform/messages'
 import type { Disposition, HostTab, OpenContext } from '../../platform/open-result'
@@ -11,6 +11,16 @@ import { would } from '../would'
 
 export const currentTab = async (): Promise<HostTab | undefined> => session().browser.host()
 export const loadTabs = async () => session().browser.tabs()
+/** The demo's browser has one window, so no tab is ever offered a move. */
+export async function loadWindows(): Promise<WindowEntry[]> {
+  const tabs = session().browser.tabs()
+  const title = tabs.find((t) => t.tabId === session().browser.hostId)?.title ?? ''
+  return [{ windowId: 1, title, tabCount: tabs.length, incognito: false }]
+}
+export const isBookmarked = async (url: string) =>
+  session()
+    .browser.bookmarks()
+    .some((b) => b.url === url)
 export const loadRecentHistory = async () => session().browser.recentHistory()
 export const loadBookmarks = async () => session().browser.bookmarks()
 export const loadRecentlyClosed = async () => session().browser.recentlyClosed()
@@ -73,7 +83,7 @@ export async function openResult(
   return false
 }
 
-export async function runAction(action: ActionId, target: { host: HostTab }): Promise<void> {
+export async function runAction(action: ActionId, target: { host: HostTab }): Promise<boolean> {
   const s = session()
   const { browser } = s
   const hostId = target.host.id
@@ -83,23 +93,28 @@ export async function runAction(action: ActionId, target: { host: HostTab }): Pr
     case 'pin':
     case 'unpin':
       browser.setPinned(hostId, action === 'pin')
-      return
+      return false
     case 'duplicate':
       browser.duplicate(hostId)
-      return
+      return false
     case 'close-other-tabs':
       browser.closeOthers(hostId)
-      return
+      return false
+    case 'close-duplicate-tabs':
+      for (const id of duplicateTabs(browser.tabs(), target.host)) browser.close(id)
+      return false
     case 'reopen-closed-tab': {
       const last = browser.recentlyClosed()[0]
       const entry = last ? browser.restore(last.sessionId) : undefined
       if (entry) s.hooks.would(would.reopen(entry.title))
-      return
+      return false
     }
     default:
-      // New tabs and windows, the browser's own pages and Aloft's settings
-      // would all leave the page.
+      // The rest would leave or change the page the demo sits on (new tabs
+      // and windows, reloading or closing it, the browser's own pages and
+      // Aloft's settings), or reach past the demo's invented browser.
       s.hooks.would(would.run(action))
+      return false
   }
 }
 

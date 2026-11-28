@@ -65,7 +65,18 @@ actionDuplicate: Duplicate tab
 actionNewTab: New tab
 actionNewWindow: New window
 actionMoveToNewWindow: Move tab to new window
+actionMoveToOtherWindow: Move tab to another window
+actionMoveToWindow:
+  1: Move tab to the window with $1 (1 tab)
+  n: Move tab to the window with $1 ($2 tabs)
+actionCloseTab: Close tab
 actionCloseOtherTabs: Close other tabs
+actionCloseDuplicateTabs: Close duplicate tabs
+actionReload: Reload
+actionBookmark: Bookmark this page
+actionRemoveBookmark: Remove bookmark
+actionMute: Mute tab
+actionUnmute: Unmute tab
 actionReopenClosedTab: Reopen closed tab
 actionOpenSettings: Aloft settings
 actionHistory: History

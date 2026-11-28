@@ -13,6 +13,7 @@
     "arrow-left",
     "at-sign",
     "bookmark",
+    "bookmark-minus",
     "check",
     "copy",
     "copy-x",
@@ -33,6 +34,7 @@
     "pin-off",
     "plus",
     "puzzle",
+    "rotate-cw",
     "search",
     "settings",
     "shield-check",
@@ -44,6 +46,8 @@
     "trash-2",
     "undo-2",
     "upload",
+    "volume-2",
+    "volume-x",
     "x"
   ]
 }
