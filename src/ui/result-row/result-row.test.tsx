@@ -111,6 +111,15 @@ describe('ResultRow', () => {
       expect(row.querySelector('[data-shown]')).toBeNull()
     })
 
+    it('ends a scope row with @ and its name, which is what makes its chip', () => {
+      renderRow({ kind: 'scope', id: 'scope:bookmarks', scope: 'bookmarks' }, true)
+      const row = screen.getByRole('option')
+      expect(row.textContent).toContain('sectionBookmarks')
+      expect(row.textContent).toContain('placeholderBookmarks')
+      expect(row.textContent).toContain('@bookmarks')
+      expect(row.querySelector('[data-shown]')).toBeTruthy()
+    })
+
     it('asks for the site’s icon, not the search address that changes as you type', () => {
       const favicon = vi.fn(() => null)
       render(() => (

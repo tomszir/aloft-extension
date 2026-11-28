@@ -2,13 +2,17 @@ import { describe, expect, it } from 'vitest'
 import { builtInKeyword, resolveKeywords } from './keywords'
 import {
   applyInput,
+  availableScopes,
   EMPTY_QUERY,
-  enterKeyword,
+  enterChip,
   leaveChip,
   listedKeywords,
+  listedScopes,
   offeredKeyword,
   parseQuery,
+  type QueryState,
   replayTyped,
+  SCOPES,
   toUrl,
 } from './query'
 
@@ -66,7 +70,7 @@ describe('keyword chips', () => {
   it('offers the keyword the input names exactly', () => {
     expect(offeredKeyword({ chip: null, text: ' yt ' }, keywords)).toEqual(youtube)
     expect(offeredKeyword({ chip: null, text: 'yt cats' }, keywords)).toBeUndefined()
-    expect(offeredKeyword(enterKeyword(youtube), keywords)).toBeUndefined()
+    expect(offeredKeyword(enterChip(youtube), keywords)).toBeUndefined()
   })
 
   it('lists keywords while the input is @ and at most one word', () => {
@@ -90,7 +94,7 @@ describe('keyword chips', () => {
   it('gives back the keyword and text on leaving, without making the chip again', () => {
     const left = leaveChip({ chip: youtube, text: 'cats' })
     expect(left).toEqual({ chip: null, text: 'yt cats' })
-    expect(leaveChip(enterKeyword(youtube))).toEqual({ chip: null, text: 'yt' })
+    expect(leaveChip(enterChip(youtube))).toEqual({ chip: null, text: 'yt' })
     expect(applyInput(left, 'yt catsx', keywords).chip).toBeNull()
   })
 })
@@ -113,10 +117,106 @@ describe('replayTyped', () => {
       chip: null,
       text: 'yyt cats',
     })
-    expect(replayTyped(enterKeyword(youtube), '@', keywords)).toEqual({ chip: youtube, text: '' })
+    expect(replayTyped(enterChip(youtube), '@', keywords)).toEqual({ chip: youtube, text: '' })
     expect(replayTyped({ chip: 'actions', text: 'pin' }, '')).toEqual({
       chip: 'actions',
       text: 'pin',
+    })
+  })
+})
+
+describe('scope chips', () => {
+  const type = (text: string, scopes = SCOPES) => applyInput(EMPTY_QUERY, text, keywords, scopes)
+
+  it('makes a scope chip from @, its name and Space, the singular too', () => {
+    expect(type('@tabs ')).toEqual({ chip: 'tabs', text: '' })
+    expect(type(' @tab ')).toEqual({ chip: 'tabs', text: '' })
+    expect(type('@Bookmarks ')).toEqual({ chip: 'bookmarks', text: '' })
+    expect(type('@bookmark ')).toEqual({ chip: 'bookmarks', text: '' })
+    expect(type('@history ')).toEqual({ chip: 'history', text: '' })
+  })
+
+  it('never hijacks a plain search that starts with a scope name', () => {
+    for (const text of ['tabs ', 'tabs vs spaces', 'history ', 'history of rome', 'bookmarks ']) {
+      expect(type(text)).toEqual({ chip: null, text })
+    }
+    expect(type('@tabs vs spaces')).toEqual({ chip: null, text: '@tabs vs spaces' })
+    expect(type('@ta ')).toEqual({ chip: null, text: '@ta ' })
+    expect(type('@s ')).toEqual({ chip: null, text: '@s ' })
+  })
+
+  it('only makes chips for the scopes offered', () => {
+    expect(type('@history ', ['tabs'])).toEqual({ chip: null, text: '@history ' })
+    expect(type('@tabs ', [])).toEqual({ chip: null, text: '@tabs ' })
+  })
+
+  it("lets a keyword of the user's own with the same name win", () => {
+    const own = resolveKeywords({
+      custom: [
+        {
+          id: 'custom-t',
+          name: 'Tabs site',
+          keyword: 'tabs',
+          url: 'https://t.ex/?q=%s',
+          enabled: true,
+        },
+      ],
+    })
+    expect(applyInput(EMPTY_QUERY, '@tabs ', own, SCOPES).chip).toMatchObject({ id: 'custom-t' })
+  })
+
+  it('offers only the scopes whose source is switched on', () => {
+    const on = { tabs: true, bookmarks: true, history: true, recentlyClosed: true }
+    expect(availableScopes(on)).toEqual(['tabs', 'bookmarks', 'history'])
+    expect(availableScopes({ ...on, bookmarks: false })).toEqual(['tabs', 'history'])
+  })
+
+  it('lists scopes while the input is @ and the start of one', () => {
+    const listed = (text: string, chip: QueryState['chip'] = null) =>
+      listedScopes({ chip, text }, SCOPES)
+    expect(listed('@')).toEqual(['tabs', 'bookmarks', 'history'])
+    expect(listed(' @H')).toEqual(['history'])
+    expect(listed('@tabs')).toEqual(['tabs'])
+    expect(listed('@yt')).toEqual([])
+    expect(listed('@tabs x')).toEqual([])
+    expect(listed('tabs')).toEqual([])
+    expect(listed('@', 'tabs')).toEqual([])
+    expect(listedScopes({ chip: null, text: '@' }, ['history'])).toEqual(['history'])
+  })
+
+  it('parses text inside a scope chip', () => {
+    expect(parseQuery(' Rust  Book ', 'bookmarks')).toEqual({
+      kind: 'scope',
+      scope: 'bookmarks',
+      text: 'Rust  Book',
+      terms: ['rust', 'book'],
+    })
+    expect(parseQuery('', 'tabs')).toEqual({ kind: 'scope', scope: 'tabs', text: '', terms: [] })
+  })
+
+  it('gives back @ and the name on leaving, without making the chip again', () => {
+    expect(leaveChip(enterChip('tabs'))).toEqual({ chip: null, text: '@tabs' })
+    const left = leaveChip({ chip: 'history', text: 'rome ' })
+    expect(left).toEqual({ chip: null, text: '@history rome' })
+    expect(applyInput(left, '@history romex', keywords, SCOPES).chip).toBeNull()
+  })
+
+  it('replays held text into a scope, by Space or Tab, and keeps a scope chip', () => {
+    expect(replayTyped(EMPTY_QUERY, '@tabs mail', keywords, SCOPES)).toEqual({
+      chip: 'tabs',
+      text: 'mail',
+    })
+    expect(replayTyped(EMPTY_QUERY, '@hist\tx', keywords, SCOPES)).toEqual({
+      chip: null,
+      text: '@histx',
+    })
+    expect(replayTyped(EMPTY_QUERY, '@tab\tx', keywords, SCOPES)).toEqual({
+      chip: 'tabs',
+      text: 'x',
+    })
+    expect(replayTyped({ chip: 'history', text: 'rome' }, '', keywords, SCOPES)).toEqual({
+      chip: 'history',
+      text: 'rome',
     })
   })
 })

@@ -11,10 +11,12 @@ import { EMPTY_LEARNED, learnedPages } from '../../core/learned'
 import { dropIndex, moveIndex, pinnedRow } from '../../core/pinned'
 import {
   applyInput,
+  availableScopes,
   EMPTY_QUERY,
-  enterKeyword,
+  enterChip,
   leaveChip,
   listedKeywords,
+  listedScopes,
   offeredKeyword,
   type ParsedQuery,
   parseQuery,
@@ -156,6 +158,7 @@ export function App(props: AppProps) {
     void takeWhatsNewOffer(Date.now()).then(setUpdated)
 
   const [query, setQuery] = createSignal<QueryState>(EMPTY_QUERY)
+  const scopes = createMemo(() => availableScopes(settings().sources))
   if (props.host === 'overlay') {
     // What was typed while the palette loaded was held on the page (see
     // prepareInPage), and so is a key that reaches the page after focus left
@@ -167,7 +170,7 @@ export function App(props: AppProps) {
       if (text === '') return
       // Read with the stored keywords, so "yt " typed early still makes its chip.
       await keywordsReady
-      setQuery((q) => replayTyped(q, text, keywords()))
+      setQuery((q) => replayTyped(q, text, keywords(), scopes()))
       if (submit) submitWhenSettled(submit)
     }
     const onFocus = () => void takeHeld()
@@ -178,6 +181,7 @@ export function App(props: AppProps) {
   const parsed = createMemo(() => parseQuery(query().text, query().chip))
   const offered = createMemo(() => offeredKeyword(query(), keywords()))
   const listed = createMemo(() => listedKeywords(query(), keywords()))
+  const listedScopeRows = createMemo(() => listedScopes(query(), scopes()))
 
   // The query whose browser searches have landed, so its results are whole.
   const [settled, setSettled] = createSignal<ParsedQuery>()
@@ -188,7 +192,8 @@ export function App(props: AppProps) {
   createEffect(
     on(parsed, async (q) => {
       const id = ++lookup
-      const searchable = q.kind === 'text' || (q.kind === 'keyword' && q.text !== '')
+      const searchable =
+        q.kind === 'text' || (q.kind !== 'empty' && q.kind !== 'actions' && q.text !== '')
       if (!searchable) {
         setHistory([])
         setBookmarks([])
@@ -196,13 +201,16 @@ export function App(props: AppProps) {
         return
       }
       const { sources } = settings()
+      // A scope asks only its own source.
+      const asks = (source: 'history' | 'bookmarks') =>
+        sources[source] && (q.kind !== 'scope' || q.scope === source)
       const [h, b] = await Promise.all([
         // The site's name narrows the browser's own search to its pages.
-        sources.history
+        asks('history')
           ? searchHistory(q.kind === 'keyword' ? `${keywordHost(q.keyword)} ${q.text}` : q.text)
           : [],
         // Once every bookmark is here, asking the browser again only costs time.
-        sources.bookmarks && q.kind === 'text' && !allBookmarks() ? searchBookmarks(q.text) : [],
+        asks('bookmarks') && q.kind !== 'keyword' && !allBookmarks() ? searchBookmarks(q.text) : [],
       ])
       if (id !== lookup) return
       setHistory(h)
@@ -238,7 +246,11 @@ export function App(props: AppProps) {
   const learning = () => settings().learnFromPicks
   const learnedForQuery = createMemo(() => {
     const q = parsed()
-    return learning() && q.kind === 'text' ? learnedPages(learned(), q.text, Date.now()) : []
+    // A scope uses what was learned in the mixed list but, picked among fewer
+    // pages, teaches nothing (see open).
+    return learning() && (q.kind === 'text' || q.kind === 'scope')
+      ? learnedPages(learned(), q.text, Date.now())
+      : []
   })
 
   const sections = createMemo(() =>
@@ -257,6 +269,7 @@ export function App(props: AppProps) {
         pinnedRowShown: pins().length > 0,
         offeredKeyword: offered(),
         listedKeywords: listed(),
+        listedScopes: listedScopeRows(),
         learned: learnedForQuery(),
         now: Date.now(),
       },
@@ -321,8 +334,8 @@ export function App(props: AppProps) {
   // would open it again.
   let acting = false
   async function activate(result: Result, shift: boolean): Promise<void> {
-    if (result.kind === 'keyword') {
-      setQuery(enterKeyword(result.keyword))
+    if (result.kind === 'keyword' || result.kind === 'scope') {
+      setQuery(enterChip(result.kind === 'keyword' ? result.keyword : result.scope))
       return
     }
     if (props.host === 'preview' || acting) return
@@ -353,6 +366,8 @@ export function App(props: AppProps) {
       props.host === 'overlay' ? (shift ? flipped : preferred) : 'current-tab'
 
     const q = parsed()
+    // Not in a scope: a page picked from one kind of result says less about
+    // what the text means everywhere else.
     const learnable =
       learning() &&
       q.kind === 'text' &&
@@ -403,12 +418,17 @@ export function App(props: AppProps) {
       sections={sections()}
       activeId={effectiveActiveId()}
       favicon={pageFavicon}
-      onQuery={(text) => setQuery(applyInput(query(), text, keywords()))}
+      onQuery={(text) => setQuery(applyInput(query(), text, keywords(), scopes()))}
       onTab={() => {
         const active = results().find((r) => r.id === effectiveActiveId())
-        const keyword = active?.kind === 'keyword' ? active.keyword : offered()
-        if (keyword) setQuery(enterKeyword(keyword))
-        return keyword !== undefined
+        const chip =
+          active?.kind === 'keyword'
+            ? active.keyword
+            : active?.kind === 'scope'
+              ? active.scope
+              : offered()
+        if (chip) setQuery(enterChip(chip))
+        return chip !== undefined
       }}
       onLeaveChip={() => setQuery(leaveChip(query()))}
       onMove={move}

@@ -4,10 +4,16 @@ export type ParsedQuery =
   | { kind: 'empty' }
   | { kind: 'actions'; text: string }
   | { kind: 'keyword'; keyword: Keyword; text: string; terms: string[] }
+  | { kind: 'scope'; scope: Scope; text: string; terms: string[] }
   | { kind: 'text'; text: string; terms: string[]; url: string | null }
 
+/** One kind of result a search can be narrowed to. */
+export type Scope = 'tabs' | 'bookmarks' | 'history'
+
+export const SCOPES: readonly Scope[] = ['tabs', 'bookmarks', 'history']
+
 /** What the input is scoped to, shown as a chip in front of it. */
-export type Chip = 'actions' | Keyword
+export type Chip = 'actions' | Scope | Keyword
 
 export interface QueryState {
   chip: Chip | null
@@ -18,17 +24,36 @@ export const EMPTY_QUERY: QueryState = { chip: null, text: '' }
 
 const ACTIONS_PREFIX = '>'
 
-const chipText = (chip: Chip) => (chip === 'actions' ? ACTIONS_PREFIX : chip.keyword)
+const chipText = (chip: Chip) =>
+  chip === 'actions'
+    ? ACTIONS_PREFIX
+    : typeof chip === 'string'
+      ? KEYWORD_PREFIX + chip
+      : chip.keyword
+
+/** The scopes offered: one for each source that's switched on. */
+export const availableScopes = (sources: Readonly<Record<Scope, boolean>>): Scope[] =>
+  SCOPES.filter((scope) => sources[scope])
+
+// Scope names are everyday words ("tabs vs spaces", "history of rome"), so
+// unlike a keyword they need the "@" to make a chip. The singular works too.
+function findScope(scopes: readonly Scope[], text: string): Scope | undefined {
+  if (!text.startsWith(KEYWORD_PREFIX)) return undefined
+  const word = text.slice(KEYWORD_PREFIX.length).toLowerCase()
+  return word === '' ? undefined : scopes.find((s) => s === word || s === `${word}s`)
+}
 
 /**
- * The state after the input's text changes to `input`. A keyword makes a chip
- * only when Space is typed right after it, so text given back by leaveChip,
- * or pasted, stays plain text however it continues.
+ * The state after the input's text changes to `input`. A keyword, or "@" and
+ * a scope, makes a chip only when Space is typed right after it, so text given
+ * back by leaveChip, or pasted, stays plain text however it continues. A
+ * keyword of the user's own wins over a scope of the same name.
  */
 export function applyInput(
   state: QueryState,
   input: string,
   keywords: readonly Keyword[] = [],
+  scopes: readonly Scope[] = [],
 ): QueryState {
   if (state.chip === null) {
     const typed = input.trimStart()
@@ -36,13 +61,15 @@ export function applyInput(
       return { chip: 'actions', text: typed.slice(ACTIONS_PREFIX.length).trimStart() }
     }
     const word = /^(\S+) $/.exec(typed)?.[1]
-    const keyword = word === undefined ? undefined : findKeyword(keywords, word)
-    if (keyword) return enterKeyword(keyword)
+    if (word !== undefined) {
+      const chip = findKeyword(keywords, word) ?? findScope(scopes, word)
+      if (chip) return enterChip(chip)
+    }
   }
   return { chip: state.chip, text: input }
 }
 
-export const enterKeyword = (keyword: Keyword): QueryState => ({ chip: keyword, text: '' })
+export const enterChip = (chip: Chip): QueryState => ({ chip, text: '' })
 
 /** The keyword the input names exactly, offered as a chip before Space or Tab makes it one. */
 export function offeredKeyword(
@@ -57,10 +84,22 @@ export function offeredKeyword(
  * can be found without opening settings. Empty otherwise.
  */
 export function listedKeywords(state: QueryState, keywords: readonly Keyword[]): Keyword[] {
-  if (state.chip !== null) return []
+  const word = listing(state)
+  return word === undefined ? [] : listKeywords(keywords, word)
+}
+
+/** The scopes to list, above the keywords, while the input is "@" and the start of one. */
+export function listedScopes(state: QueryState, scopes: readonly Scope[]): Scope[] {
+  const word = listing(state)?.toLowerCase()
+  return word === undefined ? [] : scopes.filter((s) => s.startsWith(word))
+}
+
+/** What follows the "@" while the input is "@" and part of one word. */
+function listing(state: QueryState): string | undefined {
+  if (state.chip !== null) return undefined
   const text = state.text.trim()
-  if (!text.startsWith(KEYWORD_PREFIX) || /\s/.test(text)) return []
-  return listKeywords(keywords, text.slice(KEYWORD_PREFIX.length))
+  if (!text.startsWith(KEYWORD_PREFIX) || /\s/.test(text)) return undefined
+  return text.slice(KEYWORD_PREFIX.length)
 }
 
 /**
@@ -82,6 +121,7 @@ export function replayTyped(
   state: QueryState,
   typed: string,
   keywords: readonly Keyword[] = [],
+  scopes: readonly Scope[] = [],
 ): QueryState {
   // The input's chip, as the text that would make it again.
   const since =
@@ -89,16 +129,18 @@ export function replayTyped(
       ? state.text
       : state.chip === 'actions'
         ? ACTIONS_PREFIX + state.text
-        : `${state.chip.keyword} ${state.text}`
+        : `${chipText(state.chip)} ${state.text}`
   let next = EMPTY_QUERY
   for (const char of typed + since) {
-    // A held Tab does what Tab does in the input: enters a keyword typed out.
+    // A held Tab does what Tab does in the input: enters a keyword or scope typed out.
     if (char === '\t') {
-      const keyword = offeredKeyword(next, keywords)
-      if (keyword) next = enterKeyword(keyword)
+      const chip =
+        offeredKeyword(next, keywords) ??
+        (next.chip === null ? findScope(scopes, next.text.trim()) : undefined)
+      if (chip) next = enterChip(chip)
       continue
     }
-    next = applyInput(next, next.text + char, keywords)
+    next = applyInput(next, next.text + char, keywords, scopes)
   }
   return next
 }
@@ -108,6 +150,7 @@ export function replayTyped(
 export function parseQuery(input: string, chip: Chip | null = null): ParsedQuery {
   const text = input.trim()
   if (chip === 'actions') return { kind: 'actions', text }
+  if (typeof chip === 'string') return { kind: 'scope', scope: chip, text, terms: termsOf(text) }
   if (chip !== null) return { kind: 'keyword', keyword: chip, text, terms: termsOf(text) }
   if (text === '') return { kind: 'empty' }
   return { kind: 'text', text, terms: termsOf(text), url: toUrl(text) }

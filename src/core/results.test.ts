@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { builtInKeyword } from './keywords'
-import { applyInput, EMPTY_QUERY, parseQuery } from './query'
+import { applyInput, EMPTY_QUERY, parseQuery, type Scope } from './query'
 import {
   type BuildOptions,
   buildSections,
@@ -293,6 +293,125 @@ describe('keywords', () => {
     expect(results).toEqual([
       { kind: 'site', id: 'site', keyword: github, query: '', url: 'https://github.com' },
     ])
+  })
+})
+
+describe('scopes', () => {
+  const scoped = (scope: Scope, text: string, opts: BuildOptions = options, source = data) =>
+    buildSections(parseQuery(text, scope), source, opts)
+  const scopedIds = (scope: Scope, text: string, opts: BuildOptions = options, source = data) =>
+    flatten(scoped(scope, text, opts, source)).map((r) => r.id)
+
+  const many: SourceData = {
+    ...data,
+    tabs: [
+      tab(1, 1, 'Host page', 'https://host.test/', NOW),
+      ...Array.from({ length: 60 }, (_, i) =>
+        tab(10 + i, 1, `Page ${i}`, `https://p${i}.test/`, NOW - i),
+      ),
+    ],
+    history: [
+      { title: 'Host page', url: 'https://host.test/', visitCount: 9, lastVisitTime: NOW },
+      ...Array.from({ length: 60 }, (_, i) => ({
+        title: `Rome ${i}`,
+        url: `https://rome.test/${i}`,
+        visitCount: 1,
+        lastVisitTime: NOW - i * 1000,
+      })),
+    ],
+    bookmarks: Array.from({ length: 60 }, (_, i) => ({
+      id: `m${i}`,
+      title: `Saved ${i}`,
+      url: `https://saved.test/${i}`,
+      dateAdded: i,
+    })),
+  }
+
+  it('lists the scope from @ above the keywords, distinct from them', () => {
+    const github = builtInKeyword('github')
+    const sections = buildSections(parseQuery('@'), data, {
+      ...options,
+      listedScopes: ['tabs', 'history'],
+      listedKeywords: [github],
+    })
+    expect(sections.map((s) => s.id).slice(0, 2)).toEqual(['scopes', 'keywords'])
+    expect(sections[0]?.results).toEqual([
+      { kind: 'scope', id: 'scope:tabs', scope: 'tabs' },
+      { kind: 'scope', id: 'scope:history', scope: 'history' },
+    ])
+  })
+
+  it('with nothing typed, lists every open tab but the host, pins too, the most recent first', () => {
+    expect(scopedIds('tabs', '')).toEqual(['tab:4', 'tab:3', 'tab:2'])
+    expect(scoped('tabs', '').map((s) => s.id)).toEqual(['tabs'])
+  })
+
+  it('with nothing typed, lists the newest bookmarks and the most recent history', () => {
+    expect(scopedIds('bookmarks', '', options, many).slice(0, 2)).toEqual([
+      'bookmark:m59',
+      'bookmark:m58',
+    ])
+    expect(scopedIds('history', '', options, many).slice(0, 2)).toEqual([
+      'history:https://rome.test/0',
+      'history:https://rome.test/1',
+    ])
+  })
+
+  it('shows more rows than the mixed list, but not without end', () => {
+    expect(scopedIds('tabs', '', options, many)).toHaveLength(50)
+    expect(scopedIds('tabs', 'page', options, many)).toHaveLength(50)
+    expect(scopedIds('history', 'rome', options, many)).toHaveLength(50)
+    expect(scopedIds('bookmarks', 'saved', options, many)).toHaveLength(50)
+    const mixed = flatten(buildSections(parseQuery('rome'), many, options))
+    expect(mixed.filter((r) => r.kind === 'history')).toHaveLength(5)
+  })
+
+  it('only lists its own kind, with no search, address or best match row', () => {
+    expect(scopedIds('tabs', 'aloft')).toEqual(['tab:2'])
+    expect(scopedIds('tabs', 'github.com')).toEqual(['tab:2'])
+    expect(scopedIds('bookmarks', 'aloft')).toEqual(['bookmark:b1'])
+    expect(scopedIds('history', 'aloft')).toEqual([
+      'history:https://github.com/tomszir/aloft/',
+      'history:https://github.com/tomszir/aloft/issues#top',
+      'history:https://notes.test/aloft',
+    ])
+    expect(scopedIds('history', 'zzzz')).toEqual([])
+  })
+
+  it('highlights what matched', () => {
+    expect(flatten(scoped('tabs', 'rules'))[0]).toMatchObject({ highlights: [[7, 12]] })
+  })
+
+  it('never offers the page Aloft is open over', () => {
+    expect(scopedIds('history', '', options, many)).not.toContain('history:https://host.test/')
+    expect(scopedIds('tabs', 'host')).toEqual([])
+  })
+
+  it('lists nothing for a source that is switched off', () => {
+    const off = { ...options, sources: { ...options.sources, bookmarks: false } }
+    expect(scopedIds('bookmarks', '', off)).toEqual([])
+    expect(scopedIds('bookmarks', 'aloft', off)).toEqual([])
+  })
+
+  it('lifts learned pages within the scope, never above it as another kind', () => {
+    const tabPick = {
+      ...options,
+      learned: [{ url: 'https://github.com/tomszir/aloft', title: 'Aloft', score: 5 }],
+    }
+    // The page is an open tab, but in history it stays a history row.
+    expect(scopedIds('history', 'aloft', tabPick)[0]).toBe(
+      'history:https://github.com/tomszir/aloft/',
+    )
+    const notes = {
+      ...options,
+      learned: [{ url: 'https://notes.test/aloft', title: 'Aloft notes', score: 3 }],
+    }
+    expect(scopedIds('history', 'aloft', notes)[0]).toBe('history:https://notes.test/aloft')
+    // A page found only through a pick turns up in history, as in the mixed list.
+    const gone = { ...options, learned: [{ url: 'https://gone.test/x', title: 'Gone', score: 2 }] }
+    expect(scopedIds('history', 'gone', gone)).toEqual(['history:https://gone.test/x'])
+    expect(scopedIds('tabs', 'gone', gone)).toEqual([])
+    expect(scopedIds('bookmarks', 'gone', gone)).toEqual([])
   })
 })
 

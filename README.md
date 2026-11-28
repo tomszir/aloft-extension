@@ -23,6 +23,7 @@ Press <kbd>Alt</kbd>+<kbd>Q</kbd>, or <kbd>Ctrl</kbd>+<kbd>T</kbd> if you give i
 
 - **One search for everything:** open tabs in every window, history, bookmarks and recently closed tabs, ranked together, matched by initials and through typos, and learning which page you pick for what you type. Type an address to go straight to it, or anything else to search the web with your default engine.
 - **Keywords:** type `yt`, `gh`, `cl` or `gpt` and Space to search YouTube or GitHub, or ask Claude or ChatGPT, right from the bar.
+- **Scopes:** type `@tabs`, `@bookmarks` or `@history` and Space to search just one of them.
 - **Pinned tabs, one key away:** your pinned tabs sit at the top. <kbd>Alt</kbd>+<kbd>1</kbd> to <kbd>9</kbd> opens them.
 - **Actions:** type <kbd>&gt;</kbd> to pin, duplicate, move to a new window, close other tabs or reopen a closed one, or to open your browser's history, downloads, bookmarks, passwords, extensions or settings.
 - **Stays out of the way:** the page dims behind the bar instead of being replaced, and <kbd>Esc</kbd> puts you back exactly where you were.

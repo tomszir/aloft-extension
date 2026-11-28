@@ -1,7 +1,8 @@
 import { createEffect, For, Match, Show, Switch } from 'solid-js'
 import { i18n } from '#i18n'
 import type { ActionId } from '../../core/actions'
-import { type Keyword, keywordUrl } from '../../core/keywords'
+import { KEYWORD_PREFIX, type Keyword, keywordUrl } from '../../core/keywords'
+import type { Scope } from '../../core/query'
 import { displayUrl, type Highlight, type Result, tileLetter } from '../../core/results'
 import type { Settings } from '../../core/settings'
 import { Favicon, type FaviconLoader } from '../favicon/favicon'
@@ -25,6 +26,28 @@ export interface ResultRowProps {
   otherWindow?: boolean
 }
 
+/** How a scope is named, shown and asked for, in its chip and its row. */
+export const SCOPE_TEXT: Record<
+  Scope,
+  { name: () => string; search: () => string; icon: IconName }
+> = {
+  tabs: {
+    name: () => i18n.t('sectionOpenTabs'),
+    search: () => i18n.t('placeholderTabs'),
+    icon: 'app-window',
+  },
+  bookmarks: {
+    name: () => i18n.t('sectionBookmarks'),
+    search: () => i18n.t('placeholderBookmarks'),
+    icon: 'bookmark',
+  },
+  history: {
+    name: () => i18n.t('sectionHistory'),
+    search: () => i18n.t('placeholderHistory'),
+    icon: 'history',
+  },
+}
+
 const verb = (keyword: Keyword) =>
   keyword.kind === 'ask'
     ? i18n.t('keywordAsk', [keyword.name])
@@ -40,6 +63,8 @@ function title(result: Result): string {
       return verb(result.keyword)
     case 'site':
       return result.query === '' ? i18n.t('keywordOpen', [result.keyword.name]) : result.query
+    case 'scope':
+      return SCOPE_TEXT[result.scope].name()
     default:
       return result.title
   }
@@ -56,6 +81,8 @@ function subtitle(result: Result): string {
       return result.listed ? displayUrl(result.url) : i18n.t('keywordOfferHint')
     case 'site':
       return result.query === '' ? displayUrl(result.url) : verb(result.keyword)
+    case 'scope':
+      return SCOPE_TEXT[result.scope].search()
     case 'action':
       return result.hint
     default:
@@ -68,6 +95,7 @@ function action(result: Result): string {
     case 'search':
       return i18n.t('actionSearch')
     case 'keyword':
+    case 'scope':
       return i18n.t('actionChoose')
     case 'site':
       if (result.query === '') return i18n.t('actionOpen')
@@ -125,6 +153,12 @@ function segments(text: string, highlights: readonly Highlight[] = []): Segment[
   return parts
 }
 
+/** What's typed for a row in the "@" list: a scope always needs its "@". */
+function listedAs(result: Result): string | undefined {
+  if (result.kind === 'scope') return KEYWORD_PREFIX + result.scope
+  return result.kind === 'keyword' && result.listed ? result.keyword.keyword : undefined
+}
+
 // A keyword's rows show its site, so their tile takes the site's letter, not
 // the "Search…" or typed text in the title.
 const letterSource = (result: Result) =>
@@ -139,6 +173,8 @@ function glyph(result: Result): IconName | undefined {
       return 'globe'
     case 'action':
       return ACTION_ICON[result.action]
+    case 'scope':
+      return SCOPE_TEXT[result.scope].icon
     default:
       return undefined
   }
@@ -228,12 +264,10 @@ export function ResultRow(props: ResultRowProps) {
         </span>
       </span>
       <Switch>
-        <Match
-          when={props.result.kind === 'keyword' && props.result.listed && props.result.keyword}
-        >
-          {(keyword) => (
+        <Match when={listedAs(props.result)}>
+          {(typed) => (
             <span class={styles.action}>
-              <Kbd selected={props.active}>{keyword().keyword}</Kbd>
+              <Kbd selected={props.active}>{typed()}</Kbd>
               {/* Always there, only shown when selected, so the keywords stay in one column. */}
               <span class={styles.enter} data-shown={props.active || undefined}>
                 <Kbd selected>↵</Kbd>
