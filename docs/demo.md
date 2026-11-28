@@ -97,7 +97,7 @@ What the host page needs to know:
 
 The invented browser (`src/demo/browser-state.ts`, from the sites in `src/demo/sites.ts`, which the store screenshots use too) has one window: four pinned tabs, one of them asleep; three open tabs, the first being the page the demo sits on; a recently closed tab; about twenty history entries and five bookmarks, all on `*.aloft.test`. The fake platform (`src/demo/platform/`) answers the palette from it.
 
-Search, ranking, best matches, keywords (`yt`, `gh`, the `@` list), `>` actions, pinned tabs with Alt+1–9, the pin menu and dragging pins, Shift+Enter, learned picks and themes all run the extension's own code.
+Search, ranking, best matches, keywords (`yt`, `gh`, the `@` list), scopes (`@tabs`), `>` actions, pinned tabs with Alt+1–9, the pin menu and dragging pins, Shift+Enter, learned picks and themes all run the extension's own code.
 
 **Changes the state:** pin and unpin, duplicate, close other tabs, reopen closed tab, closing a tab from its row (Delete), moving and unpinning pins, and opening a page in a new tab (it then shows among the open tabs). Switching to a tab wakes it if it was asleep. Learned picks, settings and themes are kept in memory, never in storage, until `destroy()`.
 

@@ -2,7 +2,7 @@ import type { ActionEntry, ActionId } from './actions'
 import { type Keyword, keywordHost, keywordUrl } from './keywords'
 import { type LearnedPage, promotedPage } from './learned'
 import { type Highlight, highlightRanges, matchScore } from './match'
-import type { ParsedQuery } from './query'
+import type { ParsedQuery, Scope } from './query'
 import { bareUrl, pageKey } from './url'
 
 export type { Highlight } from './match'
@@ -31,6 +31,8 @@ export interface BookmarkEntry {
   id: string
   title: string
   url: string
+  /** When it was bookmarked, for the newest first in the bookmarks scope. */
+  dateAdded?: number
 }
 
 export interface ClosedEntry {
@@ -62,6 +64,8 @@ export type Result =
   | { kind: 'keyword'; id: string; keyword: Keyword; url: string; listed?: boolean }
   /** Sends `query` to a keyword's site, or opens the site when it's empty. */
   | { kind: 'site'; id: string; keyword: Keyword; query: string; url: string }
+  /** Offers a scope's chip, from the "@" list. */
+  | { kind: 'scope'; id: string; scope: Scope }
   | ({
       kind: 'tab'
       id: string
@@ -75,7 +79,15 @@ export type Result =
   | { kind: 'closed'; id: string; sessionId: string; title: string; url: string }
   | ({ kind: 'action'; id: string; action: ActionId; title: string; hint: string } & Highlighted)
 
-export type SectionId = 'keywords' | 'top' | 'tabs' | 'history' | 'bookmarks' | 'closed' | 'actions'
+export type SectionId =
+  | 'scopes'
+  | 'keywords'
+  | 'top'
+  | 'tabs'
+  | 'history'
+  | 'bookmarks'
+  | 'closed'
+  | 'actions'
 
 export interface Section {
   id: SectionId
@@ -92,6 +104,8 @@ export interface BuildOptions {
   offeredKeyword?: Keyword
   /** Keywords listed above everything else while "@" is typed; this replaces the offer. */
   listedKeywords?: readonly Keyword[]
+  /** Scopes listed above the keywords while "@" is typed. */
+  listedScopes?: readonly Scope[]
   /** Pages picked before for what's typed, strongest first (`learnedPages`). */
   learned?: readonly LearnedPage[]
   now: number
@@ -99,6 +113,8 @@ export interface BuildOptions {
 
 // Small enough that every section stays visible without scrolling.
 const LIMITS = { tabs: 4, history: 5, bookmarks: 3, emptyTabs: 5, closed: 3 } as const
+// A scope has the whole list to itself, so it can scroll.
+const SCOPED_LIMIT = 50
 
 const DAY = 24 * 60 * 60 * 1000
 
@@ -247,7 +263,6 @@ export function buildSections(
     ])
   }
 
-  const { terms, text, url } = query
   const hostUrl = data.tabs.find((t) => t.tabId === hostTabId)?.url
   // The page Aloft is open over is never worth learning towards: opening it
   // again would only duplicate it.
@@ -256,10 +271,62 @@ export function buildSections(
   )
   const lifts = new Map(learned.map((p) => [pageKey(p.url), Math.min(p.score, MAX_LIFT)]))
   const lift = (pageUrl: string) => lifts.get(pageKey(pageUrl)) ?? 0
+
+  // Learned pages join history, so a page found once by initials or a typo
+  // the browser's own history search can't match keeps turning up.
+  const candidates: HistoryEntry[] = [
+    ...data.history,
+    ...learned.map((p) => ({ title: p.title, url: p.url, visitCount: 0, lastVisitTime: 0 })),
+  ]
+  // As in the mixed list, the page Aloft is open over isn't offered again
+  // from history or bookmarks.
+  const notHost = (page: { url: string }) =>
+    hostUrl === undefined || pageKey(page.url) !== pageKey(hostUrl)
+
+  if (query.kind === 'scope') {
+    const { scope, terms } = query
+    if (!sources[scope]) return []
+    // With nothing typed, the newest first. Otherwise ranked as in the mixed
+    // list, learned pages lifted, but nothing goes above the rest: there's no
+    // search row to go above, so the top row is already what Enter opens.
+    const rank = <T extends { title: string; url: string }>(
+      pages: readonly T[],
+      newest: (page: T) => number,
+      weigh = (score: number, _page: T) => score,
+    ) =>
+      ranked(
+        pages,
+        (page) => {
+          if (terms.length === 0) return newest(page)
+          const score = matchScore(terms, page.title, page.url)
+          return score === null ? null : weigh(score + lift(page.url), page)
+        },
+        SCOPED_LIMIT,
+      )
+    const results: Result[] =
+      scope === 'tabs'
+        ? rank(tabs, (t) => t.lastAccessed).map((t) => ({
+            ...tabResult(t),
+            highlights: highlightRanges(terms, t.title),
+          }))
+        : scope === 'bookmarks'
+          ? rank(uniquePages(data.bookmarks).filter(notHost), (b) => b.dateAdded ?? 0).map((b) =>
+              bookmarkResult(b, terms),
+            )
+          : rank(
+              dedupe(candidates.filter(notHost)),
+              (h) => h.lastVisitTime,
+              (score, h) => score * 2 + frecency(h, now),
+            ).map((h) => historyResult(h, terms))
+    return compact([{ id: scope, results }])
+  }
+
+  const { terms, text, url } = query
   const pick = learnedTopHit(promotedPage(learned), tabs, data.bookmarks, sources, terms)
 
   const top: Result[] = []
   const listed = options.listedKeywords ?? []
+  const scopes = options.listedScopes ?? []
   const offered = listed.length > 0 ? undefined : options.offeredKeyword
   if (offered) {
     top.push({ kind: 'keyword', id: 'keyword', keyword: offered, url: keywordUrl(offered, '') })
@@ -297,12 +364,6 @@ export function buildSections(
     : []
   for (const b of bookmarks) shown.add(pageKey(b.url))
 
-  // Learned pages join history, so a page found once by initials or a typo
-  // the browser's own history search can't match keeps turning up.
-  const candidates: HistoryEntry[] = [
-    ...data.history,
-    ...learned.map((p) => ({ title: p.title, url: p.url, visitCount: 0, lastVisitTime: 0 })),
-  ]
   const history = sources.history
     ? ranked(
         dedupe(candidates.filter((h) => !shown.has(pageKey(h.url)))),
@@ -340,6 +401,10 @@ export function buildSections(
   }
 
   return compact([
+    {
+      id: 'scopes',
+      results: scopes.map((scope) => ({ kind: 'scope', id: `scope:${scope}`, scope })),
+    },
     {
       id: 'keywords',
       results: listed.map((k) => ({

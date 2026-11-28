@@ -399,6 +399,72 @@ describe('Palette', () => {
     })
   })
 
+  describe('scope chip', () => {
+    it('sits in front of the input, names the scope and says what is searched', () => {
+      renderPalette({ chip: 'history', query: '' })
+      const chip = screen.getByText('sectionHistory')
+      const input = screen.getByRole('combobox')
+      expect(chip.compareDocumentPosition(input) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+      expect(input.getAttribute('placeholder')).toBe('placeholderHistory')
+      expect(document.querySelector('[data-mode]')?.getAttribute('data-mode')).toBe('actions')
+    })
+
+    it('names each scope', () => {
+      renderPalette({ chip: 'tabs', query: '', sections: [], activeId: undefined })
+      expect(screen.getByText('sectionOpenTabs')).toBeTruthy()
+      expect(screen.getByRole('combobox').getAttribute('placeholder')).toBe('placeholderTabs')
+      cleanup()
+      renderPalette({ chip: 'bookmarks', query: '' })
+      expect(screen.getByText('sectionBookmarks')).toBeTruthy()
+      expect(screen.getByRole('combobox').getAttribute('placeholder')).toBe('placeholderBookmarks')
+    })
+
+    it('says so when nothing in the scope matches', () => {
+      renderPalette({ chip: 'tabs', query: 'zzz', sections: [], activeId: undefined })
+      expect(screen.getByRole('status').textContent).toBe('scopeNone')
+    })
+
+    it('Backspace on an empty input and Escape leave it, and the footer offers the way back', () => {
+      const props = renderPalette({ chip: 'bookmarks', query: '' })
+      const input = screen.getByRole('combobox')
+      fireEvent.keyDown(input, { key: 'Backspace' })
+      fireEvent.keyDown(input, { key: 'Escape' })
+      expect(props.onLeaveChip).toHaveBeenCalledTimes(2)
+      expect(props.onClose).not.toHaveBeenCalled()
+      const footer = screen.getByRole('contentinfo').textContent ?? ''
+      expect(footer).toContain('hintBack')
+      expect(footer).not.toContain('hintKeywords')
+    })
+
+    it('lists scopes from @ under their own label, ahead of the keywords', () => {
+      renderPalette({
+        query: '@',
+        activeId: 'scope:tabs',
+        sections: [
+          { id: 'scopes', results: [{ kind: 'scope', id: 'scope:tabs', scope: 'tabs' }] },
+          {
+            id: 'keywords',
+            results: [
+              {
+                kind: 'keyword',
+                id: 'keyword:youtube',
+                keyword: builtInKeyword('youtube'),
+                url: 'https://www.youtube.com',
+                listed: true,
+              },
+            ],
+          },
+        ],
+      })
+      const groups = screen.getAllByRole('group')
+      expect(groups.map((g) => g.getAttribute('aria-label'))).toEqual([
+        'sectionScopes',
+        'sectionKeywords',
+      ])
+      expect(groups[0]?.textContent).toContain('@tabs')
+    })
+  })
+
   describe('pinned row', () => {
     it('shows each pin as a button with its Alt shortcut', () => {
       renderPalette({ pins, pinShortcuts: pins })

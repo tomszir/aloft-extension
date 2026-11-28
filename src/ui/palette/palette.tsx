@@ -11,7 +11,7 @@ import { Keyed } from '../keyed/keyed'
 import { KeywordChip } from '../keyword-chip/keyword-chip'
 import { slideHighlight } from '../motion/slide'
 import { PinnedRow } from '../pinned-row/pinned-row'
-import { ResultRow } from '../result-row/result-row'
+import { ResultRow, SCOPE_TEXT } from '../result-row/result-row'
 import { TileMenu } from '../tile-menu/tile-menu'
 import styles from './palette.module.css'
 
@@ -60,6 +60,7 @@ export interface PaletteProps {
 const RESULTS_ID = 'al-results'
 
 const SECTION_LABEL: Record<SectionId, (() => string) | undefined> = {
+  scopes: () => i18n.t('sectionScopes'),
   keywords: () => i18n.t('sectionKeywords'),
   top: undefined,
   tabs: () => i18n.t('sectionOpenTabs'),
@@ -100,11 +101,14 @@ export function Palette(props: PaletteProps) {
     return ids
   })
   const keyword = () => (typeof props.chip === 'object' ? props.chip : null)
+  const scope = () =>
+    typeof props.chip === 'string' && props.chip !== 'actions' ? SCOPE_TEXT[props.chip] : undefined
   const placeholder = () => {
     const k = keyword()
     if (k)
       return k.kind === 'ask' ? i18n.t('keywordAsk', [k.name]) : i18n.t('keywordSearch', [k.name])
-    return props.chip === 'actions' ? i18n.t('placeholderActions') : i18n.t('palettePlaceholder')
+    if (props.chip === 'actions') return i18n.t('placeholderActions')
+    return scope()?.search() ?? i18n.t('palettePlaceholder')
   }
   const activeResult = createMemo(() =>
     props.sections.flatMap((s) => s.results).find((r) => r.id === props.activeId),
@@ -287,13 +291,16 @@ export function Palette(props: PaletteProps) {
           {/* The icon shows the mode; the chip only names it. */}
           <span
             class={styles.searchIcon}
-            data-mode={props.chip === 'actions' ? 'actions' : keyword() ? 'keyword' : 'search'}
+            data-mode={
+              props.chip === 'actions' || scope() ? 'actions' : keyword() ? 'keyword' : 'search'
+            }
           >
-            <Icon name={props.chip === 'actions' ? 'terminal' : 'search'} />
+            <Icon name={props.chip === 'actions' ? 'terminal' : (scope()?.icon ?? 'search')} />
           </span>
           <Show when={props.chip === 'actions'}>
             <span class={styles.modeChip}>{i18n.t('sectionActions')}</span>
           </Show>
+          <Show when={scope()}>{(s) => <span class={styles.modeChip}>{s().name()}</span>}</Show>
           <Show when={keyword()}>
             {(k) => <KeywordChip keyword={k()} favicon={props.favicon} />}
           </Show>
@@ -324,10 +331,10 @@ export function Palette(props: PaletteProps) {
             onReorder={props.onReorderPin}
           />
         </Show>
-        {/* Actions mode has no search row to fall back on, so say it. */}
-        <Show when={props.chip === 'actions' && props.sections.length === 0}>
+        {/* Actions and scopes have no search row to fall back on, so say it. */}
+        <Show when={(props.chip === 'actions' || scope()) && props.sections.length === 0}>
           <p class={styles.empty} role="status">
-            {i18n.t('actionsNone')}
+            {props.chip === 'actions' ? i18n.t('actionsNone') : i18n.t('scopeNone')}
           </p>
         </Show>
         <div

@@ -9,6 +9,10 @@ paletteLabel: Aloft
 palettePlaceholder: Search or enter address
 placeholderActions: Search actions
 actionsNone: No matching actions
+placeholderTabs: Search open tabs
+placeholderBookmarks: Search bookmarks
+placeholderHistory: Search history
+scopeNone: Nothing found
 resultsLabel: Results
 hintActions: Actions
 hintKeywords: Keywords
@@ -22,6 +26,7 @@ sectionHistory: History
 sectionBookmarks: Bookmarks
 sectionRecentlyClosed: Recently closed
 sectionKeywords: Keywords
+sectionScopes: Search only
 searchTheWeb: Search the web
 goToAddress: Go to address
 actionSearch: Search

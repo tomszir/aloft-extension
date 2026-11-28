@@ -96,7 +96,9 @@ export async function searchBookmarks(text: string): Promise<BookmarkEntry[]> {
   const nodes = await browser.bookmarks.search(text)
   // Folders match too; they have no URL to open.
   return nodes.flatMap((b) =>
-    b.url && isOpenable(b.url) ? [{ id: b.id, title: b.title || b.url, url: b.url }] : [],
+    b.url && isOpenable(b.url)
+      ? [{ id: b.id, title: b.title || b.url, url: b.url, dateAdded: b.dateAdded }]
+      : [],
   )
 }
 
@@ -110,7 +112,12 @@ export async function loadBookmarks(): Promise<BookmarkEntry[]> {
     for (const node of nodes) {
       // Folders have no URL to open.
       if (node.url && isOpenable(node.url))
-        out.push({ id: node.id, title: node.title || node.url, url: node.url })
+        out.push({
+          id: node.id,
+          title: node.title || node.url,
+          url: node.url,
+          dateAdded: node.dateAdded,
+        })
       if (node.children) walk(node.children)
     }
   }
