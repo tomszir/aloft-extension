@@ -15,11 +15,16 @@ const UNOPENABLE = import.meta.env.FIREFOX
   : /^javascript:/i
 const isOpenable = (url: string) => isWorthListing(url) && !UNOPENABLE.test(url)
 
-export async function loadTabs(): Promise<TabEntry[]> {
+/**
+ * Open tabs in normal windows, or only in private ones when `incognito`. Each
+ * kind of window keeps to its own tabs, as the browser's own tab search does:
+ * a private tab's title shouldn't turn up in an ordinary window.
+ */
+export async function loadTabs(incognito = false): Promise<TabEntry[]> {
   const tabs = await browser.tabs.query({ windowType: 'normal' })
   return tabs.flatMap((t) => {
     const url = t.url || t.pendingUrl
-    if (t.id === undefined || !url || !isWorthListing(url)) return []
+    if (t.id === undefined || !url || t.incognito !== incognito || !isWorthListing(url)) return []
     return [
       {
         tabId: t.id,
@@ -118,14 +123,16 @@ export async function loadBookmarks(): Promise<BookmarkEntry[]> {
   return out
 }
 
-export async function loadRecentlyClosed(): Promise<ClosedEntry[]> {
+/** Tabs closed in normal windows, or only in private ones when `incognito`, like {@link loadTabs}. */
+export async function loadRecentlyClosed(incognito = false): Promise<ClosedEntry[]> {
   const sessions = await browser.sessions.getRecentlyClosed({ maxResults: 10 })
   // Closed windows are left out: restoring one from a single row would be a
   // surprise.
   return sessions.flatMap((s) => {
     const tab = s.tab
     // Restored by session, not opened by address, so any page can come back.
-    if (!tab?.sessionId || !tab.url || !isWorthListing(tab.url)) return []
+    if (!tab?.sessionId || !tab.url || tab.incognito !== incognito || !isWorthListing(tab.url))
+      return []
     return [{ sessionId: tab.sessionId, title: tab.title || tab.url, url: tab.url }]
   })
 }

@@ -8,6 +8,8 @@ export interface HostTab {
   id: number
   index: number
   windowId: number
+  /** In a private window. */
+  incognito?: boolean
 }
 
 export interface OpenContext {

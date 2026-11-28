@@ -23,7 +23,7 @@ import { zoomCorrection } from './zoom'
 function toHostTab(tab: Browser.tabs.Tab | undefined): HostTab | undefined {
   return tab?.id === undefined
     ? undefined
-    : { id: tab.id, index: tab.index, windowId: tab.windowId }
+    : { id: tab.id, index: tab.index, windowId: tab.windowId, incognito: tab.incognito }
 }
 
 async function closeOverlay(tabId: number): Promise<void> {

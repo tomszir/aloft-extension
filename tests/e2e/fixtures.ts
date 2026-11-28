@@ -207,3 +207,34 @@ export async function palettePainted(page: Page): Promise<void> {
       () => new Promise((painted) => requestAnimationFrame(() => requestAnimationFrame(painted))),
     )
 }
+
+/**
+ * Lets Aloft run in private windows, as the switch on its details page does,
+ * and returns its background: the switch reloads the extension. A reload
+ * disables an extension loaded from the command line unless developer mode is
+ * on, so that goes on first.
+ */
+export async function allowInPrivate(context: BrowserContext, background: Worker): Promise<Worker> {
+  const id = new URL(background.url()).host
+  const page = await context.newPage()
+  await page.goto('chrome://extensions/')
+  await page.evaluate(async (extensionId) => {
+    const api = Reflect.get(globalThis, 'chrome') as {
+      developerPrivate: {
+        updateProfileConfiguration: (update: object) => Promise<void>
+        updateExtensionConfiguration: (update: object) => Promise<void>
+      }
+    }
+    await api.developerPrivate.updateProfileConfiguration({ inDeveloperMode: true })
+    await api.developerPrivate.updateExtensionConfiguration({ extensionId, incognitoAccess: true })
+  }, id)
+  // The reloaded background starts on the next event, such as a page of its own.
+  await base
+    .expect(async () => {
+      await page.goto(`chrome-extension://${id}/options.html`)
+    })
+    .toPass()
+  await page.close()
+  const worker = context.serviceWorkers().find((w) => w !== background)
+  return worker ?? (await context.waitForEvent('serviceworker'))
+}
