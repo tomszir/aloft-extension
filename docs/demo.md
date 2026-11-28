@@ -99,9 +99,9 @@ The invented browser (`src/demo/browser-state.ts`, from the sites in `src/demo/s
 
 Search, ranking, best matches, keywords (`yt`, `gh`, the `@` list), `>` actions, pinned tabs with Alt+1–9, the pin menu and dragging pins, Shift+Enter, learned picks and themes all run the extension's own code.
 
-**Changes the state:** pin and unpin, duplicate, close other tabs, reopen closed tab, closing a tab from its row (Delete), moving and unpinning pins, and opening a page in a new tab (it then shows among the open tabs). Switching to a tab wakes it if it was asleep. Learned picks, settings and themes are kept in memory, never in storage, until `destroy()`.
+**Changes the state:** pin and unpin, duplicate, close other tabs, close duplicate tabs, reopen closed tab, closing a tab from its row (Delete), moving and unpinning pins, and opening a page in a new tab (it then shows among the open tabs). Switching to a tab wakes it if it was asleep. Learned picks, settings and themes are kept in memory, never in storage, until `destroy()`.
 
-**Only reported** through `onWould`, because they'd leave the page: switching tabs ("Would switch to …"), opening a page ("Would open … in a new tab", or "in this tab" with Shift+Enter), web searches, reopening a closed tab, and the actions for a new tab or window, moving to a new window, the browser's own pages and Aloft's settings ("Would run “History”"). The page the demo sits on never changes.
+**Only reported** through `onWould`, because they'd leave the page: switching tabs ("Would switch to …"), opening a page ("Would open … in a new tab", or "in this tab" with Shift+Enter), web searches, reopening a closed tab, and the actions for a new tab or window, moving to a new window, reloading, closing, muting or bookmarking the page, the browser's own pages and Aloft's settings ("Would run “History”"). The page the demo sits on never changes.
 
 **After acting**, the extension's bar closes. The demo's opens again straight away, as if Alt+Q had been pressed, so the change shows: a pin added by `> Pin tab` is in the row.
 
@@ -134,4 +134,4 @@ The demo's unit tests run as their own Vitest project with the same swaps, and f
 
 ## Budget
 
-**44.1 KB gzipped** at 1.0.0 (level 9, as `pnpm size` measures; Vite's build output says about 45.7 KB), against a budget of **46 KB**. The palette page's budget is 42 KB, but its CSS and strings are separate files; here they're inside, about 5.5 KB between them. `pnpm size` checks it whenever `.output/demo` exists, and CI builds it on every PR.
+**44.1 KB gzipped** at 1.0.0 (level 9, as `pnpm size` measures; Vite's build output says about 45.7 KB), against a budget of **46 KB**. The palette page's budget is 43 KB, but its CSS and strings are separate files; here they're inside, about 5.5 KB between them. `pnpm size` checks it whenever `.output/demo` exists, and CI builds it on every PR.
