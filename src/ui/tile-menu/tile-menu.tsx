@@ -23,7 +23,17 @@ export function TileMenu(props: TileMenuProps) {
   const buttons = () =>
     [...(menu?.querySelectorAll<HTMLButtonElement>('button') ?? [])].filter((b) => !b.disabled)
 
-  onMount(() => buttons()[0]?.focus())
+  onMount(() => {
+    // Kept on screen: a menu opened low down, or by a right click near the
+    // edge, would otherwise run out of the frame.
+    if (menu) {
+      const { width, height } = menu.getBoundingClientRect()
+      const gap = 4
+      menu.style.left = `${Math.max(gap, Math.min(props.x, innerWidth - width - gap))}px`
+      menu.style.top = `${Math.max(gap, Math.min(props.y, innerHeight - height - gap))}px`
+    }
+    buttons()[0]?.focus()
+  })
 
   const onKeyDown = (event: KeyboardEvent) => {
     const list = buttons()

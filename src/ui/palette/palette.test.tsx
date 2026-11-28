@@ -503,4 +503,69 @@ describe('Palette', () => {
       expect(props.onClose).not.toHaveBeenCalled()
     })
   })
+
+  describe('row menu', () => {
+    const items = () => [
+      { label: 'Switch', run: vi.fn() },
+      { label: 'Copy', run: vi.fn() },
+    ]
+    // Only the open tab has a menu here, like a search row that has none.
+    const menuFor = vi.fn((result: { kind: string }) => (result.kind === 'tab' ? items() : []))
+    const onTab = { activeId: 'tab:2', menuFor }
+
+    it("opens the selected row's menu with Ctrl+K, focused on its first item", () => {
+      renderPalette(onTab)
+      fireEvent.keyDown(screen.getByRole('combobox'), { key: 'k', code: 'KeyK', ctrlKey: true })
+      expect(screen.getByRole('menu').getAttribute('aria-label')).toBe('pinnedMenuLabel')
+      expect(document.activeElement).toBe(screen.getByRole('menuitem', { name: 'Switch' }))
+    })
+
+    it('opens it with a right click on the row, selecting that row', () => {
+      const props = renderPalette({ menuFor })
+      fireEvent.contextMenu(screen.getByRole('option', { name: /Aloft repo/ }))
+      expect(screen.getByRole('menu')).toBeTruthy()
+      expect(props.onHover).toHaveBeenCalledWith('tab:2')
+    })
+
+    it('moves with the arrow keys, and Escape closes only the menu', () => {
+      const props = renderPalette(onTab)
+      fireEvent.keyDown(screen.getByRole('combobox'), { key: 'k', code: 'KeyK', ctrlKey: true })
+      fireEvent.keyDown(screen.getByRole('menu'), { key: 'ArrowDown' })
+      expect(document.activeElement).toBe(screen.getByRole('menuitem', { name: 'Copy' }))
+      fireEvent.keyDown(screen.getByRole('menu'), { key: 'Escape' })
+      expect(screen.queryByRole('menu')).toBeNull()
+      expect(props.onClose).not.toHaveBeenCalled()
+      expect(document.activeElement).toBe(screen.getByRole('combobox'))
+    })
+
+    it('runs the picked item and closes the menu', () => {
+      const picked = items()
+      renderPalette({ activeId: 'tab:2', menuFor: () => picked })
+      fireEvent.keyDown(screen.getByRole('combobox'), { key: 'k', code: 'KeyK', ctrlKey: true })
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Copy' }))
+      expect(picked[1]?.run).toHaveBeenCalled()
+      expect(screen.queryByRole('menu')).toBeNull()
+    })
+
+    it('names the key in the footer only while the selected row has a menu', () => {
+      const [activeId, setActiveId] = createSignal('search')
+      const base = baseProps()
+      render(() => <Palette {...base} activeId={activeId()} menuFor={menuFor} />)
+      const footer = () => screen.getByRole('contentinfo').textContent ?? ''
+      expect(footer()).not.toContain('hintOptions')
+      fireEvent.keyDown(screen.getByRole('combobox'), { key: 'k', code: 'KeyK', ctrlKey: true })
+      expect(screen.queryByRole('menu')).toBeNull()
+      setActiveId('tab:2')
+      expect(footer()).toContain('Ctrl+K')
+      expect(footer()).toContain('hintOptions')
+    })
+
+    it('leaves rows without a menu to the browser on a right click', () => {
+      renderPalette()
+      const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true })
+      screen.getByRole('option', { name: /Aloft repo/ }).dispatchEvent(event)
+      expect(event.defaultPrevented).toBe(false)
+      expect(screen.queryByRole('menu')).toBeNull()
+    })
+  })
 })

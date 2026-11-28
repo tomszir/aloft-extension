@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   EMPTY_LEARNED,
+  forgetPage,
   type LearnedPicks,
   learnedPages,
   learnedText,
@@ -63,6 +64,21 @@ describe('recordPick', () => {
     }
     expect(learned.picks.length).toBe(400)
     expect(learned.picks[0]?.text).toBe('keep')
+  })
+})
+
+describe('forgetPage', () => {
+  it('forgets the page for every text it was picked for, and nothing else', () => {
+    let learned = picked(2, 'gh')
+    learned = recordPick(learned, 'aloft', GITHUB, NOW)
+    learned = recordPick(learned, 'wiki', WIKI, NOW)
+    const forgotten = forgetPage(learned, `${GITHUB.url}/#readme`)
+    expect(forgotten.picks.map((p) => p.url)).toEqual([WIKI.url])
+  })
+
+  it('leaves the picks as they were when the page was never picked', () => {
+    const learned = picked(1, 'gh')
+    expect(forgetPage(learned, WIKI.url)).toBe(learned)
   })
 })
 

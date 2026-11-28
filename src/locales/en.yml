@@ -14,6 +14,7 @@ hintActions: Actions
 hintKeywords: Keywords
 hintClose: Close
 hintBack: Back
+hintOptions: Options
 hintWhatsNew: What's new in $1
 openNewTab: New tab
 openHere: Here
@@ -55,6 +56,10 @@ menuOpen: Open
 menuMoveLeft: Move left
 menuMoveRight: Move right
 menuUnpin: Unpin
+menuOpenNewTab: Open in new tab
+menuOpenHere: Open in this tab
+menuCopyAddress: Copy address
+menuRemoveFromHistory: Remove from history
 sectionActions: Actions
 actionRun: Run
 actionClose: Close

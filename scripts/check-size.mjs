@@ -45,7 +45,7 @@ for (const target of TARGETS) {
   console.log(target)
   const budgets = [
     { name: 'overlay content script', files: ['content-scripts/overlay.js'], kb: 5 },
-    { name: 'palette page', files: await scriptsOf(out, 'palette.html'), kb: 43 },
+    { name: 'palette page', files: await scriptsOf(out, 'palette.html'), kb: 44 },
   ]
 
   for (const budget of budgets) {
@@ -65,7 +65,7 @@ for (const target of TARGETS) {
 
 // The web demo is one file with its styles and strings inside, loaded only
 // when a visitor asks for it, so it gets a little more than the palette page.
-const DEMO = { file: 'demo/aloft-demo.js', kb: 46 }
+const DEMO = { file: 'demo/aloft-demo.js', kb: 47 }
 const demoBuilt = await access(join(OUTPUT, DEMO.file)).then(
   () => true,
   () => false,

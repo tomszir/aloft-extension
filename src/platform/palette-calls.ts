@@ -53,6 +53,10 @@ async function closeTab(tabId: number): Promise<void> {
   await browser.tabs.remove(tabId)
 }
 
+async function removeFromHistory(url: string): Promise<void> {
+  await browser.history.deleteUrl({ url })
+}
+
 /**
  * Everything the palette asks of the browser, as one table so the Firefox
  * relay can serve the same calls. Arguments and results are plain data, since
@@ -78,6 +82,7 @@ export function paletteCalls(tab: () => Promise<Browser.tabs.Tab | undefined>) {
     takeTyped,
     openWhatsNew,
     closeTab,
+    removeFromHistory,
   }
 }
 
