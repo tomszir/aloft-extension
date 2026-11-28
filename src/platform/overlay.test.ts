@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import type { Browser } from 'wxt/browser'
+import { fakeBrowser } from 'wxt/testing/fake-browser'
 import { HELD_KEYS_KEY, OVERLAY_OPTIONS_KEY, readHeldKeys, readOverlayOptions } from './messages'
-import { prepareInPage } from './overlay'
+import { openAloft, paletteTabUrl, prepareInPage } from './overlay'
 
 const press = (key: string, init: KeyboardEventInit = {}, altGraph = false) => {
   const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...init })
@@ -103,5 +105,26 @@ describe('prepareInPage', () => {
     press('a')
     expect(first?.text).toBe('')
     expect(readHeldKeys(globalThis)?.text).toBe('a')
+  })
+})
+
+describe('openAloft', () => {
+  // A browser page, where the overlay can't be drawn.
+  const browserPage = (incognito: boolean): Browser.tabs.Tab =>
+    ({ id: 7, index: 0, windowId: 3, url: 'chrome://newtab/', incognito }) as Browser.tabs.Tab
+
+  it("opens the palette as a tab beside a page it can't draw on", async () => {
+    vi.spyOn(fakeBrowser.scripting, 'executeScript').mockRejectedValue(new Error('denied'))
+    const create = vi.spyOn(fakeBrowser.tabs, 'create')
+    await openAloft(browserPage(false))
+    expect(create).toHaveBeenCalledWith({ url: paletteTabUrl(), windowId: 3, index: 1 })
+  })
+
+  it('in a private window, opens its tab there only where the browser keeps it there', async () => {
+    vi.spyOn(fakeBrowser.scripting, 'executeScript').mockRejectedValue(new Error('denied'))
+    const create = vi.spyOn(fakeBrowser.tabs, 'create')
+    await openAloft(browserPage(true))
+    // Chromium would move it to a normal window, where browsing is kept.
+    expect(create).toHaveBeenCalledTimes(import.meta.env.FIREFOX ? 1 : 0)
   })
 })

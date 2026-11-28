@@ -130,7 +130,13 @@ export async function openAloft(tab: Browser.tabs.Tab | undefined): Promise<void
   // Already the palette, whose input has focus: nothing to do. Aloft's other
   // pages (settings, onboarding) can't be drawn on, so it opens beside them.
   if (url?.startsWith(paletteTabUrl())) return
-  if (isOwnPage(url) || !(await injectOverlay(tab.id))) await openPaletteTab(tab)
+  if (isOwnPage(url) || !(await injectOverlay(tab.id))) {
+    // Chromium shows an extension's pages only in normal windows, so from a
+    // private window the palette's tab would open in a normal one, where what's
+    // typed and opened is kept in history. Aloft stays closed there instead.
+    if (!import.meta.env.FIREFOX && tab.incognito) return
+    await openPaletteTab(tab)
+  }
 }
 
 export async function openPaletteTab(nextTo?: Browser.tabs.Tab): Promise<void> {

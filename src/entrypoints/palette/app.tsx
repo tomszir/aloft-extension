@@ -115,19 +115,22 @@ export function App(props: AppProps) {
   const [bookmarks, setBookmarks] = createSignal<BookmarkEntry[]>([])
   const [learned, setLearned] = createSignal(EMPTY_LEARNED)
   void props.hostTab.then(setHostTab)
+  // A private window lists only private tabs, and an ordinary one none.
+  const inPrivate = props.hostTab.then((tab) => tab?.incognito === true)
   // Tab events come in bursts; only the newest read may land, or an older
   // one could bring back a tab that was just closed.
   let tabsRead = 0
   const readTabs = () => {
     const id = ++tabsRead
-    return loadTabs().then((next) => {
+    return inPrivate.then(loadTabs).then((next) => {
       if (id === tabsRead) setTabs(next)
     })
   }
   const reloadTabs = () => void readTabs()
   // Pins move, hibernate and wake while Aloft is open; keep the row truthful.
   onCleanup(watchTabs(reloadTabs))
-  void loadRecentlyClosed().then(setClosed)
+  const readClosed = () => inPrivate.then(loadRecentlyClosed)
+  void readClosed().then(setClosed)
   // What's read once on opening, and what an Enter typed before the palette
   // was ready waits for. Recent history and learned picks are read once
   // because the browser's own searches match whole words only, so these are
@@ -307,7 +310,7 @@ export function App(props: AppProps) {
     setTabs((current) => current.filter((t) => t.tabId !== result.tabId))
     await closeTab(result.tabId)
     // It's now the most recently closed tab, for "Reopen closed tab".
-    setClosed(await loadRecentlyClosed())
+    setClosed(await readClosed())
   }
 
   async function showWhatsNew(): Promise<void> {
@@ -353,8 +356,10 @@ export function App(props: AppProps) {
       props.host === 'overlay' ? (shift ? flipped : preferred) : 'current-tab'
 
     const q = parsed()
+    // Nothing is learned in a private window: the picks are kept on disk.
     const learnable =
       learning() &&
+      !host.incognito &&
       q.kind === 'text' &&
       (result.kind === 'tab' || result.kind === 'history' || result.kind === 'bookmark')
     // Saved alongside opening, not before it, so remembering never slows Enter.

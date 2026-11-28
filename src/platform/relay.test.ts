@@ -63,7 +63,12 @@ describe('relay calls', () => {
   it('answers currentTab with the tab the palette is framed in', async () => {
     routeMessagesThroughBackground({ ...PALETTE, tab: HOST_TAB })
 
-    expect(await relayed('currentTab')()).toEqual({ id: 7, index: 3, windowId: 2 })
+    expect(await relayed('currentTab')()).toEqual({
+      id: 7,
+      index: 3,
+      windowId: 2,
+      incognito: false,
+    })
   })
 
   it("passes the browser's error back to the palette", async () => {

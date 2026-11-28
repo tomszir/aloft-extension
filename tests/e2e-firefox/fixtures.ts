@@ -45,7 +45,12 @@ export async function paletteFrame(page: Page): Promise<Frame> {
 }
 
 export const test = base.extend<
-  { firefox: Browser; control: Page },
+  {
+    firefox: Browser
+    control: Page
+    /** Set with test.use({ inPrivate: true }) to let Aloft run in private windows. */
+    inPrivate: boolean
+  },
   { executablePath: string; origin: string }
 >({
   executablePath: [
@@ -85,7 +90,8 @@ export const test = base.extend<
     },
     { scope: 'worker' },
   ],
-  firefox: async ({ executablePath }, use) => {
+  inPrivate: [false, { option: true }],
+  firefox: async ({ executablePath, inPrivate }, use) => {
     const browser = await puppeteer.launch({
       browser: 'firefox',
       executablePath,
@@ -97,6 +103,7 @@ export const test = base.extend<
       },
     })
     await browser.installExtension(EXTENSION_DIR)
+    if (inPrivate) await allowInPrivate(browser)
     await use(browser)
     await browser.close()
   },
@@ -116,6 +123,29 @@ export const test = base.extend<
     await use(control)
   },
 })
+
+/**
+ * Lets Aloft run in private windows, as its switch in the add-ons manager
+ * does, over WebDriver BiDi in the browser's own scope (which
+ * MOZ_REMOTE_ALLOW_SYSTEM_ACCESS opens up). It takes a reload to apply.
+ */
+async function allowInPrivate(firefox: Browser): Promise<void> {
+  const connection = Reflect.get(firefox, 'connection') as {
+    send: (method: string, params: object) => Promise<{ result: unknown }>
+  }
+  const { result } = await connection.send('browsingContext.getTree', { 'moz:scope': 'chrome' })
+  const [root] = Reflect.get(Object(result), 'contexts') as { context: string }[]
+  await connection.send('script.evaluate', {
+    target: { context: root?.context },
+    awaitPromise: true,
+    expression: `(async () => {
+      const { ExtensionPermissions } = ChromeUtils.importESModule('resource://gre/modules/ExtensionPermissions.sys.mjs')
+      const { AddonManager } = ChromeUtils.importESModule('resource://gre/modules/AddonManager.sys.mjs')
+      await ExtensionPermissions.add(${JSON.stringify(ADDON_ID)}, { permissions: ['internal:privateBrowsingAllowed'], origins: [] })
+      await (await AddonManager.getAddonByID(${JSON.stringify(ADDON_ID)})).reload()
+    })()`,
+  })
+}
 
 export { expect }
 
@@ -215,4 +245,35 @@ export function recentlyClosedUrls(control: Page): Promise<string[]> {
     }
     return (await api.sessions.getRecentlyClosed()).flatMap((s) => (s.tab?.url ? [s.tab.url] : []))
   })
+}
+
+/**
+ * Opens `url` in a new window, private or not, and returns its page. A new
+ * page from Puppeteer would open in whichever window was used last.
+ */
+export async function openInNewWindow(
+  firefox: Browser,
+  control: Page,
+  url: string,
+  incognito: boolean,
+): Promise<Page> {
+  await control.evaluate(
+    async (target, inPrivate) => {
+      const api = Reflect.get(globalThis, 'browser') as {
+        windows: { create: (props: object) => Promise<unknown> }
+      }
+      await api.windows.create({ incognito: inPrivate, url: target })
+    },
+    url,
+    incognito,
+  )
+  let found: Page | undefined
+  await expect
+    .poll(async () => {
+      found = (await firefox.pages()).find((p) => p.url() === new URL(url).href)
+      return found !== undefined
+    })
+    .toBe(true)
+  if (!found) throw new Error(`no page for ${url}`)
+  return found
 }
