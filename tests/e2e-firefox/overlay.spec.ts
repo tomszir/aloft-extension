@@ -79,3 +79,28 @@ test('opens over a page whose CSP forbids frames', async ({ firefox, control, or
     .poll(() => palette.evaluate(() => document.querySelector('[role="combobox"]') !== null))
     .toBe(true)
 })
+
+test("shows a tab's icon when it's a data: image, and a letter otherwise", async ({
+  firefox,
+  control,
+  origin,
+}) => {
+  await openPage(firefox, control, `${origin}/icon-Inbox`)
+  await openPage(firefox, control, `${origin}/Inventory`)
+  const page = await openPage(firefox, control, `${origin}/Notes`)
+  await pressOpenAloft(control, page)
+  const palette = await paletteFrame(page)
+  await page.keyboard.type('in')
+
+  const rowIcon = (title: string) =>
+    palette.evaluate((name) => {
+      const row = [...document.querySelectorAll('[role="option"]')].find((option) =>
+        option.textContent?.includes(name),
+      )
+      if (!row) return 'no row'
+      return row.querySelector('img')?.getAttribute('src') ?? 'letter'
+    }, title)
+  // Firefox hands back its own re-encoding of the icon, not the page's bytes.
+  await expect.poll(() => rowIcon('icon-Inbox')).toMatch(/^data:image\/png;base64,/)
+  await expect.poll(() => rowIcon('Inventory')).toBe('letter')
+})

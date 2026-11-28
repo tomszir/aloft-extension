@@ -15,11 +15,21 @@ const UNOPENABLE = import.meta.env.FIREFOX
   : /^javascript:/i
 const isOpenable = (url: string) => isWorthListing(url) && !UNOPENABLE.test(url)
 
+// Firefox has no favicon cache (docs/browsers.md), but a tab whose icon is a
+// data: image already holds it, so showing it fetches nothing. Large ones are
+// left out, since the overlay's tabs cross the relay on every tab event.
+const MAX_ICON_LENGTH = 16_384
+const dataIcon = (favIconUrl: string | undefined) =>
+  favIconUrl && favIconUrl.length <= MAX_ICON_LENGTH && /^data:image\//i.test(favIconUrl)
+    ? favIconUrl
+    : undefined
+
 export async function loadTabs(): Promise<TabEntry[]> {
   const tabs = await browser.tabs.query({ windowType: 'normal' })
   return tabs.flatMap((t) => {
     const url = t.url || t.pendingUrl
     if (t.id === undefined || !url || !isWorthListing(url)) return []
+    const icon = import.meta.env.FIREFOX ? dataIcon(t.favIconUrl) : undefined
     return [
       {
         tabId: t.id,
@@ -32,6 +42,7 @@ export async function loadTabs(): Promise<TabEntry[]> {
         title: t.title || url,
         url,
         lastAccessed: t.lastAccessed ?? 0,
+        ...(icon && { icon }),
       },
     ]
   })

@@ -1,4 +1,5 @@
 import { browser } from 'wxt/browser'
+import type { TabEntry } from '../core/results'
 
 // The browser's own favicon cache, so showing icons never fetches anything
 // from the sites themselves.
@@ -30,6 +31,15 @@ let genericIcon: Promise<Uint8Array | null> | undefined
 const icons = new Map<string, Promise<string | null>>()
 const known = new Map<string, string | null>()
 
+// Firefox only: data: icons that open tabs hold, by page address. Kept for the
+// palette's lifetime, so a history row for a page shows the icon too.
+const tabIcons = new Map<string, string>()
+
+/** Lets `pageFavicon` show the icons these tabs already hold. Firefox only. */
+export function rememberTabIcons(tabs: readonly TabEntry[]): void {
+  for (const tab of tabs) if (tab.icon) tabIcons.set(tab.url, tab.icon)
+}
+
 /**
  * The page's icon, or null when the browser only has its generic one; as a
  * plain value once it's known, so rows don't wait a tick for it.
@@ -37,8 +47,9 @@ const known = new Map<string, string | null>()
 export function pageFavicon(pageUrl: string): string | null | Promise<string | null> {
   // Firefox has no favicon cache an extension can read, and a tab's
   // favIconUrl is usually the site's own address, which loading would fetch.
-  // So every page gets its letter tile, straight away.
-  if (import.meta.env.FIREFOX) return null
+  // So a page gets its letter tile straight away, unless a tab holds its icon
+  // as a data: image.
+  if (import.meta.env.FIREFOX) return tabIcons.get(pageUrl) ?? null
   const answer = known.get(pageUrl)
   if (answer !== undefined) return answer
   let icon = icons.get(pageUrl)

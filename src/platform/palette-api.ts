@@ -1,4 +1,5 @@
 import { browser } from 'wxt/browser'
+import { rememberTabIcons } from './favicon'
 import { type PaletteCallName, type PaletteCalls, paletteCalls } from './palette-calls'
 import { relayed, watchRelayed } from './relay'
 import { oncePerFrame, watchTabs as watchTabsHere } from './sources'
@@ -14,7 +15,14 @@ const call = <K extends PaletteCallName>(name: K): PaletteCalls[K] =>
   viaRelay ? relayed(name) : here[name]
 
 export const currentTab = call('currentTab')
-export const loadTabs = call('loadTabs')
+const loadTabsHere = call('loadTabs')
+export const loadTabs: typeof loadTabsHere = import.meta.env.FIREFOX
+  ? async () => {
+      const tabs = await loadTabsHere()
+      rememberTabIcons(tabs)
+      return tabs
+    }
+  : loadTabsHere
 export const searchHistory = call('searchHistory')
 export const loadRecentHistory = call('loadRecentHistory')
 export const searchBookmarks = call('searchBookmarks')
