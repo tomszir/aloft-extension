@@ -1,5 +1,5 @@
 import type { Page, Worker } from '@playwright/test'
-import { expect, palettePainted, pressOpenAloft, TEST_ORIGIN, test } from './fixtures'
+import { activeTabUrl, expect, palettePainted, pressOpenAloft, TEST_ORIGIN, test } from './fixtures'
 
 const palette = (page: Page) => page.locator('iframe[title="Aloft"]').contentFrame()
 const preview = (page: Page) => page.locator('iframe[title="Preview"]').contentFrame()
@@ -121,6 +121,28 @@ test("the shortcut on Aloft's own pages opens the palette beside them", async ({
   const paletteTab = await opened
   await expect(paletteTab).toHaveURL(/\/palette\.html\?host=tab$/)
   await expect(paletteTab.getByRole('combobox')).toBeFocused()
+})
+
+test('Esc in the palette beside a page goes back to that page, not its neighbour', async ({
+  context,
+  background,
+}) => {
+  const page = await context.newPage()
+  await openSettings(page, background)
+  const neighbour = await context.newPage()
+  await neighbour.goto(`${TEST_ORIGIN}/Neighbour`)
+  const opened = context.waitForEvent('page')
+  await pressOpenAloft(background, page)
+  const paletteTab = await opened
+  const input = paletteTab.getByRole('combobox')
+  await expect(input).toBeFocused()
+  // Esc closes this tab, which can happen before the key press returns.
+  await input.press('Escape').catch((error: unknown) => {
+    if (!paletteTab.isClosed()) throw error
+  })
+
+  await expect.poll(() => paletteTab.isClosed()).toBe(true)
+  await expect.poll(() => activeTabUrl(background)).toBe(page.url())
 })
 
 test('saving a setting keeps ones a newer Aloft stored', async ({ context, background }) => {

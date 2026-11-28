@@ -292,10 +292,14 @@ export function App(props: AppProps) {
     await (props.host === 'overlay' ? closeOverlay(tab.id) : closeTab(tab.id))
   }
 
-  // Esc in the settings preview only clears: there's nothing to close.
+  // Esc in the settings preview only clears: there's nothing to close. Aloft's
+  // own tab goes back to the page it was opened on.
   async function dismiss(): Promise<void> {
     if (props.host === 'preview') setQuery(EMPTY_QUERY)
-    else await close()
+    else if (props.host === 'tab') {
+      const tab = hostTab() ?? (await props.hostTab)
+      if (tab !== undefined) await closeTab(tab.id, tab.openerTabId)
+    } else await close()
   }
 
   // The selection moves to the row after the closed one, as in a list you're

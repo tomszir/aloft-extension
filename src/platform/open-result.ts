@@ -8,6 +8,8 @@ export interface HostTab {
   id: number
   index: number
   windowId: number
+  /** The tab Aloft's own tab was opened beside, to go back to. */
+  openerTabId?: number | undefined
 }
 
 export interface OpenContext {
