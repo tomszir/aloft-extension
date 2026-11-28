@@ -23,7 +23,7 @@ import { zoomCorrection } from './zoom'
 function toHostTab(tab: Browser.tabs.Tab | undefined): HostTab | undefined {
   return tab?.id === undefined
     ? undefined
-    : { id: tab.id, index: tab.index, windowId: tab.windowId }
+    : { id: tab.id, index: tab.index, windowId: tab.windowId, openerTabId: tab.openerTabId }
 }
 
 async function closeOverlay(tabId: number): Promise<void> {
@@ -47,7 +47,11 @@ async function openWhatsNew(host: HostTab): Promise<void> {
 }
 
 // window.close() is ignored for tabs the script didn't open itself.
-async function closeTab(tabId: number): Promise<void> {
+// Closing the active tab, Chromium moves to its neighbour, not to the tab it
+// was opened from, so that one is made active first when given.
+async function closeTab(tabId: number, returnTo?: number): Promise<void> {
+  if (returnTo !== undefined)
+    await browser.tabs.update(returnTo, { active: true }).catch(() => undefined)
   await browser.tabs.remove(tabId)
 }
 

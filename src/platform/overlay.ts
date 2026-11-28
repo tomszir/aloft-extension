@@ -138,5 +138,9 @@ export async function openPaletteTab(nextTo?: Browser.tabs.Tab): Promise<void> {
     url: paletteTabUrl(),
     windowId: nextTo?.windowId,
     index: nextTo ? nextTo.index + 1 : undefined,
+    // So Esc goes back to the page Aloft was opened on, not its neighbour:
+    // Firefox returns to a closed tab's opener, and the palette reads it to
+    // do the same in Chromium.
+    openerTabId: nextTo?.id,
   })
 }
